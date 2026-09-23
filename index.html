@@ -3827,11 +3827,25 @@ service cloud.firestore {
         let currentPreviewHtmlContent = '';
         let currentPreviewFileName = '';
 
+        function buildWatermarkCSSPreview() {
+            // VML (used for the real Word .doc export below) is a legacy Word-only technology -
+            // no browser renders it at all, which is why the watermark was invisible in the
+            // Preview/PDF path (that path is rendered by the browser's own print engine, not
+            // Word). Browsers DO reliably repeat a position:fixed element on every printed/PDF
+            // page, so that is what this path uses instead.
+            let showWm = document.getElementById('wm-enable') ? document.getElementById('wm-enable').checked : false;
+            let wmLogo = document.getElementById('wm-logo-data') ? document.getElementById('wm-logo-data').value : '';
+            if (!showWm || !wmLogo) return '';
+            return `<div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); opacity:0.14; z-index:9999; pointer-events:none;">
+                <img src="${wmLogo}" style="width:420px; max-width:60vw;">
+            </div>`;
+        }
+
         function buildExportSrc(htmlContent) {
             return `<html xmlns:v='urn:schemas-microsoft-com:vml' xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'>${exportWordStyles}${buildWatermarkStyleTag()}
+            <head><meta charset='utf-8'>${exportWordStyles}
             <style>@media print { @page { size: 420mm 297mm landscape; margin: 15mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
-            </head><body>${buildWatermarkHeaderVML()}${htmlContent}</body></html>`;
+            </head><body>${buildWatermarkCSSPreview()}${htmlContent}</body></html>`;
         }
 
         function showPreview(type) {
@@ -3869,8 +3883,13 @@ service cloud.firestore {
             iframe.contentWindow.print();
         }
 
+        function buildExportSrcForWord(htmlContent) {
+            return `<html xmlns:v='urn:schemas-microsoft-com:vml' xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'>${exportWordStyles}${buildWatermarkStyleTag()}</head><body>${buildWatermarkHeaderVML()}${htmlContent}</body></html>`;
+        }
+
         function downloadPreviewWord() {
-            const src = buildExportSrc(currentPreviewHtmlContent);
+            const src = buildExportSrcForWord(currentPreviewHtmlContent);
             const blob = new Blob(['\ufeff', src], { type: 'application/msword' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${currentPreviewFileName}.doc`; link.click();
         }
