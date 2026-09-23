@@ -904,6 +904,96 @@
         #ao-badge { background:#22c55e; color:#fff; border-radius:10px; font-size:0.7rem; padding:1px 7px; margin-left:6px; display:none; }
         .ad-form label { display:block; font-weight:600; margin:12px 0 5px; }
         .ad-form input, .ad-form textarea { width:100%; }
+        /* ===== ROYAL DASHBOARD / ALLOCATION / TASKS ===== */
+        :root { --r-navy:#0b1f4d; --r-blue:#1e3a8a; --r-blue2:#2f55c9; --r-green:#065f46; --r-green2:#10b981; --r-gold:#c9a227; --r-gold2:#f3d27a; }
+        .dash-hero { background:linear-gradient(135deg, var(--r-navy) 0%, var(--r-blue) 55%, var(--r-green) 100%); color:#fff; border-radius:18px; padding:28px 32px; position:relative; overflow:hidden; box-shadow:0 20px 50px rgba(11,31,77,0.35); margin-bottom:24px; border:1px solid rgba(201,162,39,0.55); }
+        .dash-hero::after { content:''; position:absolute; right:-80px; top:-80px; width:260px; height:260px; border-radius:50%; border:2px solid rgba(243,210,122,0.25); }
+        .dash-hero h2 { font-family:'Playfair Display', serif; font-size:2rem; letter-spacing:1px; margin:0; color:#fff; }
+        .dash-hero .gold-rule { height:3px; width:130px; background:linear-gradient(90deg, var(--r-gold), var(--r-gold2)); margin:10px 0 8px; border-radius:3px; }
+        .dash-hero p { opacity:0.9; margin:0; }
+        .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(165px, 1fr)); gap:16px; margin-bottom:24px; }
+        .kpi { border-radius:16px; padding:18px 18px 16px; color:#fff; position:relative; overflow:hidden; box-shadow:0 12px 26px rgba(11,31,77,0.18); border:1px solid rgba(243,210,122,0.35); }
+        .kpi.blue { background:linear-gradient(135deg, var(--r-blue2), var(--r-navy)); } .kpi.green { background:linear-gradient(135deg, #059669, #064e3b); }
+        .kpi.gold { background:linear-gradient(135deg, #b8860b, #7c5a05); } .kpi.red { background:linear-gradient(135deg, #dc2626, #7f1d1d); } .kpi.slate { background:linear-gradient(135deg, #64748b, #1e293b); }
+        .kpi .kpi-val { font-family:'Playfair Display', serif; font-size:2.3rem; font-weight:700; line-height:1.1; }
+        .kpi .kpi-lbl { font-size:0.78rem; opacity:0.92; letter-spacing:0.8px; text-transform:uppercase; margin-top:4px; }
+        .kpi i.bg { position:absolute; right:-6px; bottom:-10px; font-size:4.6rem; opacity:0.13; }
+        .dash-card { background:#fff; border-radius:16px; padding:22px; box-shadow:0 10px 30px rgba(15,23,42,0.08); border-top:4px solid var(--r-gold); margin-bottom:24px; }
+        .dash-card h3 { font-family:'Playfair Display', serif; color:var(--r-navy); margin:0 0 4px; font-size:1.3rem; }
+        .dash-card .dash-sub { color:#64748b; font-size:0.85rem; margin-bottom:14px; }
+        .chart-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(380px, 1fr)); gap:24px; }
+        .chart-grid .dash-card { margin-bottom:0; }
+        .chart-box { position:relative; height:320px; }
+        .chart-note { color:#94a3b8; text-align:center; padding-top:120px; }
+        .royal-table { width:100%; border-collapse:separate; border-spacing:0; font-size:0.9rem; border-radius:12px; overflow:hidden; }
+        .royal-table thead th { background:linear-gradient(135deg, var(--r-navy), var(--r-blue)); color:#fff; text-align:left; padding:12px; border-bottom:3px solid var(--r-gold); font-weight:600; letter-spacing:0.3px; white-space:nowrap; }
+        .royal-table tbody td { padding:10px 12px; border-bottom:1px solid #e8edf5; vertical-align:middle; background:#fff; }
+        .royal-table tbody tr:nth-child(even) td { background:#f8fafc; }
+        .royal-table tbody tr.grp-start td { border-top:2px solid #cbd5e1; }
+        .module-chip { display:inline-block; background:#eef2ff; color:var(--r-blue); border:1px solid #c7d2fe; border-radius:8px; padding:3px 8px; margin:2px; font-size:0.78rem; font-weight:600; }
+        .module-chip.done { background:#ecfdf5; color:#065f46; border-color:#a7f3d0; }
+        .people-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-bottom:24px; }
+        .people-card { border-radius:16px; padding:20px; color:#fff; box-shadow:0 12px 26px rgba(11,31,77,0.18); border:1px solid rgba(243,210,122,0.35); }
+        .people-card.green { background:linear-gradient(135deg, #059669, #064e3b); } .people-card.blue { background:linear-gradient(135deg, var(--r-blue2), var(--r-navy)); } .people-card.slate { background:linear-gradient(135deg, #475569, #0f172a); }
+        .people-card h4 { font-family:'Playfair Display', serif; font-size:1.15rem; margin:0 0 4px; }
+        .people-card .pc-count { font-size:2rem; font-weight:700; font-family:'Playfair Display', serif; }
+        .person-pill { background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.3); border-radius:20px; padding:5px 12px; display:inline-block; margin:3px; font-size:0.83rem; }
+        .mini-bar { height:8px; background:#e2e8f0; border-radius:6px; overflow:hidden; min-width:90px; }
+        .mini-bar span { display:block; height:100%; background:linear-gradient(90deg, var(--r-green2), var(--r-green)); }
+        .due-pill { display:inline-block; font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+        .due-on_track { background:#e0e7ff; color:#1e3a8a; } .due-due_soon { background:#fef3c7; color:#92400e; } .due-overdue { background:#fee2e2; color:#991b1b; }
+        .due-done_ontime { background:#dcfce7; color:#166534; } .due-done_late { background:#fde68a; color:#78350f; } .due-no_due { background:#f1f5f9; color:#475569; }
+        .as-badge { display:inline-block; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:12px; white-space:nowrap; }
+        .as-assigned { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; } .as-started { background:#dbeafe; color:#1e3a8a; border:1px solid #93c5fd; }
+        .as-submitted { background:#dcfce7; color:#166534; border:1px solid #22c55e; } .as-amend { background:#ffedd5; color:#9a3412; border:1px solid #fb923c; }
+        .ws-amend { background:#ffedd5; color:#9a3412; border:1px solid #fb923c; }
+        /* Gantt timeline */
+        .gantt { overflow-x:auto; }
+        .gantt-inner { min-width:760px; }
+        .gantt-head { position:relative; height:28px; margin-left:240px; border-bottom:2px solid #e2e8f0; font-size:0.72rem; color:#64748b; }
+        .gantt-tick { position:absolute; top:6px; transform:translateX(-50%); white-space:nowrap; }
+        .gantt-tick:first-child { transform:none; } .gantt-tick:last-child { transform:translateX(-100%); }
+        .gantt-row { display:flex; align-items:center; height:36px; border-bottom:1px dashed #edf1f7; }
+        .gantt-label { width:240px; flex-shrink:0; font-size:0.84rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:12px; color:#0f172a; }
+        .gantt-label small { color:#64748b; }
+        .gantt-track { position:relative; flex:1; height:100%; }
+        .gantt-bar { position:absolute; top:8px; height:20px; border-radius:10px; font-size:0.7rem; color:#fff; padding:0 8px; line-height:20px; white-space:nowrap; overflow:hidden; box-shadow:0 3px 8px rgba(0,0,0,0.18); min-width:6px; }
+        .gb-assigned { background:linear-gradient(90deg, #94a3b8, #64748b); } .gb-started { background:linear-gradient(90deg, var(--r-blue2), var(--r-blue)); }
+        .gb-submitted { background:linear-gradient(90deg, var(--r-green2), var(--r-green)); } .gb-amend { background:linear-gradient(90deg, #f59e0b, #b45309); }
+        .gb-overdue { background:linear-gradient(90deg, #ef4444, #991b1b); }
+        .gantt-today { position:absolute; top:0; bottom:0; width:2px; background:var(--r-gold); z-index:2; }
+        .gantt-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:0.78rem; color:#475569; margin-top:12px; }
+        .gantt-legend i { display:inline-block; width:14px; height:10px; border-radius:5px; margin-right:5px; vertical-align:middle; }
+        /* Allocation */
+        .alloc-table input { padding:7px 8px; font-size:0.85rem; min-width:80px; }
+        .alloc-table input.w-lg { min-width:140px; } .alloc-table input.w-sm { width:78px; min-width:60px; }
+        .alloc-table input[type=date] { width:128px; min-width:120px; padding:5px; font-size:0.8rem; }
+        #step-16.form-section, #step-17.form-section, #step-18.form-section { padding:22px !important; }
+        .alloc-table .as-badge, .alloc-table .due-pill { font-size:0.68rem; padding:3px 7px; }
+        .alloc-table td, .alloc-table th { padding:8px !important; }
+        .royal-table td.nowrap { white-space:nowrap; }
+        body.rf-admin-page #outline-meta-bar { display:none !important; }
+        .alloc-name { font-weight:700; color:var(--r-navy); white-space:nowrap; }
+        .alloc-name small { display:block; font-weight:normal; color:#64748b; }
+        .alloc-draft td { background:#fffbeb !important; }
+        /* Lecturer task cards */
+        .task-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
+        .task-card { background:#fff; border-radius:16px; padding:20px; box-shadow:0 10px 28px rgba(15,23,42,0.09); border-left:6px solid var(--r-blue); position:relative; }
+        .task-card.st-submitted { border-left-color:var(--r-green2); } .task-card.st-amend { border-left-color:#f59e0b; } .task-card.st-overdue { border-left-color:#dc2626; }
+        .task-card h3 { font-family:'Playfair Display', serif; color:var(--r-navy); margin:8px 0 6px; font-size:1.2rem; }
+        .task-card .tc-code { font-weight:700; color:var(--r-blue); letter-spacing:0.5px; }
+        .task-card .tc-meta { font-size:0.85rem; color:#475569; line-height:1.7; }
+        .task-card .tc-bar { height:8px; border-radius:6px; background:#e2e8f0; overflow:hidden; margin:12px 0 6px; }
+        .task-card .tc-bar span { display:block; height:100%; background:linear-gradient(90deg, var(--r-blue2), var(--r-green2)); }
+        .task-card .tc-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+        .amend-box { background:#fff7ed; border:1px solid #fdba74; border-left:5px solid #f97316; border-radius:8px; padding:10px 12px; margin-top:12px; font-size:0.88rem; color:#7c2d12; white-space:pre-wrap; }
+        #task-alert-banner { display:none; background:linear-gradient(90deg, #7f1d1d, #b45309); color:#fff; padding:10px 25px; font-weight:600; font-size:0.92rem; cursor:pointer; gap:14px; flex-wrap:wrap; align-items:center; }
+        .lock-chip { background:#1e293b; color:#fff; border-radius:10px; padding:4px 10px; font-size:0.78rem; font-weight:700; }
+        body.rf-outline-locked .content-area .form-section input:disabled,
+        body.rf-outline-locked .content-area .form-section textarea:disabled,
+        body.rf-outline-locked .content-area .form-section select:disabled { background:#f1f5f9 !important; cursor:not-allowed; }
+        .nav-count { background:#f59e0b; color:#fff; border-radius:10px; font-size:0.7rem; padding:1px 7px; margin-left:6px; display:none; }
+
         /* STARTUP SPLASH */
         #rf-splash { position:fixed; inset:0; z-index:200000; background:radial-gradient(circle at 50% 40%, #ffffff 0%, #eef2f7 70%, #e2e8f0 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; transition:opacity 0.6s ease, visibility 0.6s ease; }
         #rf-splash.hide { opacity:0; visibility:hidden; }
@@ -1036,6 +1126,9 @@
                 <li onclick="switchStep(10, this)" style="background: rgba(10, 92, 39, 0.4); border-color: var(--royal-green-light);"><i class="fas fa-archive"></i> <span>އަރްޝީފް (Archive Bank)</span></li>
                 <li id="nav-manage-lecturers" onclick="switchStep(14, this)" style="display:none; background: rgba(134, 25, 143, 0.4); border-color: #f97316;"><i class="fas fa-user-shield"></i> <span>Manage Users (Admin)</span></li>
                 <li id="nav-all-outlines" onclick="switchStep(15, this)" style="display:none; background: rgba(180, 83, 9, 0.35); border-color: #f59e0b;"><i class="fas fa-clipboard-check"></i> <span>All Outlines (Review)</span><span id="ao-badge"></span></li>
+                <li id="nav-dashboard" onclick="switchStep(16, this)" style="display:none; background: rgba(6, 95, 70, 0.45); border-color: #c9a227;"><i class="fas fa-chart-pie"></i> <span>Dashboard</span></li>
+                <li id="nav-allocation" onclick="switchStep(17, this)" style="display:none; background: rgba(30, 58, 138, 0.45); border-color: #c9a227;"><i class="fas fa-user-tag"></i> <span>Task Allocation</span></li>
+                <li id="nav-my-tasks" onclick="switchStep(18, this)" style="display:none; background: rgba(201, 162, 39, 0.3); border-color: #c9a227;"><i class="fas fa-calendar-check"></i> <span>My Tasks</span><span id="my-tasks-count" class="nav-count"></span></li>
             </ul>
             
             <div class="sync-badge" id="sync-status">
@@ -1067,6 +1160,7 @@
                 </div>
             </header>
             <div id="workspace-banner"></div>
+            <div id="task-alert-banner" onclick="switchStep(18, document.getElementById('nav-my-tasks'))"></div>
             <div id="outline-meta-bar"></div>
 
             <div class="content-area">
@@ -1682,6 +1776,26 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /rasfahi_assignments/{id} {
+      allow read:   if active() &amp;&amp; (reviewer() || resource.data.lecturerUid == request.auth.uid);
+      allow create, delete: if active() &amp;&amp; role() in ['admin', 'dean'];
+      allow update: if active() &amp;&amp; (
+          role() in ['admin', 'dean']
+          || (role() == 'secretary' &amp;&amp; request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['status', 'locked', 'amendNote', 'amendRequestedAt', 'amendRequestedBy', 'amendCount', 'amendHistory', 'dueAt', 'reminders', 'updatedAt']))
+          || (resource.data.lecturerUid == request.auth.uid
+              &amp;&amp; request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['status', 'startedAt', 'courseId', 'moduleId', 'submittedAt', 'resubmittedAt', 'submission', 'locked', 'updatedAt'])
+              &amp;&amp; request.resource.data.status in ['started', 'submitted', 'amend']
+              &amp;&amp; !(resource.data.status == 'submitted' &amp;&amp; request.resource.data.status != 'submitted'))
+      );
+    }
+
+    // E-mail queue - written only by the server helper (Cloud Functions), never by browsers.
+    match /mail/{id} {
+      allow read, write: if false;
+    }
+
     match /lecturer_directory/{id} {
       allow read:  if signedIn();
       allow write: if isAdmin();
@@ -1712,6 +1826,27 @@ service cloud.firestore {
                         <button class="btn btn-outline btn-mini" onclick="renderAllOutlines(false, true)"><i class="fas fa-sync"></i> Refresh</button>
                     </div>
                     <div id="all-outlines-list"><p style="color:#888;">Loading...</p></div>
+                </div>
+
+                <div id="step-16" class="form-section">
+                    <div id="dash-root"><p style="color:#888;">Loading dashboard...</p></div>
+                </div>
+
+                <div id="step-17" class="form-section">
+                    <div class="dash-hero">
+                        <h2><i class="fas fa-user-tag"></i> Task Allocation</h2>
+                        <div class="gold-rule"></div>
+                        <p>Allocate module outlines to lecturers. Fill in the row next to a lecturer's name and press <b>Assign</b> - the task appears on that lecturer's <b>My Tasks</b> page immediately. Use <b>+ Add module</b> to give the same lecturer more modules.</p>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; align-items:center;">
+                        <input type="text" id="alloc-filter" class="ltr-input" placeholder="Filter by lecturer name or email..." oninput="renderAllocation(true)" style="max-width:340px;">
+                        <label style="display:flex; gap:6px; align-items:center; font-size:0.9rem;"><input type="checkbox" id="alloc-all-roles" style="width:auto;" onchange="renderAllocation(true)"> Include Deans &amp; Admins</label>
+                    </div>
+                    <div id="alloc-root" style="overflow-x:auto;"><p style="color:#888;">Loading...</p></div>
+                </div>
+
+                <div id="step-18" class="form-section">
+                    <div id="my-tasks-root"><p style="color:#888;">Loading your tasks...</p></div>
                 </div>
 
             </div>
@@ -1785,10 +1920,10 @@ service cloud.firestore {
         // firestore.rules) enforce the same model on the server.
         const ROLE_LABELS = { admin: 'Admin', dean: 'Dean', secretary: 'Secretary', lecturer: 'Lecturer' };
         const ROLE_PERMS = {
-            admin:     { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: true,  manageUsers: true,  addNotes: true,  completeAny: true  },
-            dean:      { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: true,  completeAny: true  },
-            secretary: { createOutline: false, viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false },
-            lecturer:  { createOutline: true,  viewAll: false, editAll: false, deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false }
+            admin:     { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: true,  manageUsers: true,  addNotes: true,  completeAny: true,  allocate: true,  dashboard: true,  amend: true  },
+            dean:      { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: true,  completeAny: true,  allocate: true,  dashboard: true,  amend: true  },
+            secretary: { createOutline: false, viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false, allocate: false, dashboard: false, amend: true  },
+            lecturer:  { createOutline: true,  viewAll: false, editAll: false, deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false, allocate: false, dashboard: false, amend: false }
         };
         let currentRole = null;        // resolved at login from rasfahi_accounts/{uid}
         let currentAccount = null;
@@ -1882,7 +2017,11 @@ service cloud.firestore {
             show('btn-import-backup', canCreateHere(), 'inline-flex');
             show('btn-hard-reset', can('deleteOutline') && isOwnWorkspace(), 'block');
             show('btn-rebuild-status', can('viewAll'), 'inline-flex');
+            show('nav-dashboard', can('dashboard'));
+            show('nav-allocation', can('allocate'));
             if (can('viewAll')) startStatusWatch(); else stopStatusWatch();
+            startAssignmentsWatch();
+            updateTaskNav();
             const u = auth.currentUser;
             const dbgEl = document.getElementById('account-debug-info');
             if (dbgEl && u) dbgEl.innerHTML = esc(u.email || 'no-email') + '<br>' + roleBadge(currentRole);
@@ -1894,6 +2033,7 @@ service cloud.firestore {
         auth.onAuthStateChanged(user => {
             if (accountUnsub) { accountUnsub(); accountUnsub = null; }
             stopStatusWatch();
+            stopAssignmentsWatch();
             if (user) {
                 userDocRef = db.collection("rasfahi_users").doc(user.uid);
                 wsUid = user.uid; wsDocRef = userDocRef; wsOwnerInfo = null;
@@ -2175,6 +2315,7 @@ service cloud.firestore {
                     } else if (!m.status) {
                         m.status = 'in_progress'; if (!m.startedAt) m.startedAt = t;
                     }
+                    if (m.assignmentId) markAssignmentStarted(m.assignmentId, cId, mId);
                 }
                 syncStatusIndex(cId, mId);
             }
@@ -2182,7 +2323,7 @@ service cloud.firestore {
         }
 
         // --- WORK STATUS: not started -> work in progress -> lecturer work finished ---
-        const WORK_STATUS_LABELS = { not_started: '⚪ Not started', in_progress: '⏳ Work in progress', submitted: '✅ Lecturer work finished' };
+        const WORK_STATUS_LABELS = { not_started: '⚪ Not started', in_progress: '⏳ Work in progress', submitted: '✅ Lecturer work finished', amend: '✏️ Sent for amendment' };
         function getWorkStatus(m) {
             m = m || {};
             if (m.status && WORK_STATUS_LABELS[m.status]) return m.status;
@@ -2275,29 +2416,23 @@ service cloud.firestore {
             if (!m.startedAt) m.startedAt = m.createdAt || t;
             if (!m.firstCompletedAt) m.firstCompletedAt = t;
             m.submission = { name: name, email: email, phone: phone, remarks: remarks, uid: auth.currentUser.uid, at: t };
+            const wasAmend = m.amendNote && (m.status === 'submitted');
+            m.locked = true; m.lockedAt = t;
             (m.history || (m.history = [])).push({ type: 'submitted', by: a.email, name: name, role: a.role, at: t });
+            if (m.assignmentId) {
+                const cur = assignmentsMap[m.assignmentId];
+                const upd = { status: 'submitted', submittedAt: t, submission: m.submission, locked: true, updatedAt: t };
+                if (cur && cur.status === 'amend') upd.resubmittedAt = t;
+                if (cur) Object.assign(cur, upd);
+                db.collection('rasfahi_assignments').doc(m.assignmentId).update(upd).catch(err => console.warn('[RASFAHI] task update failed', err && err.code));
+            }
             closeRfModal();
             performSave(false, false);
             syncStatusIndex(activeCourseId, activeModuleId, true);
             renderOutlineMetaBar();
             if (document.getElementById('step-10').classList.contains('active')) renderArchive();
-            alert("✅ Submitted! The Admin now sees this outline as \"Lecturer work finished\".\n\nIf you edit it again later, it will go back to \"Work in progress\" until you press All Done again.");
-        }
-
-        function returnToLecturer() {
-            const course = dbState.courses[activeCourseId];
-            const mod = course && activeModuleId && course.modules[activeModuleId];
-            if (!mod || !canReturnOutline()) return;
-            const reason = prompt("Return this outline to the lecturer for more work.\nReason (it will be added as a correction note):");
-            if (reason === null) return;
-            const a = actor(), t = nowIso();
-            const m = mod.meta || (mod.meta = {});
-            m.status = 'in_progress'; m.returnedAt = t; m.returnedBy = a.email;
-            (m.history || (m.history = [])).push({ type: 'returned', by: a.email, name: a.name, role: a.role, at: t });
-            if (reason.trim()) (m.notes || (m.notes = [])).push({ by: a.email, name: a.name, role: a.role, at: t, text: reason.trim() });
-            performSave(false, false);
-            syncStatusIndex(activeCourseId, activeModuleId, true);
-            renderOutlineMetaBar();
+            applyLockState();
+            alert("✅ Submitted - thank you! The Admin now sees this outline as \"Lecturer work finished\".\n\nThe outline is now locked. If the curriculum team asks for amendments, it will be unlocked for you and you will see their note.");
         }
 
         // --- LIVE PROGRESS DASHBOARD (Admin / Dean / Secretary) ---
@@ -2348,11 +2483,11 @@ service cloud.firestore {
             if (!can('viewAll')) { box.innerHTML = ''; return; }
             const deleted = new Set((accountsCache || []).filter(a => a.deleted).map(a => a.uid));
             const rows = Object.entries(statusRows).map(([id, r]) => Object.assign({ _id: id }, r)).filter(r => !deleted.has(r.ownerUid));
-            const counts = { all: rows.length, not_started: 0, in_progress: 0, submitted: 0 };
+            const counts = { all: rows.length, not_started: 0, in_progress: 0, submitted: 0, amend: 0 };
             rows.forEach(r => { counts[WORK_STATUS_LABELS[r.status] ? r.status : 'not_started']++; });
             const chip = (key, label) => `<div class="status-chip ${statusFilter === key ? 'active' : ''}" onclick="setStatusFilter('${key}')"><b>${counts[key]}</b>${label}</div>`;
-            let html = `<div class="status-chips">${chip('all', 'All outlines')}${chip('in_progress', WORK_STATUS_LABELS.in_progress)}${chip('submitted', WORK_STATUS_LABELS.submitted)}${chip('not_started', WORK_STATUS_LABELS.not_started)}</div>`;
-            const order = { submitted: 0, in_progress: 1, not_started: 2 };
+            let html = `<div class="status-chips">${chip('all', 'All outlines')}${chip('in_progress', WORK_STATUS_LABELS.in_progress)}${chip('submitted', WORK_STATUS_LABELS.submitted)}${chip('amend', WORK_STATUS_LABELS.amend)}${chip('not_started', WORK_STATUS_LABELS.not_started)}</div>`;
+            const order = { submitted: 0, amend: 1, in_progress: 2, not_started: 3 };
             const list = rows.filter(r => statusFilter === 'all' || r.status === statusFilter)
                 .sort((a, b) => (order[a.status] - order[b.status]) || String(b.submittedAt || b.lastEditedAt || '').localeCompare(String(a.submittedAt || a.lastEditedAt || '')));
             if (!rows.length) {
@@ -2423,7 +2558,7 @@ service cloud.firestore {
         function historyTableHtml(meta) {
             const h = (meta && meta.history) ? meta.history.slice().reverse() : [];
             if (!h.length) return '<p style="color:#888;">No history recorded yet (history starts from the first save after this update).</p>';
-            const label = { created: 'Created', edit: 'Edited', started: '⏳ Work started', submitted: '✅ All Done - lecturer work finished', completed: '✅ Marked complete', reopened: '↩ Edited after submission (back in progress)', returned: '↩ Returned to lecturer', note: '📝 Correction note' };
+            const label = { created: 'Created', edit: 'Edited', started: '⏳ Work started', submitted: '✅ All Done - lecturer work finished', completed: '✅ Marked complete', reopened: '↩ Edited after submission (back in progress)', returned: '↩ Returned to lecturer', amend: '✏️ Sent for amendment (unlocked)', note: '📝 Correction note' };
             let html = '<table><thead><tr><th>Date &amp; time</th><th>Action</th><th>By</th></tr></thead><tbody>';
             h.forEach(e => {
                 const when = e.type === 'edit' ? (fmtDate(e.start) + (e.end && e.end !== e.start ? ' → ' + fmtDate(e.end) : '')) : fmtDate(e.at);
@@ -2471,6 +2606,7 @@ service cloud.firestore {
         function renderOutlineMetaBar() {
             const bar = document.getElementById('outline-meta-bar');
             if (!bar) return;
+            applyLockState();
             if (!auth.currentUser) { bar.style.display = 'none'; return; }
             const course = activeCourseId && dbState.courses[activeCourseId];
             const mod = course && activeModuleId && course.modules && course.modules[activeModuleId];
@@ -2484,19 +2620,730 @@ service cloud.firestore {
             const m = mod.meta || {};
             const st = getWorkStatus(m);
             const notesCount = (m.notes || []).length;
+            const asg = m.assignmentId ? assignmentsMap[m.assignmentId] : null;
+            const dueAt = (asg && asg.dueAt) || (m.assignment && m.assignment.dueAt) || '';
+            const lockedMe = isLockedForMe();
             bar.innerHTML = `<div class="meta-items">
                     <span><i class="fas fa-file-alt"></i> <b>${esc(mod.code || 'MOD')}</b></span>
+                    ${lockedMe ? '<span class="lock-chip"><i class="fas fa-lock"></i> Submitted - locked</span>' : ''}
+                    ${dueAt ? `<span><i class="fas fa-calendar-alt"></i> Due: <b>${fmtDay(dueAt)}</b> ${st === 'submitted' ? '' : duePill(dueState({ status: st === 'submitted' ? 'submitted' : 'started', dueAt: dueAt }))}</span>` : ''}
                     <span>Created: <b>${fmtDate(m.createdAt)}</b></span>
                     <span>Last edited: <b>${fmtDate(m.lastEditedAt)}</b>${m.lastEditedBy ? ' by ' + esc(m.lastEditedBy) + ' ' + roleBadge(m.lastEditedRole) : ''}</span>
                     <span>${workStatusBadge(st)}${st === 'submitted' ? ' ' + fmtDate(m.submittedAt || m.completedAt) : ''}</span>
                 </div>
                 <div class="meta-actions">
                     ${canCompleteHere() && st !== 'submitted' ? `<button class="btn btn-green btn-mini" onclick="openAllDoneForm()"><i class="fas fa-flag-checkered"></i> All Done</button>` : ''}
-                    ${canReturnOutline() && st === 'submitted' ? `<button class="btn btn-outline btn-mini" onclick="returnToLecturer()"><i class="fas fa-undo"></i> Return to lecturer</button>` : ''}
+                    ${can('amend') && !isOwnWorkspace() && st === 'submitted' ? `<button class="btn btn-outline btn-mini" style="border-color:#f97316; color:#c2410c;" onclick="openAmendModalForActive()"><i class="fas fa-pen-fancy"></i> Send for amendment</button>` : ''}
                     <button class="btn btn-outline btn-mini" onclick="showModuleHistory()"><i class="fas fa-history"></i> Edit history</button>
                     ${(notesCount || can('addNotes')) ? `<button class="btn btn-outline btn-mini" onclick="showModuleNotes()"><i class="fas fa-comment-dots"></i> Notes${notesCount ? ' (' + notesCount + ')' : ''}</button>` : ''}
-                </div>`;
+                </div>
+                ${st === 'amend' && m.amendNote ? `<div class="amend-box" style="flex-basis:100%;"><b><i class="fas fa-pen-fancy"></i> Amendment requested${m.amendRequestedAt ? ' on ' + fmtDate(m.amendRequestedAt) : ''}${m.amendRequestedBy ? ' by ' + esc(m.amendRequestedBy) : ''}:</b>\n${esc(m.amendNote)}\n<i>When the changes are made, press "All Done" again.</i></div>` : ''}`;
             bar.style.display = 'flex';
+        }
+
+
+        // =====================================================================================
+        //  TASK ALLOCATION, LECTURER TASKS, DASHBOARD, AMENDMENTS & LOCKING
+        // =====================================================================================
+        const ASSIGN_LABELS = { assigned: '⚪ Not started', started: '⏳ In progress', submitted: '✅ Finished', amend: '✏️ Amendment' };
+        const DUE_LABELS = { on_track: 'On track', due_soon: 'Due soon', overdue: 'Overdue', done_ontime: 'Finished on time', done_late: 'Finished late', no_due: 'No deadline' };
+        let assignmentsMap = {};              // id -> assignment (all for reviewers, own for lecturers)
+        let assignUnsub = null, assignScope = null, assignFirstLoad = true;
+        let allocDrafts = {};                 // lecturerUid -> [draft rows]
+        let allocEdits = {};                  // assignmentId -> edited fields not yet saved
+        let allocRenderPending = false;
+        let dashCharts = {};
+        let dashRenderTimer = null, dashRenderToken = 0;
+        let alertToastShown = false;
+
+        function localDay(d = new Date()) { const z = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - z).toISOString().slice(0, 10); }
+        function daysUntil(day) { if (!day) return null; return Math.round((Date.parse(day + 'T00:00:00') - Date.parse(localDay() + 'T00:00:00')) / 86400000); }
+        function fmtDay(day) { if (!day) return '—'; const d = new Date(day + 'T00:00:00'); return isNaN(d) ? esc(day) : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+        function dueState(a) {
+            if (a.status === 'submitted') {
+                const sd = a.submittedAt ? localDay(new Date(a.submittedAt)) : localDay();
+                return (!a.dueAt || sd <= a.dueAt) ? 'done_ontime' : 'done_late';
+            }
+            const d = daysUntil(a.dueAt);
+            if (d === null) return 'no_due';
+            if (d < 0) return 'overdue';
+            if (d <= 3) return 'due_soon';
+            return 'on_track';
+        }
+        function dueText(a) {
+            if (a.status === 'submitted') return 'Finished ' + fmtDay(a.submittedAt ? localDay(new Date(a.submittedAt)) : '');
+            const d = daysUntil(a.dueAt);
+            if (d === null) return 'No deadline';
+            if (d < 0) return Math.abs(d) + ' day' + (d === -1 ? '' : 's') + ' overdue';
+            if (d === 0) return 'Due today';
+            if (d === 1) return 'Due tomorrow';
+            return d + ' days left';
+        }
+        function duePill(st, text) { return `<span class="due-pill due-${st}">${esc(text || DUE_LABELS[st] || st)}</span>`; }
+        function asBadge(st) { st = ASSIGN_LABELS[st] ? st : 'assigned'; return `<span class="as-badge as-${st}">${ASSIGN_LABELS[st]}</span>`; }
+        function myUid() { return auth.currentUser ? auth.currentUser.uid : null; }
+        function myAssignmentsList() { const me = myUid(); return Object.values(assignmentsMap).filter(a => a.lecturerUid === me); }
+        function isRtlText(t) { return /[\u0600-\u06FF\u0780-\u07BF]/.test(t || ''); }
+
+        // ---------- live data ----------
+        function startAssignmentsWatch() {
+            if (!auth.currentUser) return;
+            const scope = can('viewAll') ? 'all' : 'mine';
+            if (assignUnsub && assignScope === scope) return;
+            stopAssignmentsWatch();
+            assignScope = scope; assignFirstLoad = true;
+            const col = db.collection('rasfahi_assignments');
+            const q = scope === 'all' ? col : col.where('lecturerUid', '==', auth.currentUser.uid);
+            assignUnsub = q.onSnapshot(snap => {
+                const next = {};
+                snap.forEach(d => { next[d.id] = Object.assign({ id: d.id }, d.data()); });
+                const prev = assignmentsMap;
+                assignmentsMap = next;
+                onAssignmentsChanged(prev, next, assignFirstLoad);
+                assignFirstLoad = false;
+            }, err => console.warn('[RASFAHI] task watch failed', err && err.code));
+        }
+        function stopAssignmentsWatch() { if (assignUnsub) { assignUnsub(); assignUnsub = null; } assignScope = null; assignmentsMap = {}; alertToastShown = false; updateTaskNav(); renderTaskAlerts(); }
+
+        function onAssignmentsChanged(prev, next, first) {
+            const me = myUid();
+            Object.values(next).forEach(a => {
+                if (a.lecturerUid !== me) return;
+                const old = prev[a.id];
+                if (!first && !old) showToast(`📌 New task assigned: <b>${esc(a.moduleCode)}</b> - ${esc(a.moduleName)} (due ${fmtDay(a.dueAt)})`, true);
+                if (!first && old && old.status !== 'amend' && a.status === 'amend') {
+                    showToast(`✏️ <b>${esc(a.moduleCode)}</b> was sent back for amendment - it is unlocked for editing.`, true);
+                    refreshOwnCourse(a.courseId);
+                }
+            });
+            if (first && !alertToastShown) { alertToastShown = true; toastUrgentTasks(); }
+            updateTaskNav();
+            renderTaskAlerts();
+            renderOutlineMetaBar();
+            if (isStepActive(16)) scheduleDashboardRender();
+            if (isStepActive(17)) renderAllocation();
+            if (isStepActive(18)) renderMyTasks();
+        }
+        function isStepActive(n) { const el = document.getElementById('step-' + n); return !!el && el.classList.contains('active'); }
+
+        // A reviewer changed one of my outlines (e.g. sent it for amendment): load the fresh copy.
+        function refreshOwnCourse(cId) {
+            if (!cId || !userDocRef || !isOwnWorkspace() || !dbState.courses[cId]) return;
+            userDocRef.collection('courses').doc(cId).get().then(doc => {
+                if (!doc.exists) return;
+                const data = doc.data();
+                dbState.courses[cId] = data;
+                lastCloudJson[cId] = JSON.stringify(data);
+                if (activeCourseId === cId) loadStateFromMemory(cId, activeModuleId, false);
+                renderOutlineMetaBar();
+                if (isStepActive(10)) renderArchive();
+            }).catch(err => console.warn('[RASFAHI] refresh failed', err && err.code));
+        }
+
+        function updateTaskNav() {
+            const nav = document.getElementById('nav-my-tasks');
+            const cnt = document.getElementById('my-tasks-count');
+            if (!nav) return;
+            const mine = myAssignmentsList();
+            nav.style.display = (auth.currentUser && (normalizeRole(currentRole) === 'lecturer' || mine.length)) ? 'flex' : 'none';
+            const open = mine.filter(a => a.status !== 'submitted').length;
+            if (cnt) { cnt.textContent = open || ''; cnt.style.display = open ? 'inline-block' : 'none'; }
+        }
+
+        function urgentOf(list) {
+            return {
+                overdue: list.filter(a => a.status !== 'submitted' && dueState(a) === 'overdue'),
+                soon: list.filter(a => a.status !== 'submitted' && dueState(a) === 'due_soon'),
+                amend: list.filter(a => a.status === 'amend')
+            };
+        }
+        function renderTaskAlerts() {
+            const b = document.getElementById('task-alert-banner');
+            if (!b) return;
+            const u = urgentOf(myAssignmentsList());
+            const parts = [];
+            if (u.overdue.length) parts.push(`<span>⛔ ${u.overdue.length} task(s) past the deadline: ${u.overdue.map(a => esc(a.moduleCode)).join(', ')}</span>`);
+            if (u.soon.length) parts.push(`<span>⏰ Due within 3 days: ${u.soon.map(a => esc(a.moduleCode) + ' (' + esc(dueText(a)) + ')').join(', ')}</span>`);
+            if (u.amend.length) parts.push(`<span>✏️ Amendment requested: ${u.amend.map(a => esc(a.moduleCode)).join(', ')}</span>`);
+            if (!auth.currentUser || !parts.length) { b.style.display = 'none'; return; }
+            b.innerHTML = parts.join('') + '<span style="margin-left:auto; text-decoration:underline;">Open My Tasks →</span>';
+            b.style.display = 'flex';
+        }
+        function toastUrgentTasks() {
+            const u = urgentOf(myAssignmentsList());
+            u.overdue.forEach(a => showToast(`⛔ <b>${esc(a.moduleCode)}</b> is past its deadline (${fmtDay(a.dueAt)}).`));
+            u.soon.forEach(a => showToast(`⏰ <b>${esc(a.moduleCode)}</b>: ${esc(dueText(a))} (${fmtDay(a.dueAt)}).`, true));
+        }
+
+        // ---------- locking after "All Done" ----------
+        function activeModuleObj() { const c = activeCourseId && dbState.courses[activeCourseId]; return c && activeModuleId && c.modules ? c.modules[activeModuleId] : null; }
+        function isLockedForMe() {
+            const mod = activeModuleObj();
+            return !!(mod && mod.meta && mod.meta.locked === true && isOwnWorkspace() && !can('editAll'));
+        }
+        function applyLockState() {
+            const locked = isLockedForMe();
+            document.body.classList.toggle('rf-outline-locked', locked);
+            document.querySelectorAll('.content-area .form-section').forEach(sec => {
+                if (NON_OUTLINE_SECTIONS.has(sec.id)) return;
+                sec.querySelectorAll('input, textarea, select, button, [contenteditable]').forEach(el => {
+                    if (el.closest('.step-footer')) return;
+                    if (locked) {
+                        if (el.hasAttribute('contenteditable')) {
+                            if (el.getAttribute('contenteditable') !== 'false') { el.setAttribute('data-rf-ce', el.getAttribute('contenteditable') || 'true'); el.setAttribute('contenteditable', 'false'); }
+                        } else if (!el.disabled) { el.disabled = true; el.setAttribute('data-rf-lock', '1'); }
+                    } else {
+                        if (el.hasAttribute('data-rf-ce')) { el.setAttribute('contenteditable', el.getAttribute('data-rf-ce') || 'true'); el.removeAttribute('data-rf-ce'); }
+                        if (el.hasAttribute('data-rf-lock')) { el.disabled = false; el.removeAttribute('data-rf-lock'); }
+                    }
+                });
+            });
+        }
+
+        // ---------- lecturer: start / open tasks ----------
+        function markAssignmentStarted(aid, cId, mId) {
+            const a = assignmentsMap[aid];
+            if (!a || a.status !== 'assigned' || a.lecturerUid !== myUid()) return;
+            const t = nowIso();
+            const upd = { status: 'started', startedAt: t, courseId: cId, moduleId: mId, updatedAt: t };
+            Object.assign(a, upd);
+            db.collection('rasfahi_assignments').doc(aid).update(upd).catch(err => console.warn('[RASFAHI] task start failed', err && err.code));
+        }
+
+        function startAssignmentTask(aid) {
+            const a = assignmentsMap[aid];
+            if (!a) return;
+            if (a.courseId && a.moduleId && dbState.courses[a.courseId] && dbState.courses[a.courseId].modules[a.moduleId]) return openAssignmentOutline(aid);
+            if (!isOwnWorkspace()) return denied("Return to your own archive first.");
+            if (!can('createOutline')) return denied("Your role cannot create outlines.");
+            const opts = Object.entries(dbState.courses).map(([id, c]) => `<option value="${esc(id)}">${esc(c.name || 'Unnamed program')}</option>`).join('');
+            openRfModal(`<h2 style="color:var(--r-navy); margin-bottom:6px;"><i class="fas fa-play-circle"></i> Start working: ${esc(a.moduleCode)}</h2>
+                <p style="color:#555; margin-bottom:14px;"><b>${esc(a.moduleName)}</b><br>Contact hours: ${esc(a.contactHours || '—')} · Due: ${fmtDay(a.dueAt)}</p>
+                <div class="ad-form"><label>Put this module outline under which program?</label>
+                <select id="st-course"><option value="__new">➕ A new program</option>${opts}</select></div>
+                <button class="btn btn-green" style="margin-top:16px;" onclick="confirmStartTask('${esc(aid)}')"><i class="fas fa-play"></i> Create the outline &amp; start</button>`);
+        }
+
+        function confirmStartTask(aid) {
+            const a = assignmentsMap[aid];
+            if (!a) return;
+            const choice = document.getElementById('st-course').value;
+            closeRfModal();
+            if (choice === '__new' || !dbState.courses[choice]) {
+                createNewCourse();
+            } else {
+                const firstMod = Object.keys(dbState.courses[choice].modules || {})[0] || null;
+                loadStateFromMemory(choice, firstMod, true);
+                createNewModule(choice);
+            }
+            const cId = activeCourseId, mId = activeModuleId;
+            const mod = activeModuleObj();
+            if (!mod) return;
+            isProgrammaticChange = true;
+            const nameEl = document.getElementById(isRtlText(a.moduleName) ? 'm-name-rtl' : 'm-name-ltr');
+            if (nameEl) nameEl.value = a.moduleName || '';
+            const codeEl = document.getElementById('m-code'); if (codeEl) codeEl.value = a.moduleCode || '';
+            isProgrammaticChange = false;
+            saveCurrentToDB();
+            mod.name = a.moduleName || mod.name; mod.code = a.moduleCode || mod.code;
+            const m = mod.meta || (mod.meta = newMeta());
+            const t = nowIso(), who = actor();
+            m.assignmentId = aid;
+            m.assignment = { moduleName: a.moduleName, moduleCode: a.moduleCode, contactHours: a.contactHours || '', assignedAt: a.assignedAt || '', dueAt: a.dueAt || '' };
+            m.status = 'in_progress'; m.startedAt = t;
+            (m.history || (m.history = [])).push({ type: 'started', by: who.email, name: who.name, role: who.role, at: t });
+            dirtyCourses.add(cId);
+            performSave(false, false);
+            syncStatusIndex(cId, mId, true);
+            markAssignmentStarted(aid, cId, mId);
+            updateTopTitleStatus();
+            switchStep(5, document.querySelectorAll('.nav-links li')[4]);
+            showToast(`▶️ Outline created for <b>${esc(a.moduleCode)}</b>. Your progress is saved automatically.`, true);
+        }
+
+        function openAssignmentOutline(aid) {
+            const a = assignmentsMap[aid];
+            if (!a) return;
+            const run = () => {
+                if (a.courseId && dbState.courses[a.courseId] && dbState.courses[a.courseId].modules[a.moduleId]) {
+                    loadStateFromMemory(a.courseId, a.moduleId, true);
+                    switchStep(5, document.querySelectorAll('.nav-links li')[4]);
+                } else {
+                    alert("The outline for this task was not found in your archive. Press \"Start working\" to create it again.");
+                }
+            };
+            if (!isOwnWorkspace()) switchWorkspace(auth.currentUser.uid).then(() => setTimeout(run, 800)); else run();
+        }
+
+        function taskCardHtml(a) {
+            const ds = dueState(a);
+            const total = Math.max(1, (Date.parse(a.dueAt + 'T00:00:00') - Date.parse((a.assignedAt || a.dueAt) + 'T00:00:00')) / 86400000);
+            const gone = (Date.parse(localDay() + 'T00:00:00') - Date.parse((a.assignedAt || localDay()) + 'T00:00:00')) / 86400000;
+            const pct = a.status === 'submitted' ? 100 : Math.max(2, Math.min(100, Math.round(gone / total * 100)));
+            const cls = a.status === 'submitted' ? 'st-submitted' : a.status === 'amend' ? 'st-amend' : ds === 'overdue' ? 'st-overdue' : '';
+            const linked = a.courseId && dbState.courses[a.courseId] && dbState.courses[a.courseId].modules[a.moduleId];
+            return `<div class="task-card ${cls}">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;"><span class="tc-code">${esc(a.moduleCode)}</span>${asBadge(a.status)}</div>
+                <h3 ${isRtlText(a.moduleName) ? 'dir="rtl" style="font-family:Faruma, \'MV Faseyha\', serif;"' : ''}>${esc(a.moduleName)}</h3>
+                <div class="tc-meta"><i class="fas fa-clock"></i> Contact hours: <b>${esc(a.contactHours || '—')}</b><br>
+                    <i class="fas fa-calendar-plus"></i> Assigned: <b>${fmtDay(a.assignedAt)}</b> &nbsp; <i class="fas fa-flag-checkered"></i> Due: <b>${fmtDay(a.dueAt)}</b></div>
+                <div class="tc-bar"><span style="width:${pct}%"></span></div>
+                <div>${duePill(ds, dueText(a))}</div>
+                ${a.status === 'amend' && a.amendNote ? `<div class="amend-box"><b>✏️ Amendment requested${a.amendRequestedAt ? ' - ' + fmtDate(a.amendRequestedAt) : ''}:</b>\n${esc(a.amendNote)}</div>` : ''}
+                <div class="tc-actions">
+                    ${a.status === 'assigned' && !linked ? `<button class="btn btn-green btn-mini" onclick="startAssignmentTask('${esc(a.id)}')"><i class="fas fa-play"></i> Start working</button>` : ''}
+                    ${linked || a.courseId ? `<button class="btn btn-blue btn-mini" onclick="openAssignmentOutline('${esc(a.id)}')"><i class="fas fa-folder-open"></i> ${a.status === 'submitted' ? 'View outline' : 'Open outline'}</button>` : ''}
+                    ${a.status !== 'assigned' && !linked && !a.courseId ? `<button class="btn btn-green btn-mini" onclick="startAssignmentTask('${esc(a.id)}')"><i class="fas fa-play"></i> Start working</button>` : ''}
+                </div></div>`;
+        }
+
+        function renderMyTasks() {
+            const root = document.getElementById('my-tasks-root');
+            if (!root) return;
+            const list = myAssignmentsList().sort((x, y) => String(x.dueAt || '9999').localeCompare(String(y.dueAt || '9999')));
+            const done = list.filter(a => a.status === 'submitted').length;
+            const u = urgentOf(list);
+            let html = `<div class="dash-hero"><h2><i class="fas fa-calendar-check"></i> My Tasks</h2><div class="gold-rule"></div>
+                <p>Module outlines allocated to you, with their deadlines. Press <b>Start working</b> to create the outline, then <b>All Done</b> when it is finished.</p></div>
+                <div class="kpi-grid">
+                    <div class="kpi blue"><i class="fas fa-tasks bg"></i><div class="kpi-val">${list.length}</div><div class="kpi-lbl">Allocated to me</div></div>
+                    <div class="kpi green"><i class="fas fa-check-double bg"></i><div class="kpi-val">${done}</div><div class="kpi-lbl">Finished</div></div>
+                    <div class="kpi gold"><i class="fas fa-hourglass-half bg"></i><div class="kpi-val">${list.length - done}</div><div class="kpi-lbl">Still to finish</div></div>
+                    <div class="kpi red"><i class="fas fa-exclamation-triangle bg"></i><div class="kpi-val">${u.overdue.length}</div><div class="kpi-lbl">Overdue</div></div>
+                </div>`;
+            if (!list.length) {
+                html += '<div class="dash-card"><p style="color:#64748b; margin:0;">No tasks have been allocated to you yet.</p></div>';
+            } else {
+                html += `<div class="dash-card"><h3>Timeline</h3><div class="dash-sub">From the date each task was assigned to its deadline. The gold line is today.</div>${ganttHtml(list, false)}</div>`;
+                html += `<div class="task-grid">${list.map(taskCardHtml).join('')}</div>`;
+            }
+            root.innerHTML = html;
+        }
+
+        // ---------- Gantt timeline (shared) ----------
+        function ganttHtml(list, withNames) {
+            const rows = list.filter(a => a.dueAt);
+            if (!rows.length) return '<p style="color:#94a3b8;">No dated tasks yet.</p>';
+            const toT = d => Date.parse(d + 'T00:00:00');
+            const today = toT(localDay());
+            let min = Math.min(today, ...rows.map(a => toT(a.assignedAt || a.dueAt)));
+            let max = Math.max(today, ...rows.map(a => toT(a.dueAt)));
+            min -= 2 * 86400000; max += 3 * 86400000;
+            const span = Math.max(1, max - min);
+            const pos = t => ((t - min) / span * 100);
+            const nTicks = 7;
+            let ticks = '';
+            for (let i = 0; i <= nTicks; i++) {
+                const t = min + span * i / nTicks;
+                ticks += `<span class="gantt-tick" style="left:${i / nTicks * 100}%">${new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>`;
+            }
+            const todayPct = pos(today);
+            const body = rows.map(a => {
+                const st = a.status !== 'submitted' && dueState(a) === 'overdue' ? 'overdue' : (ASSIGN_LABELS[a.status] ? a.status : 'assigned');
+                const s0 = toT(a.assignedAt || a.dueAt), e0 = toT(a.dueAt) + 86400000;
+                const left = pos(s0), width = Math.max(0.8, pos(e0) - left);
+                const who = withNames ? `<b>${esc(a.lecturerName || a.lecturerEmail)}</b> <small>${esc(a.moduleCode)}</small>` : `<b>${esc(a.moduleCode)}</b> <small>${esc(a.moduleName)}</small>`;
+                return `<div class="gantt-row"><div class="gantt-label" title="${esc((a.lecturerName || '') + ' - ' + a.moduleCode + ' ' + a.moduleName)}">${who}</div>
+                    <div class="gantt-track"><div class="gantt-today" style="left:${todayPct}%"></div>
+                    <div class="gantt-bar gb-${st}" style="left:${left}%; width:${width}%;" title="${esc(a.moduleCode)}: ${fmtDay(a.assignedAt)} → ${fmtDay(a.dueAt)} · ${esc(ASSIGN_LABELS[a.status] || '')}">${esc(a.moduleCode)} · ${fmtDay(a.dueAt)}</div></div></div>`;
+            }).join('');
+            return `<div class="gantt"><div class="gantt-inner"><div class="gantt-head">${ticks}</div>${body}</div></div>
+                <div class="gantt-legend"><span><i class="gb-assigned"></i>Not started</span><span><i class="gb-started"></i>In progress</span><span><i class="gb-amend"></i>Amendment</span><span><i class="gb-submitted"></i>Finished</span><span><i class="gb-overdue"></i>Overdue</span><span><i style="background:var(--r-gold); width:3px;"></i>Today</span></div>`;
+        }
+
+        // ---------- ALLOCATION (Dean / Admin) ----------
+        function allocPeople() {
+            const includeAll = document.getElementById('alloc-all-roles') && document.getElementById('alloc-all-roles').checked;
+            const withTasks = new Set(Object.values(assignmentsMap).map(a => a.lecturerUid));
+            return (accountsCache || []).filter(a => !a.deleted && ((includeAll ? normalizeRole(a.role) !== 'secretary' : normalizeRole(a.role) === 'lecturer') || withTasks.has(a.uid)))
+                .sort((x, y) => String(x.name || x.email).localeCompare(String(y.name || y.email)));
+        }
+        function newDraft() { return { k: 'd' + Date.now() + Math.random().toString(36).slice(2, 6), moduleName: '', moduleCode: '', contactHours: '', assignedAt: localDay(), dueAt: '' }; }
+        function allocAddRow(uid) { (allocDrafts[uid] || (allocDrafts[uid] = [])).push(newDraft()); renderAllocation(true); }
+        function allocDraftInput(uid, k, field, val) { const d = (allocDrafts[uid] || []).find(x => x.k === k); if (d) d[field] = val; }
+        function allocRemoveDraft(uid, k) { allocDrafts[uid] = (allocDrafts[uid] || []).filter(x => x.k !== k); renderAllocation(true); }
+        function allocEditInput(aid, field, val) { (allocEdits[aid] || (allocEdits[aid] = {}))[field] = val; }
+
+        function validTask(t) {
+            if (!String(t.moduleName || '').trim()) return "Please enter the module name.";
+            if (!String(t.moduleCode || '').trim()) return "Please enter the module code.";
+            if (!t.assignedAt) return "Please choose the assigned date.";
+            if (!t.dueAt) return "Please choose the date it must be finished by.";
+            if (t.dueAt < t.assignedAt) return "The finish date cannot be before the assigned date.";
+            return null;
+        }
+
+        function allocAssign(uid, k) {
+            if (!can('allocate')) return denied("Only the Dean or Admin can allocate tasks.");
+            const d = (allocDrafts[uid] || []).find(x => x.k === k);
+            const person = findAccount(uid);
+            if (!d) return;
+            const err = validTask(d); if (err) { alert(err); return; }
+            const t = nowIso(), who = actor();
+            const doc = {
+                lecturerUid: uid, lecturerEmail: person.email || '', lecturerName: person.name || '',
+                moduleName: d.moduleName.trim(), moduleCode: d.moduleCode.trim().toUpperCase(), contactHours: String(d.contactHours || '').trim(),
+                assignedAt: d.assignedAt, dueAt: d.dueAt, status: 'assigned', locked: false,
+                createdAt: t, createdBy: who.email, createdByRole: who.role, updatedAt: t,
+                reminders: { dayBefore: false, overdue: false }, amendCount: 0
+            };
+            db.collection('rasfahi_assignments').add(doc).then(() => {
+                allocDrafts[uid] = (allocDrafts[uid] || []).filter(x => x.k !== k);
+                showToast(`✅ <b>${esc(doc.moduleCode)}</b> assigned to <b>${esc(doc.lecturerName || doc.lecturerEmail)}</b>.`);
+                renderAllocation(true);
+            }).catch(e => alert("❌ Could not assign the task: " + (e.code || e.message) + "\nIf this says permission-denied, publish the updated Firestore rules."));
+        }
+
+        function allocSave(aid) {
+            if (!can('allocate')) return;
+            const cur = assignmentsMap[aid]; const ed = allocEdits[aid];
+            if (!cur || !ed || !Object.keys(ed).length) { showToast('No changes to save.', true); return; }
+            const merged = Object.assign({}, cur, ed);
+            const err = validTask(merged); if (err) { alert(err); return; }
+            const upd = {};
+            ['moduleName', 'moduleCode', 'contactHours', 'assignedAt', 'dueAt'].forEach(f => { if (ed[f] !== undefined) upd[f] = f === 'moduleCode' ? String(ed[f]).trim().toUpperCase() : String(ed[f]).trim(); });
+            if (upd.dueAt && upd.dueAt !== cur.dueAt) upd.reminders = { dayBefore: false, overdue: false };
+            upd.updatedAt = nowIso();
+            db.collection('rasfahi_assignments').doc(aid).update(upd).then(() => { delete allocEdits[aid]; showToast('💾 Task updated.', true); renderAllocation(true); })
+                .catch(e => alert("❌ Could not save: " + (e.code || e.message)));
+        }
+
+        function allocDelete(aid) {
+            if (!can('allocate')) return;
+            const a = assignmentsMap[aid]; if (!a) return;
+            if (!confirm(`Remove the task ${a.moduleCode} from ${a.lecturerName || a.lecturerEmail}?\n\n(Any outline the lecturer already made stays in their archive.)`)) return;
+            db.collection('rasfahi_assignments').doc(aid).delete().then(() => { delete allocEdits[aid]; renderAllocation(true); })
+                .catch(e => alert("❌ Could not remove: " + (e.code || e.message)));
+        }
+
+        function renderAllocation(force) {
+            const root = document.getElementById('alloc-root');
+            if (!root || !can('allocate')) return;
+            if (!force && root.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') {
+                if (!allocRenderPending) { allocRenderPending = true; root.addEventListener('focusout', function h() { root.removeEventListener('focusout', h); setTimeout(() => { allocRenderPending = false; if (!root.contains(document.activeElement)) renderAllocation(true); }, 50); }); }
+                return;
+            }
+            const q = (document.getElementById('alloc-filter').value || '').toLowerCase().trim();
+            const people = allocPeople().filter(p => !q || String(p.name || '').toLowerCase().includes(q) || String(p.email || '').toLowerCase().includes(q));
+            if (!people.length) { root.innerHTML = '<p style="color:#888;">No lecturers found. Create lecturer accounts on the Manage Users page first.</p>'; return; }
+            const byUid = {};
+            Object.values(assignmentsMap).forEach(a => { (byUid[a.lecturerUid] || (byUid[a.lecturerUid] = [])).push(a); });
+            let html = `<table class="royal-table alloc-table"><thead><tr><th>Lecturer</th><th>Module name</th><th>Code</th><th>Contact hrs</th><th>Assigned date</th><th>Finish by</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+            people.forEach(p => {
+                const tasks = (byUid[p.uid] || []).sort((x, y) => String(x.createdAt || '').localeCompare(String(y.createdAt || '')));
+                if (!tasks.length && !(allocDrafts[p.uid] || []).length) allocDrafts[p.uid] = [newDraft()];
+                const drafts = allocDrafts[p.uid] || [];
+                const nameCell = `<td><div class="alloc-name">${esc(p.name || '(no name)')}<small>${esc(p.email)}</small></div></td>`;
+                let first = true;
+                tasks.forEach(a => {
+                    const ed = allocEdits[a.id] || {};
+                    const v = f => esc(ed[f] !== undefined ? ed[f] : (a[f] || ''));
+                    html += `<tr class="${first ? 'grp-start' : ''}">${nameCell}
+                        <td><input class="w-lg" value="${v('moduleName')}" oninput="allocEditInput('${a.id}','moduleName',this.value)"></td>
+                        <td><input class="w-sm" value="${v('moduleCode')}" oninput="allocEditInput('${a.id}','moduleCode',this.value)"></td>
+                        <td><input class="w-sm" type="number" min="0" value="${v('contactHours')}" oninput="allocEditInput('${a.id}','contactHours',this.value)"></td>
+                        <td><input type="date" value="${v('assignedAt')}" oninput="allocEditInput('${a.id}','assignedAt',this.value)"></td>
+                        <td><input type="date" value="${v('dueAt')}" oninput="allocEditInput('${a.id}','dueAt',this.value)"></td>
+                        <td>${asBadge(a.status)}<div style="margin-top:4px;">${duePill(dueState(a), dueText(a))}</div></td>
+                        <td style="white-space:nowrap;">
+                            <button class="btn btn-outline btn-mini" title="Save changes" onclick="allocSave('${a.id}')"><i class="fas fa-save"></i></button>
+                            ${a.status === 'submitted' ? `<button class="btn btn-outline btn-mini" title="Send for amendment" style="border-color:#f97316; color:#c2410c;" onclick="openAmendModalForAssignment('${a.id}')"><i class="fas fa-pen-fancy"></i></button>` : ''}
+                            ${a.courseId ? `<button class="btn btn-outline btn-mini" title="Open outline" onclick="openOutlineFor('${esc(a.lecturerUid)}','${esc(a.courseId)}','${esc(a.moduleId)}')"><i class="fas fa-eye"></i></button>` : ''}
+                            <button class="btn btn-danger btn-mini" title="Remove task" onclick="allocDelete('${a.id}')"><i class="fas fa-trash"></i></button>
+                        </td></tr>`;
+                    first = false;
+                });
+                drafts.forEach(d => {
+                    html += `<tr class="alloc-draft ${first ? 'grp-start' : ''}">${nameCell}
+                        <td><input class="w-lg" placeholder="Module name" value="${esc(d.moduleName)}" oninput="allocDraftInput('${p.uid}','${d.k}','moduleName',this.value)"></td>
+                        <td><input class="w-sm" placeholder="Code" value="${esc(d.moduleCode)}" oninput="allocDraftInput('${p.uid}','${d.k}','moduleCode',this.value)"></td>
+                        <td><input class="w-sm" type="number" min="0" placeholder="Hrs" value="${esc(d.contactHours)}" oninput="allocDraftInput('${p.uid}','${d.k}','contactHours',this.value)"></td>
+                        <td><input type="date" value="${esc(d.assignedAt)}" oninput="allocDraftInput('${p.uid}','${d.k}','assignedAt',this.value)"></td>
+                        <td><input type="date" value="${esc(d.dueAt)}" oninput="allocDraftInput('${p.uid}','${d.k}','dueAt',this.value)"></td>
+                        <td><span class="as-badge as-assigned">Not assigned yet</span></td>
+                        <td style="white-space:nowrap;"><button class="btn btn-green btn-mini" onclick="allocAssign('${p.uid}','${d.k}')"><i class="fas fa-check"></i> Assign</button>
+                            <button class="btn btn-outline btn-mini" title="Remove this row" onclick="allocRemoveDraft('${p.uid}','${d.k}')"><i class="fas fa-times"></i></button></td></tr>`;
+                    first = false;
+                });
+                html += `<tr><td></td><td colspan="7"><button class="btn btn-outline btn-mini" style="border-style:dashed;" onclick="allocAddRow('${p.uid}')"><i class="fas fa-plus"></i> Add module for ${esc(p.name || p.email)}</button></td></tr>`;
+            });
+            root.innerHTML = html + '</tbody></table>';
+        }
+
+        // ---------- AMENDMENT (Dean / Secretary / Admin) ----------
+        let amendCtx = null;
+        function openAmendModal(ctx) {
+            if (!can('amend')) return denied("Only the Dean, Secretary or Admin can send an outline for amendment.");
+            amendCtx = ctx;
+            const a = ctx.aid ? assignmentsMap[ctx.aid] : null;
+            openRfModal(`<h2 style="color:#c2410c; margin-bottom:6px;"><i class="fas fa-pen-fancy"></i> Send for amendment</h2>
+                <p style="color:#555;"><b>${esc(ctx.label || '')}</b><br>The outline will be unlocked for the lecturer, and they will see this note (and receive it by e-mail when the e-mail helper is active).</p>
+                <div class="ad-form">
+                    <label>Amendment note from curriculum review *</label><textarea id="am-note" rows="6" placeholder="Paste the requested changes here..."></textarea>
+                    <label>New finish-by date (optional)</label><input type="date" id="am-due" value="${esc(a && a.dueAt && a.dueAt >= localDay() ? a.dueAt : '')}">
+                </div>
+                <button class="btn btn-blue" style="margin-top:15px; background:#c2410c;" onclick="submitAmendment()"><i class="fas fa-paper-plane"></i> Send for amendment</button>`);
+        }
+        function openAmendModalForActive() {
+            const mod = activeModuleObj(); if (!mod) return;
+            openAmendModal({ aid: mod.meta && mod.meta.assignmentId, ownerUid: wsUid, courseId: activeCourseId, moduleId: activeModuleId, label: (mod.code || '') + ' - ' + (mod.name || '') });
+        }
+        function openAmendModalForAssignment(aid) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            openAmendModal({ aid: aid, ownerUid: a.lecturerUid, courseId: a.courseId, moduleId: a.moduleId, label: a.moduleCode + ' - ' + a.moduleName + ' (' + (a.lecturerName || a.lecturerEmail) + ')' });
+        }
+
+        function submitAmendment() {
+            const ctx = amendCtx; if (!ctx) return;
+            const note = document.getElementById('am-note').value.trim();
+            const newDue = document.getElementById('am-due').value;
+            if (!note) { alert("Please enter the amendment note."); return; }
+            const t = nowIso(), who = actor();
+            const applyMeta = (m) => {
+                m.locked = false; m.status = 'amend'; m.amendNote = note; m.amendRequestedAt = t; m.amendRequestedBy = who.email;
+                m.amendCount = (m.amendCount || 0) + 1;
+                (m.notes || (m.notes = [])).push({ by: who.email, name: who.name, role: who.role, at: t, text: '[Amendment] ' + note });
+                (m.history || (m.history = [])).push({ type: 'amend', by: who.email, name: who.name, role: who.role, at: t });
+                if (newDue && m.assignment) m.assignment.dueAt = newDue;
+                return m;
+            };
+            const jobs = [];
+            const inMemory = ctx.ownerUid === wsUid && ctx.courseId && dbState.courses[ctx.courseId] && dbState.courses[ctx.courseId].modules[ctx.moduleId];
+            if (inMemory) {
+                const mod = dbState.courses[ctx.courseId].modules[ctx.moduleId];
+                applyMeta(mod.meta || (mod.meta = {}));
+                dirtyCourses.add(ctx.courseId);
+                performSave(false, false);
+                syncStatusIndex(ctx.courseId, ctx.moduleId, true);
+            } else if (ctx.ownerUid && ctx.courseId && ctx.moduleId) {
+                const ref = db.collection('rasfahi_users').doc(ctx.ownerUid).collection('courses').doc(ctx.courseId);
+                jobs.push(ref.get().then(doc => {
+                    if (!doc.exists) return;
+                    const data = doc.data(); const mod = data.modules && data.modules[ctx.moduleId];
+                    if (!mod) return;
+                    const meta = applyMeta(mod.meta || {});
+                    return ref.update({ ['modules.' + ctx.moduleId + '.meta']: meta }).then(() =>
+                        db.collection('rasfahi_status').doc(statusKey(ctx.ownerUid, ctx.moduleId)).set({ status: 'amend', updatedAt: t }, { merge: true }).catch(() => {}));
+                }));
+            }
+            if (ctx.aid) {
+                const cur = assignmentsMap[ctx.aid] || {};
+                const upd = { status: 'amend', locked: false, amendNote: note, amendRequestedAt: t, amendRequestedBy: who.email,
+                              amendCount: (cur.amendCount || 0) + 1, amendHistory: (cur.amendHistory || []).concat([{ note: note, at: t, by: who.email, role: who.role }]), updatedAt: t };
+                if (newDue) { upd.dueAt = newDue; upd.reminders = { dayBefore: false, overdue: false }; }
+                jobs.push(db.collection('rasfahi_assignments').doc(ctx.aid).update(upd));
+            }
+            Promise.all(jobs).then(() => {
+                closeRfModal();
+                renderOutlineMetaBar();
+                showToast('✏️ Sent for amendment - the lecturer can edit the outline again.', true);
+            }).catch(e => alert("❌ Could not send for amendment: " + (e.code || e.message)));
+        }
+        const returnToLecturer = openAmendModalForActive;
+
+        // ---------- DASHBOARD (Dean / Admin) ----------
+        function scheduleDashboardRender() { clearTimeout(dashRenderTimer); dashRenderTimer = setTimeout(renderDashboard, 250); }
+
+        let chartJsPromise = null;
+        function ensureChartJs() {
+            if (window.Chart) return Promise.resolve();
+            if (chartJsPromise) return chartJsPromise;
+            const urls = ['https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js', 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js'];
+            chartJsPromise = new Promise((resolve, reject) => {
+                let i = 0;
+                const next = () => {
+                    if (i >= urls.length) { chartJsPromise = null; return reject(new Error('Chart library could not be loaded (no internet?)')); }
+                    const sc = document.createElement('script'); sc.src = urls[i++];
+                    sc.onload = () => resolve(); sc.onerror = () => { sc.remove(); next(); };
+                    document.head.appendChild(sc);
+                };
+                next();
+            });
+            return chartJsPromise;
+        }
+
+        function dashData() {
+            const tasks = Object.values(assignmentsMap);
+            const accs = (accountsCache || []).filter(a => !a.deleted);
+            const byUid = {};
+            tasks.forEach(a => { (byUid[a.lecturerUid] || (byUid[a.lecturerUid] = [])).push(a); });
+            const lecturers = accs.filter(a => normalizeRole(a.role) === 'lecturer' || byUid[a.uid]);
+            const personName = uid => { const p = accs.find(x => x.uid === uid); const t = (byUid[uid] || [])[0] || {}; return (p && (p.name || p.email)) || t.lecturerName || t.lecturerEmail || 'Unknown'; };
+            const allocated = Object.keys(byUid).map(uid => ({ uid, name: personName(uid), email: ((accs.find(x => x.uid === uid) || {}).email) || (byUid[uid][0] || {}).lecturerEmail || '', tasks: byUid[uid] }));
+            allocated.sort((x, y) => x.name.localeCompare(y.name));
+            const started = allocated.filter(p => p.tasks.some(a => a.status !== 'assigned'));
+            const notStarted = allocated.filter(p => p.tasks.every(a => a.status === 'assigned'));
+            const unallocated = lecturers.filter(a => !byUid[a.uid] && !a.disabled);
+            const count = st => tasks.filter(a => a.status === st).length;
+            const health = { done_ontime: 0, done_late: 0, on_track: 0, due_soon: 0, overdue: 0, no_due: 0 };
+            tasks.forEach(a => { health[dueState(a)]++; });
+            return { tasks, allocated, started, notStarted, unallocated, lecturers,
+                     counts: { assigned: count('assigned'), started: count('started'), amend: count('amend'), submitted: count('submitted') }, health,
+                     totalHours: tasks.reduce((x, a) => x + (parseFloat(a.contactHours) || 0), 0) };
+        }
+
+        function renderDashboard() {
+            const root = document.getElementById('dash-root');
+            if (!root || !can('dashboard')) return;
+            const D = dashData();
+            const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const pill = p => `<span class="person-pill">${esc(p.name || p.email)}</span>`;
+            const finishedPeople = D.allocated.filter(p => p.tasks.every(a => a.status === 'submitted'));
+            const alerts = D.tasks.filter(a => a.status !== 'submitted' && ['overdue', 'due_soon'].includes(dueState(a))).sort((x, y) => String(x.dueAt).localeCompare(String(y.dueAt)));
+            let html = `<div class="dash-hero">
+                    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+                        <div><h2><i class="fas fa-crown" style="color:var(--r-gold2);"></i> Module Outline Dashboard</h2><div class="gold-rule"></div>
+                        <p>Allocation, progress and deadlines of every module outline - updates live.</p></div>
+                        <div style="text-align:right; opacity:0.9;"><i class="fas fa-calendar-day"></i> ${today}</div>
+                    </div></div>
+
+                <div class="dash-card"><h3><i class="fas fa-stream"></i> Timeline</h3><div class="dash-sub">Every allocated outline from its assigned date to its deadline, with the lecturer's name. The gold line marks today.</div>
+                    ${ganttHtml(D.tasks.slice().sort((x, y) => String(x.lecturerName || '').localeCompare(String(y.lecturerName || '')) || String(x.dueAt).localeCompare(String(y.dueAt))), true)}</div>
+
+                <div class="kpi-grid">
+                    <div class="kpi blue"><i class="fas fa-chalkboard-teacher bg"></i><div class="kpi-val">${D.lecturers.length}</div><div class="kpi-lbl">Lecturers</div></div>
+                    <div class="kpi green"><i class="fas fa-user-check bg"></i><div class="kpi-val">${D.allocated.length}</div><div class="kpi-lbl">Allocated</div></div>
+                    <div class="kpi slate"><i class="fas fa-user-clock bg"></i><div class="kpi-val">${D.unallocated.length}</div><div class="kpi-lbl">Not allocated</div></div>
+                    <div class="kpi blue"><i class="fas fa-book bg"></i><div class="kpi-val">${D.tasks.length}</div><div class="kpi-lbl">Modules allocated</div></div>
+                    <div class="kpi green"><i class="fas fa-check-double bg"></i><div class="kpi-val">${D.counts.submitted}</div><div class="kpi-lbl">Finished</div></div>
+                    <div class="kpi blue"><i class="fas fa-pen bg"></i><div class="kpi-val">${D.counts.started}</div><div class="kpi-lbl">In progress</div></div>
+                    <div class="kpi gold"><i class="fas fa-pen-fancy bg"></i><div class="kpi-val">${D.counts.amend}</div><div class="kpi-lbl">In amendment</div></div>
+                    <div class="kpi red"><i class="fas fa-exclamation-triangle bg"></i><div class="kpi-val">${D.health.overdue}</div><div class="kpi-lbl">Overdue</div></div>
+                </div>
+
+                <div class="chart-grid">
+                    <div class="dash-card"><h3>Finished vs. not finished</h3><div class="dash-sub">Modules per lecturer</div><div class="chart-box"><canvas id="ch-per-lect"></canvas></div></div>
+                    <div class="dash-card"><h3>Most outlines finished</h3><div class="dash-sub">Top lecturers by finished modules</div><div class="chart-box"><canvas id="ch-top"></canvas></div></div>
+                    <div class="dash-card"><h3>Task status</h3><div class="dash-sub">All allocated modules</div><div class="chart-box"><canvas id="ch-status"></canvas></div></div>
+                    <div class="dash-card"><h3>Deadline health</h3><div class="dash-sub">On time, late, due soon and overdue</div><div class="chart-box"><canvas id="ch-health"></canvas></div></div>
+                    <div class="dash-card"><h3>Lecturer engagement</h3><div class="dash-sub">Started, not started and not allocated</div><div class="chart-box"><canvas id="ch-people"></canvas></div></div>
+                    <div class="dash-card"><h3><i class="fas fa-bell" style="color:#b45309;"></i> Deadline alerts</h3><div class="dash-sub">Overdue or due within 3 days</div>
+                        <div style="max-height:320px; overflow:auto;">${alerts.length ? alerts.map(a => `<div style="display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #eef2f7;"><div><b>${esc(a.lecturerName || a.lecturerEmail)}</b><br><span style="color:#64748b; font-size:0.85rem;">${esc(a.moduleCode)} - ${esc(a.moduleName)} · due ${fmtDay(a.dueAt)}</span></div><div>${duePill(dueState(a), dueText(a))}</div></div>`).join('') : '<p style="color:#94a3b8;">No outlines are overdue or due soon. 👏</p>'}</div></div>
+                </div>
+
+                <div class="dash-card" style="margin-top:24px;"><h3><i class="fas fa-users"></i> Allocated lecturers</h3><div class="dash-sub">Modules, assigned dates, deadlines and progress</div>
+                    <div style="overflow-x:auto;"><table class="royal-table"><thead><tr><th>Lecturer</th><th>Modules</th><th>Assigned</th><th>Finish by</th><th>No. of modules</th><th>Progress</th></tr></thead><tbody>
+                    ${D.allocated.length ? D.allocated.map(p => {
+                        const ts = p.tasks.slice().sort((x, y) => String(x.dueAt).localeCompare(String(y.dueAt)));
+                        const done = ts.filter(a => a.status === 'submitted').length;
+                        return `<tr><td><b>${esc(p.name)}</b><br><span style="color:#64748b; font-size:0.82rem;">${esc(p.email)}</span></td>
+                            <td>${ts.map(a => `<span class="module-chip ${a.status === 'submitted' ? 'done' : ''}" title="${esc(ASSIGN_LABELS[a.status] || '')}">${esc(a.moduleCode)} · ${esc(a.moduleName)}</span>`).join('')}</td>
+                            <td class="nowrap" style="font-size:0.82rem;">${ts.map(a => fmtDay(a.assignedAt)).join('<br>')}</td>
+                            <td class="nowrap" style="font-size:0.82rem;">${ts.map(a => fmtDay(a.dueAt) + ' ' + (a.status !== 'submitted' && dueState(a) === 'overdue' ? '⛔' : '')).join('<br>')}</td>
+                            <td style="text-align:center; font-weight:700; font-size:1.1rem; color:var(--r-navy);">${ts.length}</td>
+                            <td><div class="mini-bar"><span style="width:${Math.round(done / ts.length * 100)}%"></span></div><small>${done}/${ts.length} finished</small></td></tr>`;
+                    }).join('') : '<tr><td colspan="6" style="color:#94a3b8;">No outlines have been allocated yet. Use Task Allocation.</td></tr>'}
+                    </tbody></table></div></div>
+
+                <div class="people-grid">
+                    <div class="people-card green"><h4><i class="fas fa-running"></i> Started</h4><div class="pc-count">${D.started.length}</div>${D.started.map(pill).join('') || '<span style="opacity:0.8;">Nobody yet</span>'}</div>
+                    <div class="people-card blue"><h4><i class="fas fa-hourglass-start"></i> Not started</h4><div class="pc-count">${D.notStarted.length}</div>${D.notStarted.map(pill).join('') || '<span style="opacity:0.8;">Everyone has started</span>'}</div>
+                    <div class="people-card slate"><h4><i class="fas fa-user-slash"></i> Not allocated</h4><div class="pc-count">${D.unallocated.length}</div>${D.unallocated.map(pill).join('') || '<span style="opacity:0.8;">Every lecturer has a task</span>'}</div>
+                </div>
+                ${finishedPeople.length ? `<div class="dash-card"><h3><i class="fas fa-award" style="color:var(--r-gold);"></i> Finished all their outlines</h3><div>${finishedPeople.map(p => `<span class="module-chip done" style="font-size:0.88rem;">🏅 ${esc(p.name)}</span>`).join('')}</div></div>` : ''}`;
+            root.innerHTML = html;
+            const token = ++dashRenderToken;
+            ensureChartJs().then(() => { if (token === dashRenderToken) drawDashboardCharts(D); }).catch(err => {
+                document.querySelectorAll('#dash-root .chart-box').forEach(b => { b.innerHTML = '<div class="chart-note">Charts need an internet connection to load.</div>'; });
+            });
+        }
+
+        function drawDashboardCharts(D) {
+            const C = window.Chart; if (!C) return;
+            Object.values(dashCharts).forEach(ch => { try { ch.destroy(); } catch (e) {} });
+            dashCharts = {};
+            C.defaults.font.family = "'Segoe UI', system-ui, -apple-system, sans-serif";
+            C.defaults.color = '#334155';
+            const grad = (c1, c2, horizontal) => (ctx) => {
+                const { chart } = ctx; const area = chart.chartArea;
+                if (!area) return c1;
+                const g = horizontal ? chart.ctx.createLinearGradient(area.left, 0, area.right, 0) : chart.ctx.createLinearGradient(0, area.bottom, 0, area.top);
+                g.addColorStop(0, c2); g.addColorStop(1, c1); return g;
+            };
+            const centerText = {
+                id: 'rfCenter',
+                afterDraw(chart) {
+                    const o = chart.options.plugins.rfCenter; if (!o) return;
+                    const meta = chart.getDatasetMeta(0); if (!meta || !meta.data[0]) return;
+                    const { x, y } = meta.data[0];
+                    const c = chart.ctx; c.save(); c.textAlign = 'center'; c.textBaseline = 'middle';
+                    c.fillStyle = '#0b1f4d'; c.font = "700 28px 'Playfair Display', serif"; c.fillText(o.value, x, y - 8);
+                    c.fillStyle = '#64748b'; c.font = "12px 'Segoe UI', sans-serif"; c.fillText(o.label, x, y + 16); c.restore();
+                }
+            };
+            const barValues = {
+                id: 'rfValues',
+                afterDatasetsDraw(chart) {
+                    if (!chart.options.plugins.rfValues) return;
+                    const c = chart.ctx; c.save(); c.font = "600 11px 'Segoe UI', sans-serif"; c.fillStyle = '#0f172a';
+                    chart.data.datasets.forEach((ds, i) => {
+                        const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
+                        meta.data.forEach((bar, j) => {
+                            const v = ds.data[j]; if (!v) return;
+                            if (chart.options.indexAxis === 'y') { c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(v, bar.x + 6, bar.y); }
+                            else { c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillText(v, bar.x, bar.y - 4); }
+                        });
+                    });
+                    c.restore();
+                }
+            };
+            const legend = { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 16, font: { size: 12 } } };
+            const tooltip = { backgroundColor: '#0b1f4d', titleColor: '#f3d27a', bodyColor: '#fff', borderColor: '#c9a227', borderWidth: 1, padding: 12, cornerRadius: 10 };
+            const empty = (id, msg) => { const cv = document.getElementById(id); if (cv) cv.parentElement.innerHTML = `<div class="chart-note">${msg}</div>`; };
+            const shortName = n => { n = String(n || ''); return n.length > 18 ? n.slice(0, 17) + '…' : n; };
+
+            // 1. Finished vs not finished per lecturer (stacked)
+            if (D.allocated.length) {
+                const labels = D.allocated.map(p => shortName(p.name));
+                const cnt = st => D.allocated.map(p => p.tasks.filter(a => a.status === st).length);
+                dashCharts.per = new C(document.getElementById('ch-per-lect'), {
+                    type: 'bar',
+                    data: { labels, datasets: [
+                        { label: 'Finished', data: cnt('submitted'), backgroundColor: grad('#10b981', '#065f46', true), borderRadius: 8, borderSkipped: false },
+                        { label: 'In progress', data: cnt('started'), backgroundColor: grad('#3b6ee8', '#1e3a8a', true), borderRadius: 8, borderSkipped: false },
+                        { label: 'Amendment', data: cnt('amend'), backgroundColor: grad('#fbbf24', '#b45309', true), borderRadius: 8, borderSkipped: false },
+                        { label: 'Not started', data: cnt('assigned'), backgroundColor: grad('#cbd5e1', '#64748b', true), borderRadius: 8, borderSkipped: false }
+                    ] },
+                    options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend, tooltip },
+                               scales: { x: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef2f7' } }, y: { stacked: true, grid: { display: false } } } }
+                });
+            } else empty('ch-per-lect', 'No allocations yet');
+
+            // 2. Top finishers
+            const top = D.allocated.map(p => ({ name: p.name, n: p.tasks.filter(a => a.status === 'submitted').length })).filter(x => x.n > 0).sort((x, y) => y.n - x.n).slice(0, 8);
+            if (top.length) {
+                dashCharts.top = new C(document.getElementById('ch-top'), {
+                    type: 'bar', plugins: [barValues],
+                    data: { labels: top.map(x => shortName(x.name)), datasets: [{ label: 'Finished modules', data: top.map(x => x.n), backgroundColor: grad('#f3d27a', '#a16207', false), borderColor: '#c9a227', borderWidth: 1, borderRadius: 10, maxBarThickness: 46 }] },
+                    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip, rfValues: true }, layout: { padding: { top: 18 } },
+                               scales: { y: { beginAtZero: true, grace: '15%', ticks: { precision: 0 }, grid: { color: '#eef2f7' } }, x: { grid: { display: false } } } }
+                });
+            } else empty('ch-top', 'No finished outlines yet');
+
+            // 3. Task status doughnut
+            if (D.tasks.length) {
+                dashCharts.status = new C(document.getElementById('ch-status'), {
+                    type: 'doughnut', plugins: [centerText],
+                    data: { labels: ['Finished', 'In progress', 'Amendment', 'Not started'], datasets: [{ data: [D.counts.submitted, D.counts.started, D.counts.amend, D.counts.assigned], backgroundColor: ['#059669', '#1e3a8a', '#d97706', '#94a3b8'], borderColor: '#fff', borderWidth: 3, hoverOffset: 10 }] },
+                    options: { maintainAspectRatio: false, cutout: '66%', plugins: { legend, tooltip, rfCenter: { value: D.tasks.length, label: 'modules' } } }
+                });
+                // 4. Deadline health
+                const H = D.health;
+                dashCharts.health = new C(document.getElementById('ch-health'), {
+                    type: 'doughnut', plugins: [centerText],
+                    data: { labels: ['Finished on time', 'Finished late', 'On track', 'Due within 3 days', 'Overdue'], datasets: [{ data: [H.done_ontime, H.done_late, H.on_track, H.due_soon, H.overdue], backgroundColor: ['#065f46', '#c9a227', '#2f55c9', '#f59e0b', '#b91c1c'], borderColor: '#fff', borderWidth: 3, hoverOffset: 10 }] },
+                    options: { maintainAspectRatio: false, cutout: '60%', plugins: { legend, tooltip, rfCenter: { value: D.tasks.length ? Math.round((H.done_ontime + H.on_track) / D.tasks.length * 100) + '%' : '—', label: 'on time / on track' } } }
+                });
+            } else { empty('ch-status', 'No allocations yet'); empty('ch-health', 'No allocations yet'); }
+
+            // 5. Lecturer engagement pie
+            if (D.lecturers.length) {
+                dashCharts.people = new C(document.getElementById('ch-people'), {
+                    type: 'pie',
+                    data: { labels: ['Started', 'Not started', 'Not allocated'], datasets: [{ data: [D.started.length, D.notStarted.length, D.unallocated.length], backgroundColor: ['#059669', '#1e3a8a', '#94a3b8'], borderColor: '#fff', borderWidth: 3, hoverOffset: 10 }] },
+                    options: { maintainAspectRatio: false, plugins: { legend, tooltip } }
+                });
+            } else empty('ch-people', 'No lecturers yet');
         }
 
         // --- WORKSPACES: reviewers (Dean / Secretary / Admin) can open another user's archive ---
@@ -2633,13 +3480,14 @@ service cloud.firestore {
             }
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.hasAttribute('contenteditable')) {
                 if (!isOutlineField(e.target)) return;
+                if (isLockedForMe()) return;
                 userEditedSinceSave = true;
                 scheduleAutoSave();
             }
         });
 
         // Structural edits (adding/removing rows etc.) happen through buttons inside the outline steps.
-        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15']);
+        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15', 'step-16', 'step-17', 'step-18']);
         function isOutlineField(el) {
             if (el.id && (el.id.startsWith('hdr-') || el.id.startsWith('wm-'))) return false; // account branding, saved separately
             const sec = el.closest('.form-section');
@@ -2756,6 +3604,10 @@ service cloud.firestore {
             if(num === 10) renderArchive(); 
             if(num === 14) renderUserDirectory();
             if(num === 15) { renderAllOutlines(false, true); renderStatusDashboard(); }
+            if(num === 16) { if (!can('dashboard')) return denied("The dashboard is for the Dean and Admin."); loadAccounts(false).then(renderDashboard); renderDashboard(); }
+            if(num === 17) { if (!can('allocate')) return denied("Only the Dean or Admin can allocate tasks."); loadAccounts(true).then(() => renderAllocation(true)); renderAllocation(true); }
+            if(num === 18) renderMyTasks();
+            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18].includes(num));
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
 
@@ -2849,12 +3701,12 @@ service cloud.firestore {
                     schHtml: document.getElementById('tbody-sch').innerHTML,
                     assessHtml: document.getElementById('tbody-assess').innerHTML
                 };
-                dbState.courses[cId].modules[mId].name = document.getElementById('m-name-rtl').value || "Unnamed Module";
+                dbState.courses[cId].modules[mId].name = document.getElementById('m-name-rtl').value || document.getElementById('m-name-ltr').value || "Unnamed Module";
                 dbState.courses[cId].modules[mId].code = document.getElementById('m-code').value || "MOD";
             }
         }
 
-        function saveCurrentToDB() { if (activeCourseId && !isProgrammaticChange) extractDOMToState(activeCourseId, activeModuleId); }
+        function saveCurrentToDB() { if (activeCourseId && !isProgrammaticChange && !isLockedForMe()) extractDOMToState(activeCourseId, activeModuleId); }
 
         function loadStateFromMemory(cId, mId, triggerRender = true) {
             if(triggerRender) saveCurrentToDB(); 
