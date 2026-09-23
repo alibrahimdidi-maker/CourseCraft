@@ -1840,7 +1840,7 @@ service cloud.firestore {
                     </div>
                     <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; align-items:center;">
                         <input type="text" id="alloc-filter" class="ltr-input" placeholder="Filter by lecturer name or email..." oninput="renderAllocation(true)" style="max-width:340px;">
-                        <label style="display:flex; gap:6px; align-items:center; font-size:0.9rem;"><input type="checkbox" id="alloc-all-roles" style="width:auto;" onchange="renderAllocation(true)"> Include Deans &amp; Admins</label>
+                        <label style="display:flex; gap:6px; align-items:center; font-size:0.9rem;"><input type="checkbox" id="alloc-lect-only" style="width:auto;" onchange="renderAllocation(true)"> Show lecturers only</label>
                     </div>
                     <div id="alloc-root" style="overflow-x:auto;"><p style="color:#888;">Loading...</p></div>
                 </div>
@@ -2179,7 +2179,7 @@ service cloud.firestore {
                     const r = normalizeRole(a.role);
                     const opts = Object.keys(ROLE_LABELS).map(k => `<option value="${k}" ${k === r ? 'selected' : ''}>${ROLE_LABELS[k]}</option>`).join('');
                     html += `<tr>
-                        <td><b>${esc(a.name || '(no name)')}</b>${isMe ? ' <small>(you)</small>' : ''}<br><span style="color:#555;">${esc(a.email)}</span></td>
+                        <td><div style="display:flex; gap:6px; align-items:center;"><input type="text" id="un-${a.uid}" value="${esc(a.name || '')}" placeholder="Full name" style="padding:6px; min-width:170px;"><button class="btn btn-outline btn-mini" title="Save name" onclick="setUserName('${a.uid}')"><i class="fas fa-save"></i></button></div>${isMe ? '<small>(you)</small> ' : ''}<span style="color:#555;">${esc(a.email)}</span></td>
                         <td><select ${locked ? 'disabled' : ''} onchange="setUserRole('${a.uid}', this.value)">${opts}</select></td>
                         <td>${a.disabled ? '<span class="status-badge status-disabled">Disabled</span>' : '<span class="status-badge status-active">Active</span>'}</td>
                         <td style="font-size:0.8rem; color:#666;">${fmtDate(a.createdAt, false)}<br>${esc(a.createdBy || '')}</td>
@@ -2202,6 +2202,21 @@ service cloud.firestore {
         const renderLecturerDirectory = renderUserDirectory;
 
         function findAccount(uid) { return (accountsCache || []).find(a => a.uid === uid) || { uid: uid, email: '', name: '' }; }
+
+        function setUserName(uid) {
+            if (!can('manageUsers')) return denied("Admin only.");
+            const el = document.getElementById('un-' + uid); if (!el) return;
+            const name = el.value.trim();
+            if (!name) { alert("Please enter a name."); return; }
+            const a = findAccount(uid);
+            db.collection('rasfahi_accounts').doc(uid).set({ name: name, email: a.email || '', updatedAt: nowIso(), updatedBy: auth.currentUser.email }, { merge: true }).then(() => {
+                if (auth.currentUser && uid === auth.currentUser.uid) currentAccount = Object.assign({}, currentAccount || {}, { name: name });
+                // keep the name on this person's tasks up to date
+                Object.values(assignmentsMap).filter(t => t.lecturerUid === uid && t.lecturerName !== name).forEach(t => db.collection('rasfahi_assignments').doc(t.id).update({ lecturerName: name, updatedAt: nowIso() }).catch(() => {}));
+                showToast('💾 Name saved: <b>' + esc(name) + '</b>', true);
+                renderUserDirectory();
+            }).catch(err => alert("❌ Could not save the name: " + (err.code || err.message)));
+        }
 
         function setUserRole(uid, role) {
             if (!can('manageUsers')) return denied("Admin only.");
@@ -2381,7 +2396,7 @@ service cloud.firestore {
             const course = dbState.courses[activeCourseId];
             const mod = course && activeModuleId && course.modules[activeModuleId];
             if (!mod) return;
-            if (!canCompleteHere()) return denied("Only the outline's own author can submit it as finished.");
+            if (!canCompleteHere()) return denied(isOwnWorkspace() ? "Your role cannot submit outlines." : "You are viewing another user's archive. Press \"Return to my own archive\" first - All Done is pressed by the outline's own author.");
             saveCurrentToDB();
             const sub = (mod.meta && mod.meta.submission) || {};
             const empty = countEmptyOutlineFields();
@@ -2633,6 +2648,8 @@ service cloud.firestore {
                 </div>
                 <div class="meta-actions">
                     ${canCompleteHere() && st !== 'submitted' ? `<button class="btn btn-green btn-mini" onclick="openAllDoneForm()"><i class="fas fa-flag-checkered"></i> All Done</button>` : ''}
+                    ${canCompleteHere() && st === 'submitted' && can('editAll') ? `<button class="btn btn-green btn-mini" onclick="openAllDoneForm()"><i class="fas fa-redo"></i> All Done again</button>` : ''}
+                    ${!isOwnWorkspace() ? `<span style="font-size:0.78rem; color:#64748b;" title="All Done is pressed by the person the outline belongs to, in their own archive."><i class="fas fa-info-circle"></i> Viewing another user's outline</span>` : ''}
                     ${can('amend') && !isOwnWorkspace() && st === 'submitted' ? `<button class="btn btn-outline btn-mini" style="border-color:#f97316; color:#c2410c;" onclick="openAmendModalForActive()"><i class="fas fa-pen-fancy"></i> Send for amendment</button>` : ''}
                     <button class="btn btn-outline btn-mini" onclick="showModuleHistory()"><i class="fas fa-history"></i> Edit history</button>
                     ${(notesCount || can('addNotes')) ? `<button class="btn btn-outline btn-mini" onclick="showModuleNotes()"><i class="fas fa-comment-dots"></i> Notes${notesCount ? ' (' + notesCount + ')' : ''}</button>` : ''}
@@ -2875,6 +2892,13 @@ service cloud.firestore {
             if (!isOwnWorkspace()) switchWorkspace(auth.currentUser.uid).then(() => setTimeout(run, 800)); else run();
         }
 
+        function allDoneForAssignment(aid) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            if (!(a.courseId && dbState.courses[a.courseId] && dbState.courses[a.courseId].modules[a.moduleId])) return openAssignmentOutline(aid);
+            loadStateFromMemory(a.courseId, a.moduleId, true);
+            openAllDoneForm();
+        }
+
         function taskCardHtml(a) {
             const ds = dueState(a);
             const total = Math.max(1, (Date.parse(a.dueAt + 'T00:00:00') - Date.parse((a.assignedAt || a.dueAt) + 'T00:00:00')) / 86400000);
@@ -2894,6 +2918,7 @@ service cloud.firestore {
                     ${a.status === 'assigned' && !linked ? `<button class="btn btn-green btn-mini" onclick="startAssignmentTask('${esc(a.id)}')"><i class="fas fa-play"></i> Start working</button>` : ''}
                     ${linked || a.courseId ? `<button class="btn btn-blue btn-mini" onclick="openAssignmentOutline('${esc(a.id)}')"><i class="fas fa-folder-open"></i> ${a.status === 'submitted' ? 'View outline' : 'Open outline'}</button>` : ''}
                     ${a.status !== 'assigned' && !linked && !a.courseId ? `<button class="btn btn-green btn-mini" onclick="startAssignmentTask('${esc(a.id)}')"><i class="fas fa-play"></i> Start working</button>` : ''}
+                    ${linked && a.status !== 'submitted' ? `<button class="btn btn-green btn-mini" onclick="allDoneForAssignment('${esc(a.id)}')"><i class="fas fa-flag-checkered"></i> All Done</button>` : ''}
                 </div></div>`;
         }
 
@@ -2953,7 +2978,7 @@ service cloud.firestore {
 
         // ---------- ALLOCATION (Dean / Admin) ----------
         function allocPeople() {
-            const includeAll = document.getElementById('alloc-all-roles') && document.getElementById('alloc-all-roles').checked;
+            const includeAll = !(document.getElementById('alloc-lect-only') && document.getElementById('alloc-lect-only').checked);
             const withTasks = new Set(Object.values(assignmentsMap).map(a => a.lecturerUid));
             return (accountsCache || []).filter(a => !a.deleted && ((includeAll ? normalizeRole(a.role) !== 'secretary' : normalizeRole(a.role) === 'lecturer') || withTasks.has(a.uid)))
                 .sort((x, y) => String(x.name || x.email).localeCompare(String(y.name || y.email)));
@@ -3167,7 +3192,7 @@ service cloud.firestore {
             const accs = (accountsCache || []).filter(a => !a.deleted);
             const byUid = {};
             tasks.forEach(a => { (byUid[a.lecturerUid] || (byUid[a.lecturerUid] = [])).push(a); });
-            const lecturers = accs.filter(a => normalizeRole(a.role) === 'lecturer' || byUid[a.uid]);
+            const lecturers = accs.filter(a => ['lecturer', 'dean', 'admin'].includes(normalizeRole(a.role)) || byUid[a.uid]);
             const personName = uid => { const p = accs.find(x => x.uid === uid); const t = (byUid[uid] || [])[0] || {}; return (p && (p.name || p.email)) || t.lecturerName || t.lecturerEmail || 'Unknown'; };
             const allocated = Object.keys(byUid).map(uid => ({ uid, name: personName(uid), email: ((accs.find(x => x.uid === uid) || {}).email) || (byUid[uid][0] || {}).lecturerEmail || '', tasks: byUid[uid] }));
             allocated.sort((x, y) => x.name.localeCompare(y.name));
@@ -3201,7 +3226,7 @@ service cloud.firestore {
                     ${ganttHtml(D.tasks.slice().sort((x, y) => String(x.lecturerName || '').localeCompare(String(y.lecturerName || '')) || String(x.dueAt).localeCompare(String(y.dueAt))), true)}</div>
 
                 <div class="kpi-grid">
-                    <div class="kpi blue"><i class="fas fa-chalkboard-teacher bg"></i><div class="kpi-val">${D.lecturers.length}</div><div class="kpi-lbl">Lecturers</div></div>
+                    <div class="kpi blue"><i class="fas fa-chalkboard-teacher bg"></i><div class="kpi-val">${D.lecturers.length}</div><div class="kpi-lbl">Outline authors</div></div>
                     <div class="kpi green"><i class="fas fa-user-check bg"></i><div class="kpi-val">${D.allocated.length}</div><div class="kpi-lbl">Allocated</div></div>
                     <div class="kpi slate"><i class="fas fa-user-clock bg"></i><div class="kpi-val">${D.unallocated.length}</div><div class="kpi-lbl">Not allocated</div></div>
                     <div class="kpi blue"><i class="fas fa-book bg"></i><div class="kpi-val">${D.tasks.length}</div><div class="kpi-lbl">Modules allocated</div></div>
