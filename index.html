@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RASFAHI - MNQF Program Builder</title>
-    
+    <link rel="icon" type="image/jpeg" href="images/logo-icon-only.jpg">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
 
@@ -12,18 +13,68 @@
         /* ==========================================
            1. FONTS & TYPOGRAPHY
            ========================================== */
-        /* Dhivehi (Thaana) typography: prefer a locally installed Faruma-family font if the
-           user's system has one (common on Maldivian government machines), then fall back to
-           Noto Sans Thaana — a real, freely-licensed Thaana font embedded from Google Fonts so
-           Dhivehi text always renders correctly even on a machine with no Thaana font installed. */
+        /* All fonts are bundled locally in /fonts (no Google Fonts / internet dependency), so
+           Dhivehi (Thaana), Arabic and the heading typeface always render correctly even fully
+           offline. A locally-installed Faruma-family font (common on Maldivian government
+           machines) is still preferred first if present; Noto Sans Thaana (bundled) is the
+           guaranteed fallback. */
         @font-face {
             font-family: 'Faruma';
-            src: local('Faruma'), local('MV Faruma'), local('A_Faruma'), local('Faruma Regular');
+            src: local('Faruma'), local('MV Faruma'), local('A_Faruma'), local('Faruma Regular'),
+                 url('fonts/NotoSansThaana-Regular.woff2') format('woff2');
             font-weight: normal;
             font-style: normal;
             font-display: swap;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Thaana:wght@400;500;700&family=Playfair+Display:wght@600;700&family=Segoe+UI:wght@400;600;700&display=swap');
+        @font-face {
+            font-family: 'Noto Sans Thaana';
+            src: url('fonts/NotoSansThaana-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Noto Sans Thaana';
+            src: url('fonts/NotoSansThaana-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Noto Sans Thaana';
+            src: url('fonts/NotoSansThaana-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Amiri';
+            src: url('fonts/Amiri-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Amiri';
+            src: url('fonts/Amiri-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Playfair Display';
+            src: url('fonts/PlayfairDisplay-SemiBold.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Playfair Display';
+            src: url('fonts/PlayfairDisplay-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
 
         /* ROYAL THEME COLORS */
         :root {
@@ -838,16 +889,20 @@
         
         /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 900px) {
-            #app-container { flex-direction: column; }
-            .sidebar { position: fixed; top: 0; left: -360px; width: 360px; height: 100vh; z-index: 2000; transition: left 0.4s ease; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+            html, body { max-width: 100vw; overflow-x: hidden; }
+            #app-container { flex-direction: column; max-width: 100vw; }
+            /* min-width:360px (the desktop rule) is wider than many phone screens (320-375px),
+               which made the sidebar physically stick out past the right edge when opened. Cap it
+               to the viewport instead. */
+            .sidebar { position: fixed; top: 0; left: -100vw; width: min(360px, 85vw); min-width: 0; max-width: 85vw; height: 100vh; z-index: 2000; transition: left 0.4s ease; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
             .sidebar.mobile-open { left: 0; }
-            .main-content { width: 100%; height: 100vh; overflow-x: hidden; }
-            .top-bar { padding: 15px 20px; flex-wrap: wrap; gap: 10px;}
-            .top-title { font-size: 1.1rem; }
+            .main-content { width: 100%; max-width: 100vw; height: 100vh; overflow-x: hidden; }
+            .top-bar { padding: 15px 20px; flex-wrap: wrap; gap: 10px; max-width: 100%; }
+            .top-title { font-size: 1.1rem; min-width: 0; overflow: hidden; }
             .mobile-toggle-btn { display: block; }
-            .top-buttons-group { width: 100%; justify-content: space-between;}
-            .content-area { padding: 15px; }
-            .form-section { padding: 20px; }
+            .top-buttons-group { width: 100%; justify-content: space-between; flex-wrap: wrap;}
+            .content-area { padding: 15px; max-width: 100vw; overflow-x: hidden; }
+            .form-section { padding: 20px; max-width: 100%; }
             .form-grid { grid-template-columns: 1fr; gap: 20px; }
             .export-btns { flex-direction: column; }
             .toggle-btn { display: none !important; }
@@ -855,6 +910,12 @@
             .sidebar-header h2, .sidebar-header p { display: block; }
             .nav-links li span { display: inline-block; }
             .sync-badge span { display: inline-block; }
+            .login-card { padding: 30px 22px; width: 92%; }
+            .login-card h2 { font-size: 2.2rem; }
+            img, table { max-width: 100%; }
+            #connection-banner { font-size: 0.85rem; padding: 10px; }
+            #preview-modal > div { margin: 8px auto; height: calc(100vh - 16px); border-radius: 8px; }
+            #preview-modal h2 { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -862,6 +923,7 @@
 
     <div id="login-screen">
         <div class="login-card">
+            <img src="images/logo-with-name.png" alt="Islamic University of Maldives" style="max-width:100%; height:auto; max-height:110px; margin-bottom:15px;">
             <h2>RASFAHI</h2>
             <h4>MNQF Program Builder</h4>
             
