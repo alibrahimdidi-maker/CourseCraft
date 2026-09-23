@@ -889,6 +889,20 @@
         #rf-modal .rf-modal-box { background:#fff; border-radius:12px; max-width:760px; width:100%; max-height:85vh; overflow:auto; padding:25px; box-shadow:0 30px 90px rgba(0,0,0,0.5); }
         #rf-modal table { width:100%; border-collapse:collapse; font-size:0.88rem; }
         #rf-modal th, #rf-modal td { border-bottom:1px solid var(--border); padding:8px; text-align:left; vertical-align:top; }
+        .ws-badge { display:inline-block; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:12px; white-space:nowrap; }
+        .ws-not_started { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; }
+        .ws-in_progress { background:#fef3c7; color:#92400e; border:1px solid #f59e0b; }
+        .ws-submitted { background:#dcfce7; color:#166534; border:1px solid #22c55e; }
+        .status-chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px; }
+        .status-chip { cursor:pointer; border-radius:10px; padding:12px 18px; border:2px solid var(--border); background:#fff; min-width:150px; }
+        .status-chip b { display:block; font-size:1.6rem; }
+        .status-chip.active { border-color:var(--royal-blue); box-shadow:0 0 0 3px rgba(30,58,138,0.15); }
+        #rf-toast-wrap { position:fixed; right:20px; bottom:20px; z-index:100002; display:flex; flex-direction:column; gap:10px; max-width:360px; }
+        .rf-toast { background:#0f172a; color:#fff; padding:14px 16px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.35); font-size:0.9rem; border-left:5px solid #22c55e; }
+        .rf-toast.progress { border-left-color:#f59e0b; }
+        #ao-badge { background:#22c55e; color:#fff; border-radius:10px; font-size:0.7rem; padding:1px 7px; margin-left:6px; display:none; }
+        .ad-form label { display:block; font-weight:600; margin:12px 0 5px; }
+        .ad-form input, .ad-form textarea { width:100%; }
         .note-item { background:#fffbeb; border-left:4px solid #f59e0b; padding:10px 12px; border-radius:6px; margin-bottom:10px; }
         .active-badge { background: var(--royal-blue); color: var(--royal-white); font-size: 0.8rem; padding: 4px 10px; border-radius: 12px; margin-left: 10px; font-weight: bold; letter-spacing: 0.5px;}
 
@@ -991,7 +1005,7 @@
                 <li onclick="switchStep(9, this)"><i class="fas fa-download"></i> <span>Review & Export</span></li>
                 <li onclick="switchStep(10, this)" style="background: rgba(10, 92, 39, 0.4); border-color: var(--royal-green-light);"><i class="fas fa-archive"></i> <span>އަރްޝީފް (Archive Bank)</span></li>
                 <li id="nav-manage-lecturers" onclick="switchStep(14, this)" style="display:none; background: rgba(134, 25, 143, 0.4); border-color: #f97316;"><i class="fas fa-user-shield"></i> <span>Manage Users (Admin)</span></li>
-                <li id="nav-all-outlines" onclick="switchStep(15, this)" style="display:none; background: rgba(180, 83, 9, 0.35); border-color: #f59e0b;"><i class="fas fa-clipboard-check"></i> <span>All Outlines (Review)</span></li>
+                <li id="nav-all-outlines" onclick="switchStep(15, this)" style="display:none; background: rgba(180, 83, 9, 0.35); border-color: #f59e0b;"><i class="fas fa-clipboard-check"></i> <span>All Outlines (Review)</span><span id="ao-badge"></span></li>
             </ul>
             
             <div class="sync-badge" id="sync-status">
@@ -1630,6 +1644,14 @@ service cloud.firestore {
       }
     }
 
+    match /rasfahi_status/{id} {
+      allow read:   if active() &amp;&amp; (reviewer() || resource.data.ownerUid == request.auth.uid);
+      allow create: if active() &amp;&amp; (request.resource.data.ownerUid == request.auth.uid || reviewer());
+      allow update: if active() &amp;&amp; (resource.data.ownerUid == request.auth.uid || reviewer())
+                    &amp;&amp; request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if isAdmin();
+    }
+
     match /lecturer_directory/{id} {
       allow read:  if signedIn();
       allow write: if isAdmin();
@@ -1642,8 +1664,19 @@ service cloud.firestore {
                 </div>
 
                 <div id="step-15" class="form-section">
-                    <h2 class="section-header"><i class="fas fa-clipboard-check"></i> All Outlines (Review &amp; Correction)</h2>
-                    <p style="margin-bottom: 20px; color:#555; font-size:1.05rem;">Every user's outlines, with when they were created, last edited and completed. Open any module to correct it - your changes are saved straight into that person's archive and recorded in its edit history.</p>
+                    <h2 class="section-header"><i class="fas fa-clipboard-check"></i> All Outlines (Progress, Review &amp; Correction)</h2>
+
+                    <div style="background:#fff; border:2px solid var(--royal-blue); border-radius:10px; padding:20px; margin-bottom:30px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                            <h3 style="color:var(--royal-blue); margin:0;"><i class="fas fa-tasks"></i> Outline Progress (live)</h3>
+                            <button id="btn-rebuild-status" class="btn btn-outline btn-mini" onclick="rebuildStatusIndex()"><i class="fas fa-database"></i> Scan all archives</button>
+                        </div>
+                        <p style="font-size:0.88rem; color:#666; margin-bottom:15px;">Updates by itself: an outline shows <b>Work in progress</b> as soon as its lecturer starts working on it, and <b>Lecturer work finished</b> once they press <b>All Done</b> and submit their details.</p>
+                        <div id="status-dashboard"><p style="color:#888;">Loading...</p></div>
+                    </div>
+
+                    <h3 style="color:var(--royal-blue); margin-bottom:10px;"><i class="fas fa-users"></i> Browse by user</h3>
+                    <p style="margin-bottom: 20px; color:#555; font-size:1rem;">Open any module to correct it - your changes are saved straight into that person's archive and recorded in its edit history.</p>
                     <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
                         <input type="text" id="ao-filter" class="ltr-input" placeholder="Filter by name or email..." oninput="renderAllOutlines(true)" style="max-width:350px;">
                         <button class="btn btn-outline btn-mini" onclick="renderAllOutlines(false, true)"><i class="fas fa-sync"></i> Refresh</button>
@@ -1678,6 +1711,7 @@ service cloud.firestore {
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
 
+    <div id="rf-toast-wrap"></div>
     <div id="rf-modal" onclick="if(event.target===this) closeRfModal()"><div class="rf-modal-box"><div id="rf-modal-body"></div><div style="text-align:right; margin-top:20px;"><button class="btn btn-outline" onclick="closeRfModal()">Close</button></div></div></div>
 
     <script>
@@ -1738,7 +1772,8 @@ service cloud.firestore {
         function isOwnWorkspace() { return !!auth.currentUser && wsUid === auth.currentUser.uid; }
         function canCreateHere() { return can('createOutline') && isOwnWorkspace(); }
         function canDeleteOutlines() { return can('deleteOutline'); }
-        function canCompleteHere() { return can('completeAny') || (isOwnWorkspace() && can('createOutline')); }
+        function canCompleteHere() { return isOwnWorkspace() && can('createOutline'); }   // "All Done" = the outline's own author
+        function canReturnOutline() { return can('completeAny') && !isOwnWorkspace(); }       // Dean / Admin can send it back
         function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
         function nowIso() { return new Date().toISOString(); }
         function fmtDate(iso, withTime = true) {
@@ -1814,6 +1849,8 @@ service cloud.firestore {
             show('btn-create-course', canCreateHere(), 'inline-flex');
             show('btn-import-backup', canCreateHere(), 'inline-flex');
             show('btn-hard-reset', can('deleteOutline') && isOwnWorkspace(), 'block');
+            show('btn-rebuild-status', can('viewAll'), 'inline-flex');
+            if (can('viewAll')) startStatusWatch(); else stopStatusWatch();
             const u = auth.currentUser;
             const dbgEl = document.getElementById('account-debug-info');
             if (dbgEl && u) dbgEl.innerHTML = esc(u.email || 'no-email') + '<br>' + roleBadge(currentRole);
@@ -1824,6 +1861,7 @@ service cloud.firestore {
 
         auth.onAuthStateChanged(user => {
             if (accountUnsub) { accountUnsub(); accountUnsub = null; }
+            stopStatusWatch();
             if (user) {
                 userDocRef = db.collection("rasfahi_users").doc(user.uid);
                 wsUid = user.uid; wsDocRef = userDocRef; wsOwnerInfo = null;
@@ -2043,6 +2081,9 @@ service cloud.firestore {
             const accRef = db.collection('rasfahi_accounts').doc(uid);
             accRef.set({ deleted: true, disabled: true, deletedAt: nowIso(), deletedBy: auth.currentUser.email }, { merge: true }).then(() => {
                 db.collection('lecturer_directory').doc(uid).delete().catch(() => {});
+                db.collection('rasfahi_status').where('ownerUid', '==', uid).get().then(snap => {
+                    const b = db.batch(); snap.forEach(d => b.delete(d.ref)); return b.commit();
+                }).catch(() => {});
                 let p = Promise.resolve();
                 if (wipeOutlines) {
                     p = db.collection('rasfahi_users').doc(uid).collection('courses').get().then(snap => {
@@ -2063,7 +2104,7 @@ service cloud.firestore {
         function newMeta() {
             const a = actor(), t = nowIso();
             return { createdAt: t, createdBy: a.email, createdByName: a.name, createdRole: a.role,
-                     lastEditedAt: t, lastEditedBy: a.email, lastEditedRole: a.role,
+                     lastEditedAt: t, lastEditedBy: a.email, lastEditedRole: a.role, status: 'not_started',
                      history: [{ type: 'created', by: a.email, name: a.name, role: a.role, at: t }] };
         }
 
@@ -2084,25 +2125,246 @@ service cloud.firestore {
             const course = dbState.courses[cId]; if (!course) return;
             stampEdit(course.meta || (course.meta = {}));
             const mod = mId && course.modules && course.modules[mId];
-            if (mod) stampEdit(mod.meta || (mod.meta = {}));
+            if (mod) {
+                const m = mod.meta || (mod.meta = {});
+                stampEdit(m);
+                // Only the outline's own author moves its work status.
+                if (isOwnWorkspace()) {
+                    const a = actor(), t = nowIso(), st = getWorkStatus(m);
+                    if (st === 'not_started') {
+                        m.status = 'in_progress'; m.startedAt = t;
+                        (m.history || (m.history = [])).push({ type: 'started', by: a.email, name: a.name, role: a.role, at: t });
+                    } else if (st === 'submitted') {
+                        m.status = 'in_progress'; m.reopenedAt = t;
+                        (m.history || (m.history = [])).push({ type: 'reopened', by: a.email, name: a.name, role: a.role, at: t });
+                    } else if (!m.status) {
+                        m.status = 'in_progress'; if (!m.startedAt) m.startedAt = t;
+                    }
+                }
+                syncStatusIndex(cId, mId);
+            }
             renderOutlineMetaBar();
         }
 
-        function markModuleComplete() {
+        // --- WORK STATUS: not started -> work in progress -> lecturer work finished ---
+        const WORK_STATUS_LABELS = { not_started: '⚪ Not started', in_progress: '⏳ Work in progress', submitted: '✅ Lecturer work finished' };
+        function getWorkStatus(m) {
+            m = m || {};
+            if (m.status && WORK_STATUS_LABELS[m.status]) return m.status;
+            if (m.completedAt) return 'submitted';                                  // outlines marked complete before this update
+            return (m.history || []).some(h => h.type === 'edit') ? 'in_progress' : 'not_started';
+        }
+        function workStatusBadge(st) { st = WORK_STATUS_LABELS[st] ? st : 'not_started'; return `<span class="ws-badge ws-${st}">${WORK_STATUS_LABELS[st]}</span>`; }
+
+        // A small, separate "progress list" (one tiny document per module) lets the Admin see every
+        // outline's status live, without downloading everyone's full archives.
+        const lastIndexWrite = {};
+        const indexedThisSession = new Set();
+        function statusKey(uid, mId) { return uid + '__' + mId; }
+        function workspaceOwner() {
+            if (isOwnWorkspace()) { const a = actor(); return { uid: wsUid, email: a.email, name: a.name }; }
+            const o = wsOwnerInfo || {}; return { uid: wsUid, email: o.email || '', name: o.name || '' };
+        }
+        function buildStatusDoc(owner, cId, course, mId, mod) {
+            const m = mod.meta || {}; const sub = m.submission || {};
+            return {
+                ownerUid: owner.uid, ownerEmail: owner.email || sub.email || '', ownerName: sub.name || owner.name || '',
+                courseId: cId, courseName: course.name || '', moduleId: mId, moduleCode: mod.code || '', moduleName: mod.name || '',
+                status: getWorkStatus(m), createdAt: m.createdAt || null, startedAt: m.startedAt || null,
+                lastEditedAt: m.lastEditedAt || null, lastEditedBy: m.lastEditedBy || '',
+                submittedAt: m.submittedAt || m.completedAt || null, submittedName: sub.name || '', submittedEmail: sub.email || '',
+                submittedPhone: sub.phone || '', submittedRemarks: sub.remarks || '', updatedAt: nowIso()
+            };
+        }
+        function syncStatusIndex(cId, mId, force) {
+            if (!auth.currentUser || !wsUid || wsUid === 'guest') return;
+            const course = dbState.courses[cId]; const mod = course && course.modules && course.modules[mId];
+            if (!mod) return;
+            const key = statusKey(wsUid, mId);
+            const st = getWorkStatus(mod.meta), prev = lastIndexWrite[key], now = Date.now();
+            if (!force && prev && prev.status === st && prev.code === mod.code && prev.name === mod.name && now - prev.t < 5 * 60 * 1000) return;
+            lastIndexWrite[key] = { status: st, code: mod.code, name: mod.name, t: now };
+            indexedThisSession.add(key);
+            db.collection('rasfahi_status').doc(key).set(buildStatusDoc(workspaceOwner(), cId, course, mId, mod), { merge: true })
+                .catch(err => console.warn('[RASFAHI] progress list update failed', err && err.code));
+        }
+        function deleteStatusDocs(uid, mIds) {
+            mIds.forEach(mId => db.collection('rasfahi_status').doc(statusKey(uid, mId)).delete().catch(() => {}));
+        }
+
+        function countEmptyOutlineFields() {
+            let empty = 0;
+            document.querySelectorAll('.prog-data, .mod-data').forEach(el => {
+                const v = el.hasAttribute('contenteditable') ? el.innerText : el.value;
+                if (el.type !== 'checkbox' && (!v || !String(v).trim())) empty++;
+            });
+            return empty;
+        }
+
+        function openAllDoneForm() {
             const course = dbState.courses[activeCourseId];
             const mod = course && activeModuleId && course.modules[activeModuleId];
             if (!mod) return;
-            if (!canCompleteHere()) return denied("Your role cannot mark this outline as complete.");
-            const m = mod.meta || (mod.meta = {});
-            const again = !!m.completedAt;
-            if (!confirm(again ? "Update the completion date of this module outline to now?" : "Mark this whole module outline as COMPLETE?\nToday's date and time will be recorded automatically.")) return;
+            if (!canCompleteHere()) return denied("Only the outline's own author can submit it as finished.");
+            saveCurrentToDB();
+            const sub = (mod.meta && mod.meta.submission) || {};
+            const empty = countEmptyOutlineFields();
+            openRfModal(`<h2 style="color:var(--royal-green); margin-bottom:5px;"><i class="fas fa-flag-checkered"></i> All Done - submit finished outline</h2>
+                <p style="color:#555;"><b>${esc(mod.code)} - ${esc(mod.name)}</b><br>Once submitted, the Admin will see this outline as <b>Lecturer work finished</b>. Today's date and time are recorded automatically.</p>
+                ${empty ? `<p style="background:#fef3c7; color:#92400e; padding:10px; border-radius:6px; margin-top:10px;"><i class="fas fa-exclamation-triangle"></i> ${empty} field(s) in this course/module are still empty. Please check before submitting.</p>` : ''}
+                <div class="ad-form">
+                    <label>Lecturer full name *</label><input type="text" id="ad-name" class="ltr-input" value="${esc(sub.name || (currentAccount && currentAccount.name) || '')}">
+                    <label>Email address *</label><input type="text" id="ad-email" class="ltr-input" value="${esc(sub.email || (auth.currentUser && auth.currentUser.email) || '')}">
+                    <label>Phone number</label><input type="text" id="ad-phone" class="ltr-input" value="${esc(sub.phone || '')}">
+                    <label>Remarks for the Admin (optional)</label><textarea id="ad-remarks" rows="3">${esc(sub.remarks || '')}</textarea>
+                    <label style="display:flex; gap:8px; align-items:center; font-weight:normal;"><input type="checkbox" id="ad-confirm" style="width:auto;"> I confirm that the whole module outline is finished.</label>
+                </div>
+                <button class="btn btn-green" style="margin-top:15px;" onclick="submitAllDone()"><i class="fas fa-check-double"></i> Submit - All Done</button>`);
+        }
+        const markModuleComplete = openAllDoneForm;
+
+        function submitAllDone() {
+            const course = dbState.courses[activeCourseId];
+            const mod = course && activeModuleId && course.modules[activeModuleId];
+            if (!mod || !canCompleteHere()) return;
+            const name = document.getElementById('ad-name').value.trim();
+            const email = document.getElementById('ad-email').value.trim();
+            const phone = document.getElementById('ad-phone').value.trim();
+            const remarks = document.getElementById('ad-remarks').value.trim();
+            if (!name) { alert("Please enter your full name."); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert("Please enter a valid email address."); return; }
+            if (!document.getElementById('ad-confirm').checked) { alert("Please tick the confirmation box."); return; }
             const a = actor(), t = nowIso();
-            m.completedAt = t; m.completedBy = a.email; m.completedRole = a.role;
+            const m = mod.meta || (mod.meta = {});
+            m.status = 'submitted'; m.submittedAt = t; m.completedAt = t; m.completedBy = a.email; m.completedRole = a.role;
+            if (!m.startedAt) m.startedAt = m.createdAt || t;
             if (!m.firstCompletedAt) m.firstCompletedAt = t;
-            (m.history || (m.history = [])).push({ type: 'completed', by: a.email, name: a.name, role: a.role, at: t });
+            m.submission = { name: name, email: email, phone: phone, remarks: remarks, uid: auth.currentUser.uid, at: t };
+            (m.history || (m.history = [])).push({ type: 'submitted', by: a.email, name: name, role: a.role, at: t });
+            closeRfModal();
+            performSave(false, false);
+            syncStatusIndex(activeCourseId, activeModuleId, true);
             renderOutlineMetaBar();
             if (document.getElementById('step-10').classList.contains('active')) renderArchive();
+            alert("✅ Submitted! The Admin now sees this outline as \"Lecturer work finished\".\n\nIf you edit it again later, it will go back to \"Work in progress\" until you press All Done again.");
+        }
+
+        function returnToLecturer() {
+            const course = dbState.courses[activeCourseId];
+            const mod = course && activeModuleId && course.modules[activeModuleId];
+            if (!mod || !canReturnOutline()) return;
+            const reason = prompt("Return this outline to the lecturer for more work.\nReason (it will be added as a correction note):");
+            if (reason === null) return;
+            const a = actor(), t = nowIso();
+            const m = mod.meta || (mod.meta = {});
+            m.status = 'in_progress'; m.returnedAt = t; m.returnedBy = a.email;
+            (m.history || (m.history = [])).push({ type: 'returned', by: a.email, name: a.name, role: a.role, at: t });
+            if (reason.trim()) (m.notes || (m.notes = [])).push({ by: a.email, name: a.name, role: a.role, at: t, text: reason.trim() });
             performSave(false, false);
+            syncStatusIndex(activeCourseId, activeModuleId, true);
+            renderOutlineMetaBar();
+        }
+
+        // --- LIVE PROGRESS DASHBOARD (Admin / Dean / Secretary) ---
+        let statusUnsub = null, statusRows = {}, statusFirstLoad = true, statusFilter = 'all';
+        function startStatusWatch() {
+            if (statusUnsub || !auth.currentUser || !can('viewAll')) return;
+            statusFirstLoad = true;
+            statusUnsub = db.collection('rasfahi_status').onSnapshot(snap => {
+                const next = {};
+                snap.forEach(d => { next[d.id] = d.data(); });
+                if (!statusFirstLoad) {
+                    Object.entries(next).forEach(([id, d]) => {
+                        const old = statusRows[id];
+                        if (d.ownerUid === auth.currentUser.uid) return;
+                        const who = d.ownerName || d.ownerEmail || 'A lecturer';
+                        if (d.status === 'submitted' && (!old || old.status !== 'submitted')) showToast(`✅ <b>${esc(who)}</b> finished <b>${esc(d.moduleCode)}</b> - Lecturer work finished`);
+                        else if (d.status === 'in_progress' && (!old || old.status === 'not_started')) showToast(`⏳ <b>${esc(who)}</b> started working on <b>${esc(d.moduleCode)}</b>`, true);
+                    });
+                }
+                statusRows = next; statusFirstLoad = false;
+                updateStatusBadge();
+                if (document.getElementById('step-15').classList.contains('active')) renderStatusDashboard();
+            }, err => {
+                console.warn('[RASFAHI] progress watch failed', err && err.code);
+                const box = document.getElementById('status-dashboard');
+                if (box) box.innerHTML = '<p style="color:var(--danger);">Could not load the progress list (' + esc(err.code || err.message) + '). If this says permission-denied, publish the updated Firestore rules from the Manage Users page.</p>';
+            });
+        }
+        function stopStatusWatch() { if (statusUnsub) { statusUnsub(); statusUnsub = null; } statusRows = {}; updateStatusBadge(); }
+
+        function showToast(html, isProgress) {
+            const wrap = document.getElementById('rf-toast-wrap'); if (!wrap) return;
+            const t = document.createElement('div');
+            t.className = 'rf-toast' + (isProgress ? ' progress' : '');
+            t.innerHTML = html;
+            wrap.appendChild(t);
+            setTimeout(() => t.remove(), 8000);
+        }
+        function updateStatusBadge() {
+            const b = document.getElementById('ao-badge'); if (!b) return;
+            const n = Object.values(statusRows).filter(r => r.status === 'submitted').length;
+            b.textContent = n ? '✅ ' + n : ''; b.style.display = n ? 'inline-block' : 'none';
+        }
+        function setStatusFilter(f) { statusFilter = f; renderStatusDashboard(); }
+
+        function renderStatusDashboard() {
+            const box = document.getElementById('status-dashboard'); if (!box) return;
+            if (!can('viewAll')) { box.innerHTML = ''; return; }
+            const deleted = new Set((accountsCache || []).filter(a => a.deleted).map(a => a.uid));
+            const rows = Object.entries(statusRows).map(([id, r]) => Object.assign({ _id: id }, r)).filter(r => !deleted.has(r.ownerUid));
+            const counts = { all: rows.length, not_started: 0, in_progress: 0, submitted: 0 };
+            rows.forEach(r => { counts[WORK_STATUS_LABELS[r.status] ? r.status : 'not_started']++; });
+            const chip = (key, label) => `<div class="status-chip ${statusFilter === key ? 'active' : ''}" onclick="setStatusFilter('${key}')"><b>${counts[key]}</b>${label}</div>`;
+            let html = `<div class="status-chips">${chip('all', 'All outlines')}${chip('in_progress', WORK_STATUS_LABELS.in_progress)}${chip('submitted', WORK_STATUS_LABELS.submitted)}${chip('not_started', WORK_STATUS_LABELS.not_started)}</div>`;
+            const order = { submitted: 0, in_progress: 1, not_started: 2 };
+            const list = rows.filter(r => statusFilter === 'all' || r.status === statusFilter)
+                .sort((a, b) => (order[a.status] - order[b.status]) || String(b.submittedAt || b.lastEditedAt || '').localeCompare(String(a.submittedAt || a.lastEditedAt || '')));
+            if (!rows.length) {
+                html += '<p style="color:#888;">Nothing on the progress list yet. Outlines appear here as soon as someone works on them' + (can('viewAll') ? ' - or press <b>Scan all archives</b> to add every existing outline now.' : '.') + '</p>';
+            } else if (!list.length) {
+                html += '<p style="color:#888;">No outlines with this status.</p>';
+            } else {
+                html += '<div style="overflow-x:auto;"><table class="user-table"><thead><tr><th>Lecturer</th><th>Module outline</th><th>Status</th><th>Started</th><th>Last edited</th><th>Finished</th><th></th></tr></thead><tbody>';
+                list.forEach(r => {
+                    html += `<tr>
+                        <td><b>${esc(r.ownerName || '(no name)')}</b><br><span style="color:#555; font-size:0.85rem;">${esc(r.ownerEmail)}</span></td>
+                        <td><b>${esc(r.moduleCode)}</b> - ${esc(r.moduleName)}<br><span style="color:#888; font-size:0.8rem;">${esc(r.courseName)}</span></td>
+                        <td>${workStatusBadge(r.status)}</td>
+                        <td style="font-size:0.82rem;">${fmtDate(r.startedAt)}</td>
+                        <td style="font-size:0.82rem;">${fmtDate(r.lastEditedAt)}${r.lastEditedBy ? '<br><span style="color:#888;">' + esc(r.lastEditedBy) + '</span>' : ''}</td>
+                        <td style="font-size:0.82rem;">${r.status === 'submitted' ? fmtDate(r.submittedAt) + (r.submittedName ? '<br><b>' + esc(r.submittedName) + '</b>' : '') + (r.submittedEmail ? '<br>' + esc(r.submittedEmail) : '') + (r.submittedPhone ? '<br>' + esc(r.submittedPhone) : '') + (r.submittedRemarks ? '<br><i style="color:#555;">"' + esc(r.submittedRemarks) + '"</i>' : '') : '—'}</td>
+                        <td><button class="btn btn-blue btn-mini" onclick="openOutlineFor('${esc(r.ownerUid)}', '${esc(r.courseId)}', '${esc(r.moduleId)}')"><i class="fas fa-edit"></i> Open</button></td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+            }
+            box.innerHTML = html;
+        }
+
+        // Adds every existing outline (made before this feature) to the progress list.
+        function rebuildStatusIndex() {
+            if (!can('viewAll')) return;
+            const box = document.getElementById('status-dashboard');
+            if (box) box.innerHTML = '<p style="color:#888;"><i class="fas fa-spinner fa-spin"></i> Scanning all archives...</p>';
+            loadAccounts(true).then(accs => {
+                const users = accs.filter(a => !a.deleted);
+                return Promise.all(users.map(a => db.collection('rasfahi_users').doc(a.uid).collection('courses').get().then(snap => {
+                    const batch = db.batch(); let n = 0;
+                    snap.forEach(d => {
+                        const c = d.data();
+                        Object.entries(c.modules || {}).forEach(([mId, mod]) => {
+                            batch.set(db.collection('rasfahi_status').doc(statusKey(a.uid, mId)), buildStatusDoc({ uid: a.uid, email: a.email, name: a.name }, d.id, c, mId, mod), { merge: true });
+                            n++;
+                        });
+                    });
+                    return n ? batch.commit().then(() => n) : 0;
+                }).catch(err => { console.warn('[RASFAHI] scan failed for', a.email, err && err.code); return 0; })));
+            }).then(ns => {
+                const total = (ns || []).reduce((x, y) => x + y, 0);
+                showToast('Progress list updated: ' + total + ' outline(s) scanned.', true);
+                renderStatusDashboard();
+            }).catch(err => alert("❌ Scan failed: " + (err.code || err.message)));
         }
 
         function addCorrectionNote() {
@@ -2126,7 +2388,7 @@ service cloud.firestore {
         function historyTableHtml(meta) {
             const h = (meta && meta.history) ? meta.history.slice().reverse() : [];
             if (!h.length) return '<p style="color:#888;">No history recorded yet (history starts from the first save after this update).</p>';
-            const label = { created: 'Created', edit: 'Edited', completed: '✅ Marked complete', note: '📝 Correction note' };
+            const label = { created: 'Created', edit: 'Edited', started: '⏳ Work started', submitted: '✅ All Done - lecturer work finished', completed: '✅ Marked complete', reopened: '↩ Edited after submission (back in progress)', returned: '↩ Returned to lecturer', note: '📝 Correction note' };
             let html = '<table><thead><tr><th>Date &amp; time</th><th>Action</th><th>By</th></tr></thead><tbody>';
             h.forEach(e => {
                 const when = e.type === 'edit' ? (fmtDate(e.start) + (e.end && e.end !== e.start ? ' → ' + fmtDate(e.end) : '')) : fmtDate(e.at);
@@ -2144,7 +2406,7 @@ service cloud.firestore {
                 <p style="color:#555; margin-bottom:15px;"><b>${esc(mod.code)} - ${esc(mod.name)}</b><br>
                 Created: ${fmtDate(m.createdAt)} ${m.createdBy ? 'by ' + esc(m.createdBy) : ''}<br>
                 Last edited: ${fmtDate(m.lastEditedAt)} ${m.lastEditedBy ? 'by ' + esc(m.lastEditedBy) : ''}<br>
-                Completed: ${m.completedAt ? fmtDate(m.completedAt) + ' by ' + esc(m.completedBy || '') : 'not yet'}</p>
+                Status: ${workStatusBadge(getWorkStatus(m))} ${m.submittedAt || m.completedAt ? ' - finished ' + fmtDate(m.submittedAt || m.completedAt) + (m.submission ? ' by ' + esc(m.submission.name) + ' (' + esc(m.submission.email) + ')' : '') : ''}</p>
                 ${historyTableHtml(m)}`);
         }
 
@@ -2165,7 +2427,8 @@ service cloud.firestore {
             let parts = [];
             parts.push('Created ' + fmtDate(m.createdAt, false));
             if (m.lastEditedAt) parts.push('Last edited ' + fmtDate(m.lastEditedAt) + (m.lastEditedBy ? ' by ' + esc(m.lastEditedBy) : ''));
-            parts.push(m.completedAt ? '<span class="meta-done">✅ Completed ' + fmtDate(m.completedAt, false) + '</span>' : '<span class="meta-open">⏳ In progress</span>');
+            const st = getWorkStatus(m);
+            parts.push(workStatusBadge(st) + (st === 'submitted' && (m.submittedAt || m.completedAt) ? ' ' + fmtDate(m.submittedAt || m.completedAt, false) : ''));
             if (m.notes && m.notes.length) parts.push('📝 ' + m.notes.length + ' note(s)');
             return parts.join(' · ');
         }
@@ -2184,15 +2447,17 @@ service cloud.firestore {
                 return;
             }
             const m = mod.meta || {};
+            const st = getWorkStatus(m);
             const notesCount = (m.notes || []).length;
             bar.innerHTML = `<div class="meta-items">
                     <span><i class="fas fa-file-alt"></i> <b>${esc(mod.code || 'MOD')}</b></span>
                     <span>Created: <b>${fmtDate(m.createdAt)}</b></span>
                     <span>Last edited: <b>${fmtDate(m.lastEditedAt)}</b>${m.lastEditedBy ? ' by ' + esc(m.lastEditedBy) + ' ' + roleBadge(m.lastEditedRole) : ''}</span>
-                    <span>${m.completedAt ? '<span class="meta-done">✅ Completed: ' + fmtDate(m.completedAt) + '</span>' : '<span class="meta-open">⏳ Not yet completed</span>'}</span>
+                    <span>${workStatusBadge(st)}${st === 'submitted' ? ' ' + fmtDate(m.submittedAt || m.completedAt) : ''}</span>
                 </div>
                 <div class="meta-actions">
-                    ${canCompleteHere() ? `<button class="btn btn-green btn-mini" onclick="markModuleComplete()"><i class="fas fa-check-circle"></i> ${m.completedAt ? 'Re-mark complete' : 'Mark outline complete'}</button>` : ''}
+                    ${canCompleteHere() && st !== 'submitted' ? `<button class="btn btn-green btn-mini" onclick="openAllDoneForm()"><i class="fas fa-flag-checkered"></i> All Done</button>` : ''}
+                    ${canReturnOutline() && st === 'submitted' ? `<button class="btn btn-outline btn-mini" onclick="returnToLecturer()"><i class="fas fa-undo"></i> Return to lecturer</button>` : ''}
                     <button class="btn btn-outline btn-mini" onclick="showModuleHistory()"><i class="fas fa-history"></i> Edit history</button>
                     ${(notesCount || can('addNotes')) ? `<button class="btn btn-outline btn-mini" onclick="showModuleNotes()"><i class="fas fa-comment-dots"></i> Notes${notesCount ? ' (' + notesCount + ')' : ''}</button>` : ''}
                 </div>`;
@@ -2455,7 +2720,7 @@ service cloud.firestore {
             }
             if(num === 10) renderArchive(); 
             if(num === 14) renderUserDirectory();
-            if(num === 15) renderAllOutlines(false, true);
+            if(num === 15) { renderAllOutlines(false, true); renderStatusDashboard(); }
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
 
@@ -2743,6 +3008,7 @@ service cloud.firestore {
             let verify = prompt("⚠️ 3/3: FINAL STEP. Type 'DELETE' in all caps to confirm:");
             if(verify !== "DELETE") { alert("Deletion cancelled."); return; }
 
+            deleteStatusDocs(wsUid, Object.keys((dbState.courses[cId] || {}).modules || {}));
             delete dbState.courses[cId];
             dirtyCourses.delete(cId); delete lastCloudJson[cId];
             if (wsDocRef) {
@@ -2769,6 +3035,7 @@ service cloud.firestore {
             if(verify !== "DELETE") { alert("Deletion cancelled."); return; }
 
             delete dbState.courses[cId].modules[mId];
+            deleteStatusDocs(wsUid, [mId]);
             dirtyCourses.add(cId);
             if(cId === activeCourseId && mId === activeModuleId) { loadStateFromMemory(cId, Object.keys(dbState.courses[cId].modules)[0] || null); } 
             else { renderArchive(); }
@@ -2905,6 +3172,7 @@ service cloud.firestore {
             if (activeCourseId && dbState.courses[activeCourseId]) {
                 if (userEditedSinceSave) recordEdit(activeCourseId, activeModuleId);
                 dirtyCourses.add(activeCourseId);
+                if (activeModuleId && wsUid !== 'guest' && !indexedThisSession.has(statusKey(wsUid, activeModuleId))) syncStatusIndex(activeCourseId, activeModuleId, true);
             }
             userEditedSinceSave = false;
 
