@@ -3163,16 +3163,38 @@ service cloud.firestore {
             let showWm = document.getElementById('wm-enable') ? document.getElementById('wm-enable').checked : false;
             let wmLogo = document.getElementById('wm-logo-data') ? document.getElementById('wm-logo-data').value : '';
             if (!showWm || !wmLogo) return '';
-            // Word's HTML/.doc renderer does not honor CSS position:fixed, opacity or z-index the
-            // way browsers do, so those alone just render the logo as a plain full-opacity image
-            // sitting in the document flow. A real repeating, translucent watermark in this format
-            // has to live inside a page HEADER (mso-element:header) using Word's own mso-position-*
-            // extensions to center it on the page, plus the legacy IE "filter:alpha()" property
-            // (Word's renderer is IE/Trident-based and still honors it) to fade it out.
+            // This is the exact markup Word itself writes when you use its own Insert > Watermark
+            // (Picture Watermark) feature and save as HTML: a VML "picture" shape (type _x0000_t75)
+            // placed inside a page HEADER (mso-element:header), which is what Word actually repeats
+            // and centers on every page - a plain <img> with CSS positioning is not the mechanism
+            // Word's watermark placement logic looks for, which is why it wasn't repeating reliably.
+            // gain/blacklevel reproduce Word's native "Washout" recolor (the standard watermark
+            // fade), so no CSS opacity trick is needed either.
             return `<div style='mso-element:header' id="wm-header">
                 <p class="MsoHeader" style="text-align:center; margin:0; border:none;">
-                <span style='position:absolute; left:0; top:0; z-index:-1; mso-position-horizontal:center; mso-position-horizontal-relative:margin; mso-position-vertical:center; mso-position-vertical-relative:margin;'>
-                <img src="${wmLogo}" width="380" style="opacity:0.15; filter:alpha(opacity=15); -ms-filter:'alpha(opacity=15)';">
+                <span style='position:absolute;z-index:-251658752;left:0;top:0;width:100%;text-align:center;'>
+                <v:shapetype id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+                <v:stroke joinstyle="miter"/>
+                <v:formulas>
+                <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+                <v:f eqn="sum @0 1 0"/>
+                <v:f eqn="sum 0 0 @1"/>
+                <v:f eqn="prod @2 1 2"/>
+                <v:f eqn="prod @3 21600 pixelWidth"/>
+                <v:f eqn="prod @3 21600 pixelHeight"/>
+                <v:f eqn="sum @0 0 1"/>
+                <v:f eqn="prod @6 1 2"/>
+                <v:f eqn="prod @7 21600 pixelWidth"/>
+                <v:f eqn="sum @8 21600 0"/>
+                <v:f eqn="prod @7 21600 pixelHeight"/>
+                <v:f eqn="sum @10 21600 0"/>
+                </v:formulas>
+                <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+                <o:lock v:ext="edit" aspectratio="t"/>
+                </v:shapetype>
+                <v:shape id="WordPictureWatermark" o:spid="_x0000_s1025" type="#_x0000_t75" style='position:absolute;margin-left:0;margin-top:0;width:320pt;height:320pt;z-index:-251658752;mso-wrap-edited:f;mso-width-percent:0;mso-height-percent:0;mso-position-horizontal:center;mso-position-horizontal-relative:margin;mso-position-vertical:center;mso-position-vertical-relative:margin;mso-width-percent:0;mso-height-percent:0' o:allowoverlap="f">
+                <v:imagedata src="${wmLogo}" o:title="watermark" gain="19661f" blacklevel="22938f"/>
+                </v:shape>
                 </span>
                 </p>
             </div>`;
@@ -3186,6 +3208,10 @@ service cloud.firestore {
 
         const exportWordStyles = `
             <style>
+                v\\:* {behavior:url(#default#VML);}
+                o\\:* {behavior:url(#default#VML);}
+                w\\:* {behavior:url(#default#VML);}
+                .shape {behavior:url(#default#VML);}
                 @page Section1 {
                     size: 420.0mm 297.0mm;
                     mso-page-orientation: landscape;
@@ -3802,7 +3828,7 @@ service cloud.firestore {
         let currentPreviewFileName = '';
 
         function buildExportSrc(htmlContent) {
-            return `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            return `<html xmlns:v='urn:schemas-microsoft-com:vml' xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head><meta charset='utf-8'>${exportWordStyles}${buildWatermarkStyleTag()}
             <style>@media print { @page { size: 420mm 297mm landscape; margin: 15mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
             </head><body>${buildWatermarkHeaderVML()}${htmlContent}</body></html>`;
@@ -3870,7 +3896,7 @@ service cloud.firestore {
                 fileName = "Sample_Revision_Form3";
             }
 
-            const src = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            const src = `<html xmlns:v='urn:schemas-microsoft-com:vml' xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head><meta charset='utf-8'>${exportWordStyles}${buildWatermarkStyleTag()}</head><body>${buildWatermarkHeaderVML()}${htmlContent}</body></html>`;
             
             const blob = new Blob(['\ufeff', src], { type: 'application/msword' });
@@ -4052,7 +4078,7 @@ service cloud.firestore {
             const fileName = type === 'module' ? `${document.getElementById('m-code').value}_Module_Outline` : (type === 'structure' ? `${document.getElementById('p-name').value}_Program_Structure` : type === 'form3' ? `${document.getElementById('p-name').value}_Revision_Form3` : `MQA_Full_Program_Document`);
 
             if(format === 'word') {
-                const src = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                const src = `<html xmlns:v='urn:schemas-microsoft-com:vml' xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
                 <head>
                     <meta charset='utf-8'>
                     ${exportWordStyles}${buildWatermarkStyleTag()}
