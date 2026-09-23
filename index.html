@@ -868,6 +868,28 @@
         .archive-course-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 15px; margin-bottom: 15px; }
         .archive-module { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--royal-green); transition: 0.3s;}
         .archive-module:hover { background: #f1f5f9; transform: translateX(5px); }
+        /* ROLES, OUTLINE META & USER MANAGEMENT */
+        .role-badge { display:inline-block; font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:10px; letter-spacing:0.4px; color:#fff; vertical-align:middle; }
+        .role-admin { background:#86198f; } .role-dean { background:#b45309; } .role-secretary { background:#0e7490; } .role-lecturer { background:#1e3a8a; }
+        .status-badge { display:inline-block; font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:10px; }
+        .status-active { background:#dcfce7; color:#166534; } .status-disabled { background:#fee2e2; color:#991b1b; }
+        #workspace-banner { display:none; background:#fff7ed; border-bottom:3px solid #f97316; color:#9a3412; padding:10px 25px; font-weight:600; font-size:0.95rem; display:none; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        #outline-meta-bar { display:none; background:#f8fafc; border-bottom:1px solid var(--border); padding:8px 25px; font-size:0.85rem; color:#334155; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+        #outline-meta-bar .meta-items { display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+        #outline-meta-bar .meta-actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .btn-mini { padding:5px 10px !important; font-size:0.8rem !important; }
+        .module-meta-line { font-size:0.78rem; color:#64748b; margin-top:4px; font-weight:normal; }
+        .meta-done { color:#15803d; font-weight:700; } .meta-open { color:#b45309; font-weight:700; }
+        .user-table { width:100%; border-collapse:collapse; background:#fff; font-size:0.9rem; }
+        .user-table th { background:var(--royal-blue); color:#fff; text-align:left; padding:10px; }
+        .user-table td { border-bottom:1px solid var(--border); padding:10px; vertical-align:middle; }
+        .user-table select { padding:6px; width:auto; }
+        .user-table .actions { display:flex; gap:6px; flex-wrap:wrap; }
+        #rf-modal { display:none; position:fixed; inset:0; z-index:100001; background:rgba(5,16,30,0.7); align-items:center; justify-content:center; padding:20px; }
+        #rf-modal .rf-modal-box { background:#fff; border-radius:12px; max-width:760px; width:100%; max-height:85vh; overflow:auto; padding:25px; box-shadow:0 30px 90px rgba(0,0,0,0.5); }
+        #rf-modal table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+        #rf-modal th, #rf-modal td { border-bottom:1px solid var(--border); padding:8px; text-align:left; vertical-align:top; }
+        .note-item { background:#fffbeb; border-left:4px solid #f59e0b; padding:10px 12px; border-radius:6px; margin-bottom:10px; }
         .active-badge { background: var(--royal-blue); color: var(--royal-white); font-size: 0.8rem; padding: 4px 10px; border-radius: 12px; margin-left: 10px; font-weight: bold; letter-spacing: 0.5px;}
 
         /* WORD IMPORTER CSS */
@@ -968,7 +990,8 @@
                 <li onclick="switchStep(12, this)"><i class="fas fa-file-word"></i> <span>Smart Word Importer</span></li>
                 <li onclick="switchStep(9, this)"><i class="fas fa-download"></i> <span>Review & Export</span></li>
                 <li onclick="switchStep(10, this)" style="background: rgba(10, 92, 39, 0.4); border-color: var(--royal-green-light);"><i class="fas fa-archive"></i> <span>އަރްޝީފް (Archive Bank)</span></li>
-                <li id="nav-manage-lecturers" onclick="switchStep(14, this)" style="display:none; background: rgba(134, 25, 143, 0.4); border-color: #f97316;"><i class="fas fa-user-shield"></i> <span>Manage Lecturers (Admin)</span></li>
+                <li id="nav-manage-lecturers" onclick="switchStep(14, this)" style="display:none; background: rgba(134, 25, 143, 0.4); border-color: #f97316;"><i class="fas fa-user-shield"></i> <span>Manage Users (Admin)</span></li>
+                <li id="nav-all-outlines" onclick="switchStep(15, this)" style="display:none; background: rgba(180, 83, 9, 0.35); border-color: #f59e0b;"><i class="fas fa-clipboard-check"></i> <span>All Outlines (Review)</span></li>
             </ul>
             
             <div class="sync-badge" id="sync-status">
@@ -999,6 +1022,8 @@
                     <button class="btn btn-outline" onclick="performSave(true, true)"><i class="fas fa-hdd"></i> Local Save</button>
                 </div>
             </header>
+            <div id="workspace-banner"></div>
+            <div id="outline-meta-bar"></div>
 
             <div class="content-area">
                 
@@ -1509,7 +1534,7 @@ Upon successful completion of this Module, students will have the knowledge and 
                     <h2 class="section-header"><i class="fas fa-archive"></i> އަރްޝީފް ބޭންކް (Archive Bank)</h2>
                     <p style="margin-bottom: 20px; color:#555; font-size:1.1rem;">Manage your courses and modules here. The active course/module will automatically save when you switch.</p>
                     
-                    <button class="btn btn-blue" onclick="createNewCourse()" style="margin-bottom: 30px;"><i class="fas fa-plus"></i> Create New Course Document</button>
+                    <button id="btn-create-course" class="btn btn-blue" onclick="createNewCourse()" style="margin-bottom: 30px;"><i class="fas fa-plus"></i> Create New Course Document</button>
                     
                     <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px;">
                         <h3 style="color:var(--royal-blue); margin-bottom: 15px;"><i class="fas fa-database"></i> Backup & Restore Workspace</h3>
@@ -1517,53 +1542,113 @@ Upon successful completion of this Module, students will have the knowledge and 
                         <div style="display:flex; gap:15px;">
                             <button class="btn btn-green" onclick="exportDatabase()"><i class="fas fa-file-export"></i> Export Backup (.rasfahi)</button>
                             <input type="file" id="import-file" accept=".rasfahi,.json" onchange="importDatabase(event)" style="display:none;">
-                            <button class="btn btn-outline" onclick="document.getElementById('import-file').click()"><i class="fas fa-file-import"></i> Import Backup</button>
+                            <button id="btn-import-backup" class="btn btn-outline" onclick="document.getElementById('import-file').click()"><i class="fas fa-file-import"></i> Import Backup</button>
                         </div>
                     </div>
 
                     <div id="archive-list"></div>
                     
-                    <button class="btn btn-danger" onclick="hardResetArchive()" style="margin-top: 40px; width: 100%;"><i class="fas fa-exclamation-triangle"></i> Hard Reset Archive (Wipe All Data)</button>
+                    <button id="btn-hard-reset" class="btn btn-danger" onclick="hardResetArchive()" style="margin-top: 40px; width: 100%;"><i class="fas fa-exclamation-triangle"></i> Hard Reset Archive (Wipe All Data)</button>
                 </div>
 
                 <div id="step-14" class="form-section">
-                    <h2 class="section-header"><i class="fas fa-user-shield"></i> Manage Lecturers (Admin)</h2>
-                    <p style="margin-bottom: 25px; color:#555; font-size:1.1rem;">Create login accounts for lecturers. Each lecturer's own Archive Bank is private to them - they cannot see your work or any other lecturer's work.</p>
+                    <h2 class="section-header"><i class="fas fa-user-shield"></i> Manage Users (Admin)</h2>
+                    <p style="margin-bottom: 25px; color:#555; font-size:1.05rem;">Create accounts and choose each person's role. <b>Lecturer</b>: creates and edits their own outlines, cannot delete. <b>Secretary</b>: edits every outline, cannot create or delete. <b>Dean</b>: reviews and corrects every outline, leaves correction notes, can create own outlines, cannot delete. <b>Admin</b>: everything, including deleting outlines and managing users.</p>
 
                     <div style="background: var(--light-bg); border: 2px dashed var(--royal-blue); border-radius: 10px; padding: 25px; margin-bottom: 30px;">
-                        <h3 style="color:var(--royal-blue); margin-bottom:15px;"><i class="fas fa-user-plus"></i> Create New Lecturer Account</h3>
+                        <h3 style="color:var(--royal-blue); margin-bottom:15px;"><i class="fas fa-user-plus"></i> Create New Account</h3>
                         <div class="form-grid">
                             <div class="form-group"><label>Full Name</label><input type="text" id="new-lect-name" class="ltr-input" placeholder="e.g. Ahmed Hassan"></div>
-                            <div class="form-group"><label>Email</label><input type="text" id="new-lect-email" class="ltr-input" placeholder="lecturer@example.com"></div>
-                            <div class="form-group full"><label>Temporary Password (min. 6 characters)</label><input type="text" id="new-lect-pass" class="ltr-input" placeholder="Give this to the lecturer securely"></div>
+                            <div class="form-group"><label>Email</label><input type="text" id="new-lect-email" class="ltr-input" placeholder="user@example.com"></div>
+                            <div class="form-group"><label>Temporary Password (min. 6 characters)</label><input type="text" id="new-lect-pass" class="ltr-input" placeholder="Give this to the user securely"></div>
+                            <div class="form-group"><label>Role</label>
+                                <select id="new-user-role">
+                                    <option value="lecturer" selected>Lecturer</option>
+                                    <option value="secretary">Secretary</option>
+                                    <option value="dean">Dean</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
                         </div>
-                        <button class="btn btn-blue" style="margin-top:15px;" onclick="createLecturerAccount()"><i class="fas fa-user-plus"></i> Create Account</button>
-                        <p style="font-size:0.85rem; color:#888; margin-top:10px;">Note: from the browser alone, an account's password can be set here but cannot later be changed or the account deleted by the admin - the lecturer can change their own password by signing in and using Firebase's password-reset flow, or you can remove their access at the database level in the Firebase Console.</p>
+                        <button class="btn btn-blue" style="margin-top:15px;" onclick="createUserAccount()"><i class="fas fa-user-plus"></i> Create Account</button>
                     </div>
 
-                    <h3 style="color:var(--royal-blue); margin-bottom:15px;"><i class="fas fa-users"></i> Lecturer Directory</h3>
-                    <div id="lecturer-directory-list"><p style="color:#888;">Loading...</p></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                        <h3 style="color:var(--royal-blue); margin:0;"><i class="fas fa-users"></i> User Directory</h3>
+                        <button class="btn btn-outline btn-mini" onclick="renderUserDirectory()"><i class="fas fa-sync"></i> Refresh</button>
+                    </div>
+                    <div id="lecturer-directory-list" style="overflow-x:auto;"><p style="color:#888;">Loading...</p></div>
+                    <p style="font-size:0.85rem; color:#666; margin-top:12px;">Disabling or deleting an account blocks that person from the system immediately. Changing a password directly (and fully removing a login) needs the small server helper in <b>functions/index.js</b> to be deployed once; without it, the app sends the user a password-reset email instead, and a deleted user's login record stays in Firebase Console &rarr; Authentication (it can no longer access anything).</p>
 
                     <div style="background:#fff7ed; border:2px solid #f97316; border-radius:10px; padding:20px; margin-top:30px;">
                         <h3 style="color:#c2410c; margin-bottom:10px;"><i class="fas fa-shield-alt"></i> Important: Firestore Security Rules</h3>
-                        <p style="font-size:0.9rem; color:#555;">For lecturer data to be genuinely private (not just hidden by the app's UI), your Firestore Security Rules must restrict each account to its own data. Open Firebase Console → Firestore Database → Rules, and use:</p>
-                        <pre style="background:#1f2937; color:#d1fae5; padding:15px; border-radius:6px; font-size:0.8rem; overflow-x:auto; margin-top:10px;">rules_version = '2';
+                        <p style="font-size:0.9rem; color:#555;">The roles are only truly enforced when these rules are published. Open Firebase Console &rarr; Firestore Database &rarr; Rules, replace everything with the rules below (also supplied as <b>firestore.rules</b>), and click Publish:</p>
+                        <pre style="background:#1f2937; color:#d1fae5; padding:15px; border-radius:6px; font-size:0.8rem; overflow-x:auto; margin-top:10px; user-select:text;">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isBootstrapAdmin() {
+      return signedIn() &amp;&amp; request.auth.token.email != null
+             &amp;&amp; request.auth.token.email.lower() in ['alibrahimdidi@gmail.com'];
+    }
+    function acctPath() { return /databases/$(database)/documents/rasfahi_accounts/$(request.auth.uid); }
+    function hasAcct() { return exists(acctPath()); }
+    function acct() { return get(acctPath()).data; }
+    function role() { return isBootstrapAdmin() ? 'admin' : (hasAcct() ? acct().get('role', 'lecturer') : 'lecturer'); }
+    function active() {
+      return signedIn() &amp;&amp; (isBootstrapAdmin() || !hasAcct() ||
+             (acct().get('disabled', false) != true &amp;&amp; acct().get('deleted', false) != true));
+    }
+    function isAdmin()   { return active() &amp;&amp; role() == 'admin'; }
+    function reviewer()  { return active() &amp;&amp; role() in ['admin', 'dean', 'secretary']; }
+    function canCreate() { return active() &amp;&amp; role() in ['admin', 'dean', 'lecturer']; }
+
+    match /rasfahi_accounts/{uid} {
+      allow read:  if signedIn() &amp;&amp; (request.auth.uid == uid || reviewer());
+      allow write: if isAdmin();
+    }
+
     match /rasfahi_users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-      match /{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read:  if active() &amp;&amp; (request.auth.uid == uid || reviewer());
+      allow write: if active() &amp;&amp; request.auth.uid == uid;
+
+      match /courses/{cid} {
+        allow read:   if active() &amp;&amp; (request.auth.uid == uid || reviewer());
+        allow create: if canCreate() &amp;&amp; request.auth.uid == uid;
+        // Only the admin may remove modules from a course document.
+        allow update: if ((active() &amp;&amp; request.auth.uid == uid) || reviewer())
+                      &amp;&amp; (isAdmin() || request.resource.data.get('modules', {}).keys()
+                                         .hasAll(resource.data.get('modules', {}).keys()));
+        allow delete: if isAdmin();
+      }
+      match /settings/{doc} {
+        allow read, write: if active() &amp;&amp; request.auth.uid == uid;
+      }
+      match /_connection_test/{doc} {
+        allow read, write: if signedIn() &amp;&amp; request.auth.uid == uid;
       }
     }
-    match /lecturer_directory/{lectId} {
-      allow read, write: if request.auth != null;
+
+    match /lecturer_directory/{id} {
+      allow read:  if signedIn();
+      allow write: if isAdmin();
     }
   }
 }</pre>
                     </div>
 
                     <div class="step-footer"><button class="btn btn-outline" onclick="switchStep(10, document.querySelectorAll('.nav-links li')[12])">⬅ Back to Archive</button></div>
+                </div>
+
+                <div id="step-15" class="form-section">
+                    <h2 class="section-header"><i class="fas fa-clipboard-check"></i> All Outlines (Review &amp; Correction)</h2>
+                    <p style="margin-bottom: 20px; color:#555; font-size:1.05rem;">Every user's outlines, with when they were created, last edited and completed. Open any module to correct it - your changes are saved straight into that person's archive and recorded in its edit history.</p>
+                    <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                        <input type="text" id="ao-filter" class="ltr-input" placeholder="Filter by name or email..." oninput="renderAllOutlines(true)" style="max-width:350px;">
+                        <button class="btn btn-outline btn-mini" onclick="renderAllOutlines(false, true)"><i class="fas fa-sync"></i> Refresh</button>
+                    </div>
+                    <div id="all-outlines-list"><p style="color:#888;">Loading...</p></div>
                 </div>
 
             </div>
@@ -1591,6 +1676,9 @@ service cloud.firestore {
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+
+    <div id="rf-modal" onclick="if(event.target===this) closeRfModal()"><div class="rf-modal-box"><div id="rf-modal-body"></div><div style="text-align:right; margin-top:20px;"><button class="btn btn-outline" onclick="closeRfModal()">Close</button></div></div></div>
 
     <script>
         // --- 0. SECURITY: ANTI-COPY / ANTI-DEV TOOLS ---
@@ -1624,32 +1712,139 @@ service cloud.firestore {
         
         const auth = firebase.auth();
         const db = firebase.firestore();
-        
+        // Local-first writes: Firestore keeps its own queue in IndexedDB, so saves never block the
+        // page and anything written offline is pushed automatically when the connection returns.
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => console.warn('[RASFAHI] offline persistence not enabled:', err && err.code));
+
+        // --- ROLES & PERMISSIONS ---
+        // Edit this table to adjust what each role may do. The Firestore rules (Manage Users page /
+        // firestore.rules) enforce the same model on the server.
+        const ROLE_LABELS = { admin: 'Admin', dean: 'Dean', secretary: 'Secretary', lecturer: 'Lecturer' };
+        const ROLE_PERMS = {
+            admin:     { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: true,  manageUsers: true,  addNotes: true,  completeAny: true  },
+            dean:      { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: true,  completeAny: true  },
+            secretary: { createOutline: false, viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false },
+            lecturer:  { createOutline: true,  viewAll: false, editAll: false, deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false }
+        };
+        let currentRole = null;        // resolved at login from rasfahi_accounts/{uid}
+        let currentAccount = null;
+        let accountUnsub = null;
+        let wsUid = 'guest';           // whose archive is loaded in the editor (own, or another user's when reviewing)
+        let wsDocRef = null;
+        let wsOwnerInfo = null;
+
+        function normalizeRole(r) { return ROLE_PERMS[r] ? r : 'lecturer'; }
+        function can(perm) { return !!(ROLE_PERMS[normalizeRole(currentRole)] || {})[perm]; }
+        function isOwnWorkspace() { return !!auth.currentUser && wsUid === auth.currentUser.uid; }
+        function canCreateHere() { return can('createOutline') && isOwnWorkspace(); }
+        function canDeleteOutlines() { return can('deleteOutline'); }
+        function canCompleteHere() { return can('completeAny') || (isOwnWorkspace() && can('createOutline')); }
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function nowIso() { return new Date().toISOString(); }
+        function fmtDate(iso, withTime = true) {
+            if (!iso) return '—';
+            const d = new Date(iso); if (isNaN(d)) return '—';
+            return withTime ? d.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+                            : d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+        }
+        function roleBadge(r) { r = normalizeRole(r); return `<span class="role-badge role-${r}">${ROLE_LABELS[r]}</span>`; }
+        function actor() {
+            const u = auth.currentUser;
+            return { email: u ? u.email : 'guest', name: (currentAccount && currentAccount.name) || '', role: normalizeRole(currentRole) };
+        }
+        function denied(msg) { alert("⛔ " + msg); }
+
         let userDocRef = null;
         let saveTimeout;
         let brandingSaveTimeout;
         let pendingCloudSync = false;
         let isProgrammaticChange = true; 
 
+        function resolveAccount(user) {
+            const email = (user.email || '').toLowerCase();
+            const ref = db.collection('rasfahi_accounts').doc(user.uid);
+            const isBoot = ADMIN_EMAILS.includes(email);
+            return ref.get().then(doc => {
+                let acc = doc.exists ? doc.data() : null;
+                if (isBoot) {
+                    if (!acc || acc.role !== 'admin' || acc.disabled || acc.deleted) {
+                        ref.set({ email: user.email, name: (acc && acc.name) || 'Administrator', role: 'admin', disabled: false, deleted: false, updatedAt: nowIso() }, { merge: true }).catch(() => {});
+                    }
+                    return Object.assign({}, acc || {}, { role: 'admin', disabled: false, deleted: false, email: user.email });
+                }
+                // Accounts made before roles existed have no record yet - they are lecturers.
+                return acc || { role: 'lecturer', email: user.email, legacy: true };
+            }).catch(err => {
+                console.warn('[RASFAHI] could not read account record', err && err.code);
+                return isBoot ? { role: 'admin', email: user.email } : { role: 'lecturer', email: user.email, fallback: true };
+            });
+        }
+
+        function showBlockedLogin(msg) {
+            const errorDiv = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+            errorDiv.innerText = msg; errorDiv.style.display = 'block';
+            btn.disabled = false; btn.innerHTML = "<i class='fas fa-lock-open'></i> Access System";
+        }
+
+        function watchOwnAccount(user) {
+            if (ADMIN_EMAILS.includes((user.email || '').toLowerCase())) return;
+            accountUnsub = db.collection('rasfahi_accounts').doc(user.uid).onSnapshot(doc => {
+                if (!doc.exists) return;
+                const d = doc.data();
+                if (d.disabled || d.deleted) {
+                    alert("Your account has been disabled by the administrator. You will be signed out.");
+                    auth.signOut();
+                    return;
+                }
+                const newRole = normalizeRole(d.role);
+                currentAccount = Object.assign({}, currentAccount || {}, d);
+                if (newRole !== currentRole) {
+                    currentRole = newRole;
+                    if (!isOwnWorkspace() && !can('viewAll')) switchWorkspace(user.uid);
+                    applyRoleUI();
+                }
+            }, err => console.warn('[RASFAHI] account watch failed', err && err.code));
+        }
+
+        function applyRoleUI() {
+            const show = (id, on, disp = 'flex') => { const el = document.getElementById(id); if (el) el.style.display = on ? disp : 'none'; };
+            show('nav-manage-lecturers', can('manageUsers'));
+            show('nav-all-outlines', can('viewAll'));
+            show('btn-create-course', canCreateHere(), 'inline-flex');
+            show('btn-import-backup', canCreateHere(), 'inline-flex');
+            show('btn-hard-reset', can('deleteOutline') && isOwnWorkspace(), 'block');
+            const u = auth.currentUser;
+            const dbgEl = document.getElementById('account-debug-info');
+            if (dbgEl && u) dbgEl.innerHTML = esc(u.email || 'no-email') + '<br>' + roleBadge(currentRole);
+            renderWorkspaceBanner();
+            renderOutlineMetaBar();
+            if (document.getElementById('step-10').classList.contains('active')) renderArchive();
+        }
+
         auth.onAuthStateChanged(user => {
+            if (accountUnsub) { accountUnsub(); accountUnsub = null; }
             if (user) {
                 userDocRef = db.collection("rasfahi_users").doc(user.uid);
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'flex';
-                let dbgEl = document.getElementById('account-debug-info');
-                if (dbgEl) dbgEl.innerHTML = (user.email || 'no-email') + '<br>UID: ' + user.uid;
-                loadBrandingSettings(user.uid);
-                restoreData(user.uid);
-
-                if (ADMIN_EMAILS.includes((user.email || '').toLowerCase())) {
-                    document.getElementById('nav-manage-lecturers').style.display = 'flex';
-                    userDocRef.set({ role: 'admin' }, { merge: true }).catch(() => {});
-                } else {
-                    document.getElementById('nav-manage-lecturers').style.display = 'none';
-                    userDocRef.set({ role: 'lecturer' }, { merge: true }).catch(() => {});
-                }
+                wsUid = user.uid; wsDocRef = userDocRef; wsOwnerInfo = null;
+                resolveAccount(user).then(acc => {
+                    if (acc.disabled || acc.deleted) {
+                        showBlockedLogin("This account has been disabled. Please contact the administrator.");
+                        auth.signOut();
+                        return;
+                    }
+                    currentAccount = acc;
+                    currentRole = normalizeRole(acc.role);
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'flex';
+                    applyRoleUI();
+                    loadBrandingSettings(user.uid);
+                    restoreData(user.uid);
+                    watchOwnAccount(user);
+                });
             } else {
-                userDocRef = null;
+                userDocRef = null; wsDocRef = null; wsUid = 'guest'; wsOwnerInfo = null;
+                currentRole = null; currentAccount = null;
                 document.getElementById('login-screen').style.display = 'flex';
                 document.getElementById('app-container').style.display = 'none';
                 restoreData('guest'); 
@@ -1687,46 +1882,423 @@ service cloud.firestore {
             return secondaryApp.auth();
         }
 
-        function createLecturerAccount() {
+        // Optional server helper (functions/index.js). If it is not deployed, every caller falls back
+        // to what the browser alone can do.
+        function callAdminFunction(action, data) {
+            try {
+                if (!firebase.functions) return Promise.reject(new Error('functions-sdk-missing'));
+                return firebase.app().functions().httpsCallable('rasfahiAdmin')(Object.assign({ action: action }, data || {})).then(r => r.data);
+            } catch (e) { return Promise.reject(e); }
+        }
+
+        let accountsCache = null;
+        function loadAccounts(force) {
+            if (accountsCache && !force) return Promise.resolve(accountsCache);
+            const pAcc = db.collection('rasfahi_accounts').get();
+            const pDir = db.collection('lecturer_directory').get().catch(() => null);
+            return Promise.all([pAcc, pDir]).then(([accSnap, dirSnap]) => {
+                const map = {};
+                accSnap.forEach(d => { map[d.id] = Object.assign({ uid: d.id }, d.data()); });
+                if (dirSnap) {
+                    dirSnap.forEach(d => {
+                        if (map[d.id]) return;
+                        const x = d.data();
+                        const rec = { email: x.email || '', name: x.name || '', role: 'lecturer', disabled: false, deleted: false, createdAt: x.createdAt || null, createdBy: x.createdBy || '' };
+                        map[d.id] = Object.assign({ uid: d.id, legacy: true }, rec);
+                        // One-time migration of pre-role accounts into the new account records.
+                        if (can('manageUsers')) db.collection('rasfahi_accounts').doc(d.id).set(rec, { merge: true }).catch(() => {});
+                    });
+                }
+                const me = auth.currentUser;
+                if (me && !map[me.uid]) map[me.uid] = { uid: me.uid, email: me.email, name: (currentAccount && currentAccount.name) || '', role: currentRole };
+                accountsCache = Object.values(map);
+                return accountsCache;
+            });
+        }
+
+        function createUserAccount() {
+            if (!can('manageUsers')) return denied("Only the admin can create accounts.");
             const name = document.getElementById('new-lect-name').value.trim();
             const email = document.getElementById('new-lect-email').value.trim();
             const pass = document.getElementById('new-lect-pass').value;
+            const role = normalizeRole(document.getElementById('new-user-role').value);
             if (!email || !pass) { alert("Please enter an email and a temporary password."); return; }
             if (pass.length < 6) { alert("Password must be at least 6 characters (Firebase's minimum)."); return; }
 
             const secondaryAuth = getSecondaryAuth();
             secondaryAuth.createUserWithEmailAndPassword(email, pass).then((cred) => {
                 const newUid = cred.user.uid;
-                const createdBy = auth.currentUser ? auth.currentUser.email : 'admin';
-                db.collection('rasfahi_users').doc(newUid).set({ role: 'lecturer', email: email, name: name }, { merge: true });
-                db.collection('lecturer_directory').doc(newUid).set({ email: email, name: name, createdAt: new Date().toISOString(), createdBy: createdBy });
                 secondaryAuth.signOut();
-                alert("✅ Lecturer account created for " + email + ". Share the email and temporary password with them securely.");
-                document.getElementById('new-lect-name').value = '';
-                document.getElementById('new-lect-email').value = '';
-                document.getElementById('new-lect-pass').value = '';
-                renderLecturerDirectory();
+                return db.collection('rasfahi_accounts').doc(newUid).set({
+                    email: email, name: name, role: role, disabled: false, deleted: false,
+                    createdAt: nowIso(), createdBy: auth.currentUser ? auth.currentUser.email : 'admin'
+                }).then(() => {
+                    alert("✅ " + ROLE_LABELS[role] + " account created for " + email + ". Share the email and temporary password with them securely.");
+                    document.getElementById('new-lect-name').value = '';
+                    document.getElementById('new-lect-email').value = '';
+                    document.getElementById('new-lect-pass').value = '';
+                    document.getElementById('new-user-role').value = 'lecturer';
+                    renderUserDirectory();
+                });
             }).catch(err => {
                 alert("❌ Could not create the account: " + (err.message || err.code || 'unknown error'));
             });
         }
+        const createLecturerAccount = createUserAccount;
 
-        function renderLecturerDirectory() {
+        function renderUserDirectory() {
             const list = document.getElementById('lecturer-directory-list');
             if (!list) return;
+            if (!can('manageUsers')) { list.innerHTML = '<p style="color:var(--danger);">Admin only.</p>'; return; }
             list.innerHTML = '<p style="color:#888;">Loading...</p>';
-            db.collection('lecturer_directory').get().then(snap => {
-                if (snap.empty) { list.innerHTML = '<p style="color:#888;">No lecturer accounts created yet.</p>'; return; }
-                let html = '';
-                snap.forEach(doc => {
-                    let d = doc.data();
-                    let created = d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '';
-                    html += `<div class="archive-module"><div><b>${d.name || '(no name)'}</b><br><span style="color:#555;">${d.email || ''}</span></div><div style="font-size:0.8rem; color:#888; text-align:right;">Created ${created}<br>by ${d.createdBy || ''}</div></div>`;
+            loadAccounts(true).then(accs => {
+                const me = auth.currentUser ? auth.currentUser.uid : '';
+                const live = accs.filter(a => !a.deleted);
+                const deletedCount = accs.length - live.length;
+                if (!live.length) { list.innerHTML = '<p style="color:#888;">No accounts yet.</p>'; return; }
+                const order = { admin: 0, dean: 1, secretary: 2, lecturer: 3 };
+                live.sort((a, b) => (order[normalizeRole(a.role)] - order[normalizeRole(b.role)]) || String(a.name || a.email).localeCompare(String(b.name || b.email)));
+                let html = '<table class="user-table"><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+                live.forEach(a => {
+                    const isMe = a.uid === me;
+                    const isBoot = ADMIN_EMAILS.includes(String(a.email || '').toLowerCase());
+                    const locked = isMe || isBoot;
+                    const r = normalizeRole(a.role);
+                    const opts = Object.keys(ROLE_LABELS).map(k => `<option value="${k}" ${k === r ? 'selected' : ''}>${ROLE_LABELS[k]}</option>`).join('');
+                    html += `<tr>
+                        <td><b>${esc(a.name || '(no name)')}</b>${isMe ? ' <small>(you)</small>' : ''}<br><span style="color:#555;">${esc(a.email)}</span></td>
+                        <td><select ${locked ? 'disabled' : ''} onchange="setUserRole('${a.uid}', this.value)">${opts}</select></td>
+                        <td>${a.disabled ? '<span class="status-badge status-disabled">Disabled</span>' : '<span class="status-badge status-active">Active</span>'}</td>
+                        <td style="font-size:0.8rem; color:#666;">${fmtDate(a.createdAt, false)}<br>${esc(a.createdBy || '')}</td>
+                        <td><div class="actions">
+                            ${locked ? '' : (a.disabled
+                                ? `<button class="btn btn-green btn-mini" onclick="toggleUserDisabled('${a.uid}', false)"><i class="fas fa-user-check"></i> Enable</button>`
+                                : `<button class="btn btn-outline btn-mini" onclick="toggleUserDisabled('${a.uid}', true)"><i class="fas fa-user-slash"></i> Disable</button>`)}
+                            <button class="btn btn-outline btn-mini" onclick="adminChangePassword('${a.uid}')"><i class="fas fa-key"></i> Password</button>
+                            ${locked ? '' : `<button class="btn btn-danger btn-mini" onclick="adminDeleteUser('${a.uid}')"><i class="fas fa-trash"></i> Delete</button>`}
+                        </div></td></tr>`;
                 });
+                html += '</tbody></table>';
+                if (deletedCount) html += `<p style="font-size:0.8rem; color:#888; margin-top:8px;">${deletedCount} deleted account(s) hidden.</p>`;
                 list.innerHTML = html;
             }).catch(err => {
-                console.error('[RASFAHI] lecturer directory load failed', err);
-                list.innerHTML = '<p style="color:var(--danger);">Could not load the lecturer directory: ' + (err.code || err.message || 'unknown error') + '</p>';
+                console.error('[RASFAHI] user directory load failed', err);
+                list.innerHTML = '<p style="color:var(--danger);">Could not load the user directory: ' + esc(err.code || err.message || 'unknown error') + '. If this says "permission-denied", publish the Firestore rules shown below.</p>';
+            });
+        }
+        const renderLecturerDirectory = renderUserDirectory;
+
+        function findAccount(uid) { return (accountsCache || []).find(a => a.uid === uid) || { uid: uid, email: '', name: '' }; }
+
+        function setUserRole(uid, role) {
+            if (!can('manageUsers')) return denied("Admin only.");
+            role = normalizeRole(role);
+            const a = findAccount(uid);
+            db.collection('rasfahi_accounts').doc(uid).set({ role: role, email: a.email || '', name: a.name || '', updatedAt: nowIso(), updatedBy: auth.currentUser.email }, { merge: true })
+                .then(() => { renderUserDirectory(); })
+                .catch(err => { alert("❌ Could not change role: " + (err.code || err.message)); renderUserDirectory(); });
+        }
+
+        function toggleUserDisabled(uid, disable) {
+            if (!can('manageUsers')) return denied("Admin only.");
+            if (auth.currentUser && uid === auth.currentUser.uid) return denied("You cannot disable your own account.");
+            const a = findAccount(uid);
+            if (disable && !confirm("Disable " + (a.email || 'this user') + "? They will be signed out and blocked immediately.")) return;
+            db.collection('rasfahi_accounts').doc(uid).set({ disabled: !!disable, updatedAt: nowIso(), updatedBy: auth.currentUser.email }, { merge: true })
+                .then(() => {
+                    callAdminFunction('setDisabled', { uid: uid, disabled: !!disable }).catch(() => {}); // also locks the login itself when the helper is deployed
+                    renderUserDirectory();
+                })
+                .catch(err => alert("❌ Could not update the account: " + (err.code || err.message)));
+        }
+
+        function adminChangePassword(uid) {
+            if (!can('manageUsers')) return denied("Admin only.");
+            const a = findAccount(uid);
+            const pw = prompt("New password for " + (a.email || 'this user') + " (min. 6 characters):");
+            if (pw === null) return;
+            if (pw.length < 6) { alert("Password must be at least 6 characters."); return; }
+            callAdminFunction('setPassword', { uid: uid, password: pw }).then(() => {
+                alert("✅ Password changed for " + (a.email || 'the user') + ". Share the new password with them securely.");
+            }).catch(err => {
+                console.warn('[RASFAHI] setPassword helper unavailable', err);
+                if (!a.email) { alert("❌ The server helper is not deployed and this account has no email on record."); return; }
+                if (confirm("The password could not be set directly (the server helper in functions/index.js is not deployed yet).\n\nSend a password-reset email to " + a.email + " instead, so they can choose a new password themselves?")) {
+                    auth.sendPasswordResetEmail(a.email)
+                        .then(() => alert("✅ Password-reset email sent to " + a.email + "."))
+                        .catch(e => alert("❌ Could not send the reset email: " + (e.code || e.message)));
+                }
+            });
+        }
+
+        function adminDeleteUser(uid) {
+            if (!can('manageUsers')) return denied("Admin only.");
+            if (auth.currentUser && uid === auth.currentUser.uid) return denied("You cannot delete your own account.");
+            const a = findAccount(uid);
+            if (!confirm("⚠️ Delete the account " + (a.email || uid) + "?\nThey will lose access to the system immediately.")) return;
+            const verify = prompt("Type 'DELETE' in all caps to confirm:");
+            if (verify !== 'DELETE') { alert("Deletion cancelled."); return; }
+            const wipeOutlines = confirm("Also permanently delete ALL of this user's outlines?\n\nOK = delete their outlines too\nCancel = keep their outlines in the system (recommended for records)");
+
+            const accRef = db.collection('rasfahi_accounts').doc(uid);
+            accRef.set({ deleted: true, disabled: true, deletedAt: nowIso(), deletedBy: auth.currentUser.email }, { merge: true }).then(() => {
+                db.collection('lecturer_directory').doc(uid).delete().catch(() => {});
+                let p = Promise.resolve();
+                if (wipeOutlines) {
+                    p = db.collection('rasfahi_users').doc(uid).collection('courses').get().then(snap => {
+                        const batch = db.batch(); snap.forEach(d => batch.delete(d.ref)); return batch.commit();
+                    }).catch(err => console.error('[RASFAHI] outline wipe failed', err));
+                }
+                return p.then(() => callAdminFunction('deleteUser', { uid: uid }).then(() => true).catch(() => false));
+            }).then(loginRemoved => {
+                alert("✅ " + (a.email || 'The user') + " has been deleted and blocked." + (loginRemoved ? "" : "\n\nNote: the login record itself is still listed in Firebase Console → Authentication (it can no longer access anything). Remove it there if you want to reuse this email address, or deploy functions/index.js so this happens automatically."));
+                renderUserDirectory();
+            }).catch(err => alert("❌ Could not delete the account: " + (err.code || err.message)));
+        }
+
+        // --- OUTLINE META: created / edited / completed dates, edit history, correction notes ---
+        const EDIT_SESSION_GAP_MS = 30 * 60 * 1000;   // edits by the same person within 30 min = one history entry
+        const MAX_HISTORY = 300;
+
+        function newMeta() {
+            const a = actor(), t = nowIso();
+            return { createdAt: t, createdBy: a.email, createdByName: a.name, createdRole: a.role,
+                     lastEditedAt: t, lastEditedBy: a.email, lastEditedRole: a.role,
+                     history: [{ type: 'created', by: a.email, name: a.name, role: a.role, at: t }] };
+        }
+
+        function stampEdit(meta) {
+            const a = actor(), t = nowIso();
+            meta.lastEditedAt = t; meta.lastEditedBy = a.email; meta.lastEditedRole = a.role;
+            const h = meta.history || (meta.history = []);
+            const last = h[h.length - 1];
+            if (last && last.type === 'edit' && last.by === a.email && (Date.parse(t) - Date.parse(last.end || last.start)) < EDIT_SESSION_GAP_MS) {
+                last.end = t;
+            } else {
+                h.push({ type: 'edit', by: a.email, name: a.name, role: a.role, start: t, end: t });
+            }
+            if (h.length > MAX_HISTORY) h.splice(0, h.length - MAX_HISTORY);
+        }
+
+        function recordEdit(cId, mId) {
+            const course = dbState.courses[cId]; if (!course) return;
+            stampEdit(course.meta || (course.meta = {}));
+            const mod = mId && course.modules && course.modules[mId];
+            if (mod) stampEdit(mod.meta || (mod.meta = {}));
+            renderOutlineMetaBar();
+        }
+
+        function markModuleComplete() {
+            const course = dbState.courses[activeCourseId];
+            const mod = course && activeModuleId && course.modules[activeModuleId];
+            if (!mod) return;
+            if (!canCompleteHere()) return denied("Your role cannot mark this outline as complete.");
+            const m = mod.meta || (mod.meta = {});
+            const again = !!m.completedAt;
+            if (!confirm(again ? "Update the completion date of this module outline to now?" : "Mark this whole module outline as COMPLETE?\nToday's date and time will be recorded automatically.")) return;
+            const a = actor(), t = nowIso();
+            m.completedAt = t; m.completedBy = a.email; m.completedRole = a.role;
+            if (!m.firstCompletedAt) m.firstCompletedAt = t;
+            (m.history || (m.history = [])).push({ type: 'completed', by: a.email, name: a.name, role: a.role, at: t });
+            renderOutlineMetaBar();
+            if (document.getElementById('step-10').classList.contains('active')) renderArchive();
+            performSave(false, false);
+        }
+
+        function addCorrectionNote() {
+            const course = dbState.courses[activeCourseId];
+            const mod = course && activeModuleId && course.modules[activeModuleId];
+            if (!mod) return;
+            if (!can('addNotes')) return denied("Only the Dean or Admin can add correction notes.");
+            const text = prompt("Correction note for this module outline:");
+            if (!text || !text.trim()) return;
+            const a = actor(), t = nowIso();
+            const m = mod.meta || (mod.meta = {});
+            (m.notes || (m.notes = [])).push({ by: a.email, name: a.name, role: a.role, at: t, text: text.trim() });
+            (m.history || (m.history = [])).push({ type: 'note', by: a.email, name: a.name, role: a.role, at: t });
+            renderOutlineMetaBar();
+            performSave(false, false);
+        }
+
+        function openRfModal(html) { document.getElementById('rf-modal-body').innerHTML = html; document.getElementById('rf-modal').style.display = 'flex'; }
+        function closeRfModal() { document.getElementById('rf-modal').style.display = 'none'; }
+
+        function historyTableHtml(meta) {
+            const h = (meta && meta.history) ? meta.history.slice().reverse() : [];
+            if (!h.length) return '<p style="color:#888;">No history recorded yet (history starts from the first save after this update).</p>';
+            const label = { created: 'Created', edit: 'Edited', completed: '✅ Marked complete', note: '📝 Correction note' };
+            let html = '<table><thead><tr><th>Date &amp; time</th><th>Action</th><th>By</th></tr></thead><tbody>';
+            h.forEach(e => {
+                const when = e.type === 'edit' ? (fmtDate(e.start) + (e.end && e.end !== e.start ? ' → ' + fmtDate(e.end) : '')) : fmtDate(e.at);
+                html += `<tr><td>${when}</td><td>${label[e.type] || esc(e.type)}</td><td>${esc(e.name || e.by || '')}${e.name ? '<br><small style="color:#888;">' + esc(e.by) + '</small>' : ''} ${roleBadge(e.role)}</td></tr>`;
+            });
+            return html + '</tbody></table>';
+        }
+
+        function showModuleHistory(cId, mId) {
+            cId = cId || activeCourseId; mId = mId || activeModuleId;
+            const course = dbState.courses[cId]; const mod = course && course.modules[mId];
+            if (!mod) return;
+            const m = mod.meta || {};
+            openRfModal(`<h2 style="color:var(--royal-blue); margin-bottom:5px;"><i class="fas fa-history"></i> Edit history</h2>
+                <p style="color:#555; margin-bottom:15px;"><b>${esc(mod.code)} - ${esc(mod.name)}</b><br>
+                Created: ${fmtDate(m.createdAt)} ${m.createdBy ? 'by ' + esc(m.createdBy) : ''}<br>
+                Last edited: ${fmtDate(m.lastEditedAt)} ${m.lastEditedBy ? 'by ' + esc(m.lastEditedBy) : ''}<br>
+                Completed: ${m.completedAt ? fmtDate(m.completedAt) + ' by ' + esc(m.completedBy || '') : 'not yet'}</p>
+                ${historyTableHtml(m)}`);
+        }
+
+        function showModuleNotes() {
+            const course = dbState.courses[activeCourseId];
+            const mod = course && activeModuleId && course.modules[activeModuleId];
+            if (!mod) return;
+            const notes = (mod.meta && mod.meta.notes) ? mod.meta.notes.slice().reverse() : [];
+            let html = `<h2 style="color:var(--royal-blue); margin-bottom:15px;"><i class="fas fa-comment-dots"></i> Correction notes</h2>`;
+            html += notes.length ? notes.map(n => `<div class="note-item"><div style="font-size:0.8rem; color:#92400e; margin-bottom:5px;">${fmtDate(n.at)} · ${esc(n.name || n.by)} ${roleBadge(n.role)}</div><div style="white-space:pre-wrap;">${esc(n.text)}</div></div>`).join('')
+                                 : '<p style="color:#888;">No correction notes for this module.</p>';
+            if (can('addNotes')) html += `<button class="btn btn-blue" style="margin-top:10px;" onclick="closeRfModal(); addCorrectionNote();"><i class="fas fa-plus"></i> Add correction note</button>`;
+            openRfModal(html);
+        }
+
+        function moduleMetaLineHtml(m) {
+            m = m || {};
+            let parts = [];
+            parts.push('Created ' + fmtDate(m.createdAt, false));
+            if (m.lastEditedAt) parts.push('Last edited ' + fmtDate(m.lastEditedAt) + (m.lastEditedBy ? ' by ' + esc(m.lastEditedBy) : ''));
+            parts.push(m.completedAt ? '<span class="meta-done">✅ Completed ' + fmtDate(m.completedAt, false) + '</span>' : '<span class="meta-open">⏳ In progress</span>');
+            if (m.notes && m.notes.length) parts.push('📝 ' + m.notes.length + ' note(s)');
+            return parts.join(' · ');
+        }
+
+        function renderOutlineMetaBar() {
+            const bar = document.getElementById('outline-meta-bar');
+            if (!bar) return;
+            if (!auth.currentUser) { bar.style.display = 'none'; return; }
+            const course = activeCourseId && dbState.courses[activeCourseId];
+            const mod = course && activeModuleId && course.modules && course.modules[activeModuleId];
+            if (!mod) {
+                if (!course && !canCreateHere() && can('viewAll')) {
+                    bar.innerHTML = '<div class="meta-items"><span><i class="fas fa-info-circle"></i> You have no outlines of your own. Open <b>All Outlines (Review)</b> to edit other users\' outlines.</span></div>';
+                    bar.style.display = 'flex';
+                } else { bar.style.display = 'none'; }
+                return;
+            }
+            const m = mod.meta || {};
+            const notesCount = (m.notes || []).length;
+            bar.innerHTML = `<div class="meta-items">
+                    <span><i class="fas fa-file-alt"></i> <b>${esc(mod.code || 'MOD')}</b></span>
+                    <span>Created: <b>${fmtDate(m.createdAt)}</b></span>
+                    <span>Last edited: <b>${fmtDate(m.lastEditedAt)}</b>${m.lastEditedBy ? ' by ' + esc(m.lastEditedBy) + ' ' + roleBadge(m.lastEditedRole) : ''}</span>
+                    <span>${m.completedAt ? '<span class="meta-done">✅ Completed: ' + fmtDate(m.completedAt) + '</span>' : '<span class="meta-open">⏳ Not yet completed</span>'}</span>
+                </div>
+                <div class="meta-actions">
+                    ${canCompleteHere() ? `<button class="btn btn-green btn-mini" onclick="markModuleComplete()"><i class="fas fa-check-circle"></i> ${m.completedAt ? 'Re-mark complete' : 'Mark outline complete'}</button>` : ''}
+                    <button class="btn btn-outline btn-mini" onclick="showModuleHistory()"><i class="fas fa-history"></i> Edit history</button>
+                    ${(notesCount || can('addNotes')) ? `<button class="btn btn-outline btn-mini" onclick="showModuleNotes()"><i class="fas fa-comment-dots"></i> Notes${notesCount ? ' (' + notesCount + ')' : ''}</button>` : ''}
+                </div>`;
+            bar.style.display = 'flex';
+        }
+
+        // --- WORKSPACES: reviewers (Dean / Secretary / Admin) can open another user's archive ---
+        function renderWorkspaceBanner() {
+            const b = document.getElementById('workspace-banner');
+            if (!b) return;
+            if (!auth.currentUser || isOwnWorkspace()) { b.style.display = 'none'; return; }
+            const o = wsOwnerInfo || {};
+            b.innerHTML = `<span><i class="fas fa-user-edit"></i> Correcting the outlines of <b>${esc(o.name || o.email || wsUid)}</b> ${o.email ? '(' + esc(o.email) + ')' : ''} ${roleBadge(o.role)} - changes save directly to their archive.</span>
+                <button class="btn btn-outline btn-mini" style="background:#fff;" onclick="switchWorkspace(auth.currentUser.uid)"><i class="fas fa-undo"></i> Return to my own archive</button>`;
+            b.style.display = 'flex';
+        }
+
+        function switchWorkspace(uid, ownerInfo, openCid, openMid) {
+            if (!auth.currentUser) return Promise.resolve(false);
+            return flushSaves().then(() => {
+                const statusEl = document.getElementById('sync-status-text');
+                if (uid === auth.currentUser.uid) {
+                    wsUid = uid; wsDocRef = userDocRef; wsOwnerInfo = null;
+                    activeCourseId = null; activeModuleId = null; resetSyncTracking();
+                    restoreData(uid);
+                    applyRoleUI();
+                    return true;
+                }
+                if (!can('viewAll')) { denied("Your role cannot open other users' outlines."); return false; }
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening archive...';
+                const ref = db.collection('rasfahi_users').doc(uid);
+                return ref.collection('courses').get().then(snap => {
+                    const courses = {};
+                    snap.forEach(d => { courses[d.id] = d.data(); });
+                    if (!Object.keys(courses).length) { alert("This user has no saved outlines yet."); statusEl.innerHTML = 'Ready'; return false; }
+                    wsUid = uid; wsDocRef = ref; wsOwnerInfo = ownerInfo || findAccount(uid);
+                    activeCourseId = null; activeModuleId = null; resetSyncTracking();
+                    dbState = { courses: courses };
+                    Object.keys(courses).forEach(id => { lastCloudJson[id] = JSON.stringify(courses[id]); });
+                    const cid = (openCid && courses[openCid]) ? openCid : Object.keys(courses)[0];
+                    const mods = courses[cid].modules || {};
+                    const mid = (openMid && mods[openMid]) ? openMid : (Object.keys(mods)[0] || null);
+                    loadStateFromMemory(cid, mid, true);
+                    applyRoleUI();
+                    statusEl.innerHTML = 'Loaded from Cloud <i class="fas fa-check-circle"></i>';
+                    return true;
+                }).catch(err => {
+                    alert("❌ Could not open this archive: " + (err.code || err.message) + "\nIf this says permission-denied, publish the Firestore rules from the Manage Users page.");
+                    return false;
+                });
+            });
+        }
+
+        let aoRenderToken = 0;
+        function renderAllOutlines(filterOnly, force) {
+            const list = document.getElementById('all-outlines-list');
+            if (!list) return;
+            if (!can('viewAll')) { list.innerHTML = '<p style="color:var(--danger);">Your role cannot view other users\' outlines.</p>'; return; }
+            if (!filterOnly) list.innerHTML = '<p style="color:#888;">Loading...</p>';
+            const token = ++aoRenderToken;
+            loadAccounts(!!force || !accountsCache).then(accs => {
+                if (token !== aoRenderToken) return;
+                const q = (document.getElementById('ao-filter').value || '').toLowerCase().trim();
+                const me = auth.currentUser ? auth.currentUser.uid : '';
+                let users = accs.filter(a => !a.deleted && (!q || String(a.name || '').toLowerCase().includes(q) || String(a.email || '').toLowerCase().includes(q)));
+                users.sort((a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email)));
+                if (!users.length) { list.innerHTML = '<p style="color:#888;">No users match.</p>'; return; }
+                list.innerHTML = users.map(a => `<div class="archive-course">
+                        <div class="archive-course-header" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">
+                            <div><b style="font-size:1.1rem; color:var(--royal-dark);">${esc(a.name || '(no name)')}</b> ${roleBadge(a.role)} ${a.disabled ? '<span class="status-badge status-disabled">Disabled</span>' : ''} ${a.uid === me ? '<small>(you)</small>' : ''}<br><span style="color:#555; font-size:0.9rem;">${esc(a.email)}</span></div>
+                            <button class="btn btn-outline btn-mini" onclick="toggleUserOutlines('${a.uid}', this)"><i class="fas fa-folder-open"></i> Show outlines</button>
+                        </div>
+                        <div id="ao-u-${a.uid}" style="display:none; margin-top:15px;"></div>
+                    </div>`).join('');
+            }).catch(err => {
+                list.innerHTML = '<p style="color:var(--danger);">Could not load users: ' + esc(err.code || err.message) + '. If this says permission-denied, the admin must publish the Firestore rules.</p>';
+            });
+        }
+
+        function toggleUserOutlines(uid, btn) {
+            const box = document.getElementById('ao-u-' + uid);
+            if (!box) return;
+            if (box.style.display === 'block') { box.style.display = 'none'; if (btn) btn.innerHTML = '<i class="fas fa-folder-open"></i> Show outlines'; return; }
+            box.style.display = 'block';
+            if (btn) btn.innerHTML = '<i class="fas fa-folder-minus"></i> Hide';
+            box.innerHTML = '<p style="color:#888;">Loading outlines...</p>';
+            db.collection('rasfahi_users').doc(uid).collection('courses').get().then(snap => {
+                if (snap.empty) { box.innerHTML = '<p style="color:#888;">No outlines saved yet.</p>'; return; }
+                let html = '';
+                snap.forEach(d => {
+                    const c = d.data();
+                    html += `<div style="border-left:3px solid var(--royal-blue); padding-left:12px; margin-bottom:15px;">
+                        <div style="font-weight:700; color:var(--royal-blue);"><i class="fas fa-graduation-cap"></i> ${esc(c.name || 'Unnamed Course')}</div>`;
+                    Object.entries(c.modules || {}).forEach(([mId, mod]) => {
+                        html += `<div class="archive-module"><div><div style="font-weight:600;">${esc(mod.code)} - ${esc(mod.name || 'Unnamed Module')}</div><div class="module-meta-line">${moduleMetaLineHtml(mod.meta)}</div></div>
+                            <button class="btn btn-blue btn-mini" onclick="openOutlineFor('${uid}', '${d.id}', '${mId}')"><i class="fas fa-edit"></i> Open &amp; correct</button></div>`;
+                    });
+                    html += '</div>';
+                });
+                box.innerHTML = html;
+            }).catch(err => { box.innerHTML = '<p style="color:var(--danger);">Could not load: ' + esc(err.code || err.message) + '</p>'; });
+        }
+
+        function openOutlineFor(uid, cId, mId) {
+            switchWorkspace(uid, findAccount(uid), cId, mId).then(ok => {
+                if (ok) switchStep(5, document.querySelectorAll('.nav-links li')[4]);
             });
         }
 
@@ -1749,8 +2321,7 @@ service cloud.firestore {
         }
 
         function handleLogout() {
-            saveCurrentToDB(); 
-            auth.signOut().then(() => {
+            flushSaves().then(() => auth.signOut()).then(() => {
                 document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = '';
             }).catch((error) => { alert("Error logging out."); });
         }
@@ -1761,16 +2332,26 @@ service cloud.firestore {
                 e.target.setAttribute('data-manual', 'true');
             }
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.hasAttribute('contenteditable')) {
-                pendingCloudSync = true;
-                clearTimeout(saveTimeout);
-                const statusEl = document.getElementById('sync-status-text');
-                if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                    statusEl.parentElement.style.color = "orange";
-                }
-                saveTimeout = setTimeout(() => performSave(false, false), 500); 
+                if (!isOutlineField(e.target)) return;
+                userEditedSinceSave = true;
+                scheduleAutoSave();
             }
         });
+
+        // Structural edits (adding/removing rows etc.) happen through buttons inside the outline steps.
+        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15']);
+        function isOutlineField(el) {
+            if (el.id && (el.id.startsWith('hdr-') || el.id.startsWith('wm-'))) return false; // account branding, saved separately
+            const sec = el.closest('.form-section');
+            return !!sec && !NON_OUTLINE_SECTIONS.has(sec.id);
+        }
+        document.addEventListener('click', (e) => {
+            if (isProgrammaticChange) return;
+            const b = e.target.closest && e.target.closest('button');
+            if (!b || b.closest('.step-footer') || !isOutlineField(b)) return;
+            userEditedSinceSave = true;
+            scheduleAutoSave();
+        }, true);
 
         // --- 2. ARCHIVE STATE MANAGEMENT ---
         let dbState = { courses: {} };
@@ -1873,7 +2454,8 @@ service cloud.firestore {
                 document.getElementById('top-title').innerText = txt;
             }
             if(num === 10) renderArchive(); 
-            if(num === 14) renderLecturerDirectory();
+            if(num === 14) renderUserDirectory();
+            if(num === 15) renderAllOutlines(false, true);
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
 
@@ -1887,22 +2469,24 @@ service cloud.firestore {
                     subtitle += ` > Module: ${mName}`;
                 }
             }
+            if (!isOwnWorkspace() && wsOwnerInfo) subtitle = "[" + (wsOwnerInfo.name || wsOwnerInfo.email || 'Other user') + "] " + subtitle;
             document.getElementById('top-subtitle').innerText = subtitle;
+            renderOutlineMetaBar();
         }
 
         // --- 3. ARCHIVE CORE LOGIC ---
         function initDefaultDB() {
             let c1 = "c_1_f2f"; let m1 = "m_1_f2f";
-            dbState.courses[c1] = { id: c1, name: "Certificate 3 in Arabic", programData: { inputs: {'p-name': 'ސެޓްފިކެޓް 3 އިން އަރަބިކް', 'p-level': '3', 'b-7-5': 'Face to Face only. 100% physically on campus.'}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {} };
-            dbState.courses[c1].modules[m1] = { id: m1, name: "Basic Arabic Grammar", code: "ARA301", moduleData: { inputs: {'m-name-rtl': 'ގަވާޢިދުލް ޢަރަބިއްޔާ', 'm-name-ltr': 'Basic Arabic Grammar', 'm-code': 'ARA301'} } };
+            dbState.courses[c1] = { id: c1, name: "Certificate 3 in Arabic", programData: { inputs: {'p-name': 'ސެޓްފިކެޓް 3 އިން އަރަބިކް', 'p-level': '3', 'b-7-5': 'Face to Face only. 100% physically on campus.'}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {}, meta: newMeta() };
+            dbState.courses[c1].modules[m1] = { id: m1, name: "Basic Arabic Grammar", code: "ARA301", moduleData: { inputs: {'m-name-rtl': 'ގަވާޢިދުލް ޢަރަބިއްޔާ', 'm-name-ltr': 'Basic Arabic Grammar', 'm-code': 'ARA301'} }, meta: newMeta() };
             
             let c2 = "c_2_blend"; let m2 = "m_2_blend";
-            dbState.courses[c2] = { id: c2, name: "Diploma in Islamic Studies", programData: { inputs: {'p-name': 'ޑިޕްލޮމާ އިން އިސްލާމިކް ސްޓަޑީޒް', 'p-level': '5', 'b-7-5': 'Blended Mode: 30% F2F, 40% Sync, 30% Async.'}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {} };
-            dbState.courses[c2].modules[m2] = { id: m2, name: "Islamic History", code: "HIS501", moduleData: { inputs: {'m-name-rtl': 'ތާރީޚުލް އިސްލާމީ', 'm-name-ltr': 'Islamic History', 'm-code': 'HIS501'} } };
+            dbState.courses[c2] = { id: c2, name: "Diploma in Islamic Studies", programData: { inputs: {'p-name': 'ޑިޕްލޮމާ އިން އިސްލާމިކް ސްޓަޑީޒް', 'p-level': '5', 'b-7-5': 'Blended Mode: 30% F2F, 40% Sync, 30% Async.'}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {}, meta: newMeta() };
+            dbState.courses[c2].modules[m2] = { id: m2, name: "Islamic History", code: "HIS501", moduleData: { inputs: {'m-name-rtl': 'ތާރީޚުލް އިސްލާމީ', 'm-name-ltr': 'Islamic History', 'm-code': 'HIS501'} }, meta: newMeta() };
 
             let c3 = "c_3_elearn"; let m3 = "m_3_elearn";
-            dbState.courses[c3] = { id: c3, name: "Master of Shariah", programData: { inputs: {'p-name': 'މާސްޓަރ އޮފް ޝަރީޢާ', 'p-level': '9', 'b-7-5': 'E-Learning Mode: 100% Online (60% Sync, 40% Async).'}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {} };
-            dbState.courses[c3].modules[m3] = { id: m3, name: "Advanced Fiqh", code: "SHR901", moduleData: { inputs: {'m-name-rtl': 'އެޑްވާންސް ފިޤުހު', 'm-name-ltr': 'Advanced Fiqh', 'm-code': 'SHR901'} } };
+            dbState.courses[c3] = { id: c3, name: "Master of Shariah", programData: { inputs: {'p-name': 'މާސްޓަރ އޮފް ޝަރީޢާ', 'p-level': '9', 'b-7-5': 'E-Learning Mode: 100% Online (60% Sync, 40% Async).'}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {}, meta: newMeta() };
+            dbState.courses[c3].modules[m3] = { id: m3, name: "Advanced Fiqh", code: "SHR901", moduleData: { inputs: {'m-name-rtl': 'އެޑްވާންސް ފިޤުހު', 'm-name-ltr': 'Advanced Fiqh', 'm-code': 'SHR901'} }, meta: newMeta() };
 
             activeCourseId = c2;
             activeModuleId = m2;
@@ -1920,6 +2504,7 @@ service cloud.firestore {
             
             extractDOMToState(activeCourseId, activeModuleId);
             isProgrammaticChange = false;
+            Object.keys(dbState.courses).forEach(id => dirtyCourses.add(id)); // push every sample course, not only the active one
             performSave(false, false);
         }
 
@@ -2092,11 +2677,12 @@ service cloud.firestore {
         }
 
         function createNewCourse() {
+            if (auth.currentUser && !canCreateHere()) return denied(isOwnWorkspace() ? "Your role cannot create outlines." : "New outlines can only be created in your own archive.");
             saveCurrentToDB();
             
             let nCid = genId("c"); let nMid = genId("m");
-            dbState.courses[nCid] = { id: nCid, name: "New Blank Program", programData: { inputs: {}, sCount: 0, aCount: 0, f3Count:0 }, modules: {} };
-            dbState.courses[nCid].modules[nMid] = { id: nMid, name: "New Module", code: "MOD01", moduleData: { inputs: {} } };
+            dbState.courses[nCid] = { id: nCid, name: "New Blank Program", programData: { inputs: {}, sCount: 0, aCount: 0, f3Count:0 }, modules: {}, meta: newMeta() };
+            dbState.courses[nCid].modules[nMid] = { id: nMid, name: "New Module", code: "MOD01", moduleData: { inputs: {} }, meta: newMeta() };
             
             activeCourseId = nCid;
             activeModuleId = nMid;
@@ -2123,9 +2709,10 @@ service cloud.firestore {
         }
 
         function createNewModule(cId) {
+            if (!canCreateHere()) return denied(isOwnWorkspace() ? "Your role cannot create outlines." : "New modules can only be created in your own archive.");
             saveCurrentToDB();
             let nMid = genId("m");
-            dbState.courses[cId].modules[nMid] = { id: nMid, name: "New Module", code: "NEW", moduleData: {} };
+            dbState.courses[cId].modules[nMid] = { id: nMid, name: "New Module", code: "NEW", moduleData: {}, meta: newMeta() };
             
             if(cId === activeCourseId) {
                 activeModuleId = nMid;
@@ -2150,18 +2737,20 @@ service cloud.firestore {
         }
 
         function deleteCourse(cId) {
+            if (!canDeleteOutlines()) return denied("Only the admin can delete outlines. You can still edit this outline.");
             if(!confirm("⚠️ 1/3: Are you absolutely sure you want to DELETE this entire course and all its modules?")) return;
             if(!confirm("⚠️ 2/3: SECOND WARNING! All data will be permanently lost. Proceed?")) return;
             let verify = prompt("⚠️ 3/3: FINAL STEP. Type 'DELETE' in all caps to confirm:");
             if(verify !== "DELETE") { alert("Deletion cancelled."); return; }
 
             delete dbState.courses[cId];
-            if (navigator.onLine && userDocRef) {
-                userDocRef.collection('courses').doc(cId).delete().catch(err => console.error('[RASFAHI] cloud course delete failed', err));
+            dirtyCourses.delete(cId); delete lastCloudJson[cId];
+            if (wsDocRef) {
+                wsDocRef.collection('courses').doc(cId).delete().catch(err => console.error('[RASFAHI] cloud course delete failed', err));
             }
             let keys = Object.keys(dbState.courses);
             if(keys.length === 0) { 
-                createNewCourse(); 
+                if (canCreateHere()) createNewCourse(); else { activeCourseId = null; activeModuleId = null; renderArchive(); renderOutlineMetaBar(); }
             } 
             else if (cId === activeCourseId) { 
                 loadStateFromMemory(keys[0], Object.keys(dbState.courses[keys[0]].modules)[0] || null); 
@@ -2173,18 +2762,21 @@ service cloud.firestore {
         }
 
         function deleteModule(cId, mId) {
+            if (!canDeleteOutlines()) return denied("Only the admin can delete outlines. You can still edit this outline.");
             if(!confirm("⚠️ 1/3: Are you sure you want to DELETE this module?")) return;
             if(!confirm("⚠️ 2/3: SECOND WARNING! All module data will be permanently lost. Proceed?")) return;
             let verify = prompt("⚠️ 3/3: FINAL STEP. Type 'DELETE' in all caps to confirm:");
             if(verify !== "DELETE") { alert("Deletion cancelled."); return; }
 
             delete dbState.courses[cId].modules[mId];
+            dirtyCourses.add(cId);
             if(cId === activeCourseId && mId === activeModuleId) { loadStateFromMemory(cId, Object.keys(dbState.courses[cId].modules)[0] || null); } 
             else { renderArchive(); }
             performSave(false, false);
         }
 
         function hardResetArchive() {
+            if (!canDeleteOutlines() || !isOwnWorkspace()) return denied("Only the admin can reset an archive, and only their own.");
             if(!confirm("⚠️ 1/3: Are you absolutely sure you want to WIPEOUT the entire archive?")) return;
             if(!confirm("⚠️ 2/3: SECOND WARNING! All courses, modules, and local data will be permanently destroyed. Proceed?")) return;
             let verify = prompt("⚠️ 3/3: FINAL STEP. Type 'RESET' in all caps to confirm:");
@@ -2205,12 +2797,13 @@ service cloud.firestore {
             
             const uid = auth.currentUser ? auth.currentUser.uid : 'guest';
             localStorage.removeItem('rasfahi_archive_' + uid);
+            resetSyncTracking();
 
-            if (navigator.onLine && userDocRef) {
-                userDocRef.collection('courses').get().then(snap => {
+            if (navigator.onLine && wsDocRef) {
+                wsDocRef.collection('courses').get().then(snap => {
                     let batch = db.batch();
                     snap.forEach(d => batch.delete(d.ref));
-                    batch.set(userDocRef, { activeCourseId: null, activeModuleId: null, timestamp: new Date().toISOString() });
+                    batch.set(wsDocRef, { activeCourseId: null, activeModuleId: null, timestamp: new Date().toISOString() });
                     return batch.commit();
                 }).catch(err => console.error('[RASFAHI] cloud archive wipe failed', err));
             }
@@ -2221,25 +2814,34 @@ service cloud.firestore {
 
         function renderArchive() {
             const list = document.getElementById('archive-list');
+            const canDel = canDeleteOutlines();
+            const canAdd = canCreateHere();
             let html = '';
+            if (!Object.keys(dbState.courses).length) {
+                html = '<p style="color:#888;">No outlines in this archive yet.</p>';
+            }
             for (const [cId, course] of Object.entries(dbState.courses)) {
                 let isCourseActive = (cId === activeCourseId);
+                const cm = course.meta || {};
                 html += `<div class="archive-course" style="border-color: ${isCourseActive ? 'var(--royal-green)' : 'var(--royal-blue)'}">
                     <div class="archive-course-header">
-                        <h3 style="color:var(--royal-blue); margin:0; font-size:1.4rem;"><i class="fas fa-graduation-cap"></i> ${course.name || 'Unnamed Course'} ${isCourseActive ? '<span class="active-badge" style="background:var(--royal-green); color:var(--royal-white);">Active Editing</span>' : ''}</h3>
+                        <div><h3 style="color:var(--royal-blue); margin:0; font-size:1.4rem;"><i class="fas fa-graduation-cap"></i> ${esc(course.name || 'Unnamed Course')} ${isCourseActive ? '<span class="active-badge" style="background:var(--royal-green); color:var(--royal-white);">Active Editing</span>' : ''}</h3>
+                        <div class="module-meta-line">Created ${fmtDate(cm.createdAt, false)}${cm.lastEditedAt ? ' · Last edited ' + fmtDate(cm.lastEditedAt) + (cm.lastEditedBy ? ' by ' + esc(cm.lastEditedBy) : '') : ''}</div></div>
                         <div>
                             <button class="btn btn-outline" style="padding:6px 12px; font-size:0.9rem;" onclick="loadStateFromMemory('${cId}', Object.keys(dbState.courses['${cId}'].modules)[0] || null)"><i class="fas fa-folder-open"></i> Load</button>
-                            <button class="btn btn-danger" style="padding:6px 12px; font-size:0.9rem;" onclick="deleteCourse('${cId}')"><i class="fas fa-trash"></i></button>
+                            ${canDel ? `<button class="btn btn-danger" style="padding:6px 12px; font-size:0.9rem;" onclick="deleteCourse('${cId}')"><i class="fas fa-trash"></i></button>` : ''}
                         </div>
                     </div><div class="archive-modules-list" style="padding-left: 20px;">
-                    <button class="btn btn-outline" style="padding:6px 12px; font-size:0.85rem; margin-bottom:15px; border-style:dashed;" onclick="createNewModule('${cId}')"><i class="fas fa-plus"></i> Add Module under Course</button>`;
-                for (const [mId, mod] of Object.entries(course.modules)) {
+                    ${canAdd ? `<button class="btn btn-outline" style="padding:6px 12px; font-size:0.85rem; margin-bottom:15px; border-style:dashed;" onclick="createNewModule('${cId}')"><i class="fas fa-plus"></i> Add Module under Course</button>` : ''}`;
+                for (const [mId, mod] of Object.entries(course.modules || {})) {
                     let isModActive = (isCourseActive && mId === activeModuleId);
                     html += `<div class="archive-module" style="border-left-color: ${isModActive ? 'var(--royal-green)' : 'var(--border)'}">
-                        <div style="font-weight:600; font-size:1.1rem; color:var(--royal-dark);">${mod.code} - ${mod.name || 'Unnamed Module'} ${isModActive ? '<span class="active-badge" style="background:var(--royal-blue); color:var(--royal-white);">Loaded</span>' : ''}</div>
-                        <div>
+                        <div><div style="font-weight:600; font-size:1.1rem; color:var(--royal-dark);">${esc(mod.code)} - ${esc(mod.name || 'Unnamed Module')} ${isModActive ? '<span class="active-badge" style="background:var(--royal-blue); color:var(--royal-white);">Loaded</span>' : ''}</div>
+                        <div class="module-meta-line">${moduleMetaLineHtml(mod.meta)}</div></div>
+                        <div style="display:flex; gap:6px; flex-shrink:0;">
                             <button class="btn btn-outline" style="padding:5px 10px; font-size:0.85rem;" onclick="loadStateFromMemory('${cId}', '${mId}')">Load</button>
-                            <button class="btn btn-danger" style="padding:5px 10px; font-size:0.85rem;" onclick="deleteModule('${cId}', '${mId}')"><i class="fas fa-times"></i></button>
+                            <button class="btn btn-outline" style="padding:5px 10px; font-size:0.85rem;" title="Edit history" onclick="showModuleHistory('${cId}', '${mId}')"><i class="fas fa-history"></i></button>
+                            ${canDel ? `<button class="btn btn-danger" style="padding:5px 10px; font-size:0.85rem;" onclick="deleteModule('${cId}', '${mId}')"><i class="fas fa-times"></i></button>` : ''}
                         </div></div>`;
                 }
                 html += `</div></div>`;
@@ -2254,67 +2856,186 @@ service cloud.firestore {
         // would quietly fall back to browser-only storage, and the newer data would simply never
         // reach another device. Each course is now its own document instead, which both keeps
         // documents small and means unrelated courses don't get rewritten on every keystroke.
+        // --- FAST, NON-BLOCKING SAVE ENGINE ---
+        // * Typing never triggers work directly: saves run after a short pause (or at least every
+        //   few seconds during non-stop typing), in the browser's idle time.
+        // * Only courses that actually changed are sent to the cloud (compared with what was last sent).
+        // * Only one cloud write is ever in flight; saves requested meanwhile are merged into one.
+        // * The browser backup copy is throttled and also runs in idle time.
+        const SAVE_IDLE_MS = 1200;          // pause after the last keystroke before saving
+        const SAVE_MAX_WAIT_MS = 8000;      // but never wait longer than this while typing continuously
+        const LOCAL_BACKUP_MIN_GAP_MS = 10000;
+        const CLOUD_WRITE_TIMEOUT_MS = 15000;
+        let saveFirstPendingAt = 0;
+        let userEditedSinceSave = false;
+        let lastCloudJson = {};             // courseId -> JSON last sent to the cloud
+        let dirtyCourses = new Set();
+        let cloudWriteInFlight = false, cloudWriteQueued = false, cloudWriteQueuedManual = false;
+        let localBackupTimer = null, lastLocalBackupAt = 0;
+
+        function resetSyncTracking() { lastCloudJson = {}; dirtyCourses = new Set(); cloudWriteQueued = false; cloudWriteQueuedManual = false; }
+
+        function runWhenIdle(fn, timeout = 1500) {
+            if (window.requestIdleCallback) window.requestIdleCallback(() => fn(), { timeout: timeout });
+            else setTimeout(fn, 0);
+        }
+
+        function setSyncStatus(html, color, title) {
+            const el = document.getElementById('sync-status-text');
+            if (!el) return;
+            const key = html + '|' + color;
+            if (el._rfKey !== key) { el.innerHTML = html; el.parentElement.style.color = color; el._rfKey = key; }
+            el.title = title || '';
+        }
+
+        function scheduleAutoSave() {
+            pendingCloudSync = true;
+            setSyncStatus('<i class="fas fa-spinner fa-spin"></i> Saving...', 'orange');
+            clearTimeout(saveTimeout);
+            const now = Date.now();
+            if (!saveFirstPendingAt) saveFirstPendingAt = now;
+            const wait = Math.max(0, Math.min(SAVE_IDLE_MS, SAVE_MAX_WAIT_MS - (now - saveFirstPendingAt)));
+            saveTimeout = setTimeout(() => runWhenIdle(() => performSave(false, false)), wait);
+        }
+
         function performSave(isManual = false, forceLocal = false) {
-            saveCurrentToDB(); 
-            const statusEl = document.getElementById('sync-status-text');
-            const uid = auth.currentUser ? auth.currentUser.uid : 'guest';
-            
-            let payload = { dbState: dbState, activeCourseId: activeCourseId, activeModuleId: activeModuleId, timestamp: new Date().toISOString() };
-            
-            if (navigator.onLine && !forceLocal && userDocRef) {
-                let metaPayload = { activeCourseId: activeCourseId, activeModuleId: activeModuleId, timestamp: payload.timestamp };
-                let batch = db.batch();
-                batch.set(userDocRef, metaPayload, { merge: true });
-                if (activeCourseId && dbState.courses[activeCourseId]) {
-                    batch.set(userDocRef.collection('courses').doc(activeCourseId), dbState.courses[activeCourseId]);
-                }
-                batch.commit().then(() => {
-                    statusEl.innerHTML = 'Saved to Cloud <i class="fas fa-check-circle"></i>'; 
-                    statusEl.parentElement.style.color = "var(--royal-green-light)";
-                    pendingCloudSync = false;
-                    if(isManual) alert("Successfully saved to Cloud Archive!");
-                }).catch(err => {
-                    console.error("Cloud save failed", err);
-                    saveToLocal(payload, uid, false);
-                    let errMsg = (err && (err.code || err.message)) ? (err.code || err.message) : 'unknown error';
-                    statusEl.innerHTML = 'Cloud save failed (' + errMsg + ') - saved locally only <i class="fas fa-exclamation-triangle"></i>';
-                    statusEl.title = err && err.message ? err.message : '';
-                    statusEl.parentElement.style.color = "var(--danger)";
-                    if(isManual) alert("Could not save to the Cloud Archive (saved to this browser only).\n\nError: " + errMsg + "\n\nThis is usually either no internet connection, or the Firestore Security Rules not allowing access to the 'courses' subcollection - check the Firebase Console > Firestore Database > Rules.");
-                });
-            } else {
-                saveToLocal(payload, uid, isManual);
+            clearTimeout(saveTimeout);
+            saveFirstPendingAt = 0;
+            saveCurrentToDB();
+            if (activeCourseId && dbState.courses[activeCourseId]) {
+                if (userEditedSinceSave) recordEdit(activeCourseId, activeModuleId);
+                dirtyCourses.add(activeCourseId);
             }
+            userEditedSinceSave = false;
+
+            if (forceLocal || !navigator.onLine || !wsDocRef) {
+                writeLocalBackup(true, isManual);
+                return;
+            }
+            scheduleLocalBackup();
+            pushDirtyCoursesToCloud(isManual);
+        }
+
+        function pushDirtyCoursesToCloud(isManual) {
+            if (!wsDocRef) return;
+            if (cloudWriteInFlight) { cloudWriteQueued = true; cloudWriteQueuedManual = cloudWriteQueuedManual || isManual; return; }
+
+            const writes = [];
+            dirtyCourses.forEach(id => {
+                const course = dbState.courses[id];
+                if (!course) { dirtyCourses.delete(id); return; }
+                const json = JSON.stringify(course);
+                if (isManual || lastCloudJson[id] !== json) writes.push({ id: id, json: json });
+            });
+            dirtyCourses.clear();
+
+            if (!writes.length) {
+                pendingCloudSync = false;
+                setSyncStatus('Saved to Cloud <i class="fas fa-check-circle"></i>', 'var(--royal-green-light)');
+                if (isManual) alert("Successfully saved to Cloud Archive!");
+                return;
+            }
+
+            const targetRef = wsDocRef;
+            const batch = db.batch();
+            if (isOwnWorkspace()) batch.set(targetRef, { activeCourseId: activeCourseId, activeModuleId: activeModuleId, timestamp: nowIso() }, { merge: true });
+            writes.forEach(w => batch.set(targetRef.collection('courses').doc(w.id), JSON.parse(w.json)));
+
+            cloudWriteInFlight = true;
+            let settled = false;
+            const finish = () => {
+                cloudWriteInFlight = false;
+                if (cloudWriteQueued) {
+                    const m = cloudWriteQueuedManual; cloudWriteQueued = false; cloudWriteQueuedManual = false;
+                    if (targetRef === wsDocRef) pushDirtyCoursesToCloud(m);
+                }
+            };
+            // Slow / flaky connection: stop waiting. Firestore keeps the write queued on this device
+            // and delivers it by itself, so the editor is never held up.
+            const safety = setTimeout(() => {
+                if (settled) return; settled = true;
+                setSyncStatus('Saved on this device - cloud sync pending <i class="fas fa-clock"></i>', 'orange');
+                writeLocalBackup(false, false);
+                finish();
+            }, CLOUD_WRITE_TIMEOUT_MS);
+
+            batch.commit().then(() => {
+                writes.forEach(w => { lastCloudJson[w.id] = w.json; });
+                if (settled) return; settled = true; clearTimeout(safety);
+                if (!cloudWriteQueued && dirtyCourses.size === 0) pendingCloudSync = false;
+                setSyncStatus('Saved to Cloud <i class="fas fa-check-circle"></i>', 'var(--royal-green-light)');
+                if (isManual) alert("Successfully saved to Cloud Archive!");
+                finish();
+            }).catch(err => {
+                console.error("Cloud save failed", err);
+                if (targetRef === wsDocRef) writes.forEach(w => dirtyCourses.add(w.id));
+                const errMsg = (err && (err.code || err.message)) ? (err.code || err.message) : 'unknown error';
+                if (!settled) { settled = true; clearTimeout(safety); }
+                writeLocalBackup(false, false);
+                setSyncStatus('Cloud save failed (' + esc(errMsg) + ') - saved locally only <i class="fas fa-exclamation-triangle"></i>', 'var(--danger)', err && err.message ? err.message : '');
+                if (isManual) alert("Could not save to the Cloud Archive (saved to this browser only).\n\nError: " + errMsg + "\n\nThis is usually either no internet connection, or the Firestore Security Rules not allowing this action - check Firebase Console > Firestore Database > Rules.");
+                cloudWriteInFlight = false;
+                cloudWriteQueued = false; cloudWriteQueuedManual = false;   // avoid retry loops on a permanent error
+            });
+        }
+
+        // Resolves once everything pending has been handed to the cloud (or after a few seconds at most).
+        function flushSaves() {
+            if (auth.currentUser && activeCourseId) performSave(false, false);
+            return new Promise(resolve => {
+                const t0 = Date.now();
+                (function wait() {
+                    if ((!cloudWriteInFlight && !cloudWriteQueued) || Date.now() - t0 > 8000) return resolve();
+                    setTimeout(wait, 150);
+                })();
+            });
+        }
+
+        function scheduleLocalBackup() {
+            if (localBackupTimer || !isOwnWorkspace()) return;
+            const gap = Math.max(0, LOCAL_BACKUP_MIN_GAP_MS - (Date.now() - lastLocalBackupAt));
+            localBackupTimer = setTimeout(() => { localBackupTimer = null; runWhenIdle(() => writeLocalBackup(false, false), 3000); }, gap);
+        }
+
+        function writeLocalBackup(showStatus, isManual) {
+            const key = 'rasfahi_archive_' + (wsUid || 'guest');
+            try {
+                localStorage.setItem(key, JSON.stringify({ dbState: dbState, activeCourseId: activeCourseId, activeModuleId: activeModuleId, timestamp: nowIso() }));
+                lastLocalBackupAt = Date.now();
+            } catch (e) {
+                console.warn('[RASFAHI] browser backup failed (storage may be full)', e);
+                if (isManual) alert("Could not save to this browser - its storage may be full. Your work is still in the Cloud Archive if you are online.");
+                return;
+            }
+            if (showStatus) setSyncStatus('Saved to Browser (Offline) <i class="fas fa-check-circle"></i>', 'orange');
+            if (isManual) alert("Saved locally to Browser Bank!");
         }
 
         // Syncs every course in dbState to its own Firestore document. Used for bulk operations
-        // (restoring a backup, migrating an older single-document archive) where more than just the
-        // active course needs to reach the cloud - performSave() alone only touches the active course.
+        // (restoring a backup, migrating an older single-document archive, coming back online).
         function syncAllCoursesToCloud(silent = true) {
-            if (!(navigator.onLine && userDocRef)) return Promise.resolve();
+            if (!(navigator.onLine && wsDocRef)) return Promise.resolve();
             let courseIds = Object.keys(dbState.courses);
             if (courseIds.length === 0) return Promise.resolve();
+            const targetRef = wsDocRef;
+            const own = isOwnWorkspace();
             let batch = db.batch();
-            batch.set(userDocRef, { activeCourseId: activeCourseId, activeModuleId: activeModuleId, timestamp: new Date().toISOString() }, { merge: true });
+            if (own) batch.set(targetRef, { activeCourseId: activeCourseId, activeModuleId: activeModuleId, timestamp: nowIso() }, { merge: true });
+            const sent = {};
             courseIds.forEach(cId => {
-                batch.set(userDocRef.collection('courses').doc(cId), dbState.courses[cId]);
+                sent[cId] = JSON.stringify(dbState.courses[cId]);
+                batch.set(targetRef.collection('courses').doc(cId), dbState.courses[cId]);
             });
             return batch.commit().then(() => {
+                Object.assign(lastCloudJson, sent);
+                if (!own) return;
                 // Every course is now safely in its own document, so it's safe to clear any
                 // leftover embedded blob from the old single-document format.
-                return userDocRef.update({ dbState: firebase.firestore.FieldValue.delete() }).catch(() => {});
+                return targetRef.update({ dbState: firebase.firestore.FieldValue.delete() }).catch(() => {});
             }).catch(err => {
                 console.error('[RASFAHI] syncAllCoursesToCloud failed', err);
-                if (!silent) alert("Could not fully sync to the Cloud Archive - some courses may be too large. Your data is still safe in this browser.");
+                if (!silent) alert("Could not fully sync to the Cloud Archive - some courses may be too large or your role may not allow it. Your data is still safe in this browser.");
             });
-        }
-
-        function saveToLocal(payload, uid, isManual) {
-            const statusEl = document.getElementById('sync-status-text');
-            localStorage.setItem('rasfahi_archive_' + uid, JSON.stringify(payload));
-            statusEl.innerHTML = 'Saved to Browser (Offline) <i class="fas fa-check-circle"></i>'; 
-            statusEl.parentElement.style.color = "orange";
-            if(isManual) alert("Saved locally to Browser Bank!");
         }
 
         function showConnectionBanner(message, color, autoHideMs) {
@@ -2358,14 +3079,15 @@ service cloud.firestore {
         function restoreData(uid) {
             const statusEl = document.getElementById('sync-status-text');
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Archive...';
-            if (navigator.onLine && userDocRef) {
-                userDocRef.get().then((metaDoc) => {
-                    userDocRef.collection('courses').get().then((coursesSnap) => {
+            if (navigator.onLine && wsDocRef) {
+                wsDocRef.get().then((metaDoc) => {
+                    wsDocRef.collection('courses').get().then((coursesSnap) => {
                         let cloudCourses = {};
                         coursesSnap.forEach(d => { cloudCourses[d.id] = d.data(); });
 
                         if (Object.keys(cloudCourses).length > 0) {
                             dbState = { courses: cloudCourses };
+                            Object.keys(cloudCourses).forEach(id => { lastCloudJson[id] = JSON.stringify(cloudCourses[id]); });
                             let meta = metaDoc.exists ? metaDoc.data() : {};
                             let cid = (meta.activeCourseId && cloudCourses[meta.activeCourseId]) ? meta.activeCourseId : Object.keys(cloudCourses)[0];
                             let mid = meta.activeModuleId || null;
@@ -2399,14 +3121,22 @@ service cloud.firestore {
                     dbState = data.dbState; loadStateFromMemory(data.activeCourseId, data.activeModuleId, true);
                     // Local data exists but the cloud had none for this account - push it up so
                     // other devices can see it too.
-                    if (navigator.onLine && userDocRef) syncAllCoursesToCloud(true);
-                } else { initDefaultDB(); }
+                    if (navigator.onLine && wsDocRef) syncAllCoursesToCloud(true);
+                } else { startEmptyOrDefault(); }
                 statusEl.innerHTML = 'Loaded from Browser <i class="fas fa-check-circle"></i>'; 
                 statusEl.parentElement.style.color = "var(--royal-green-light)";
             } else {
-                initDefaultDB(); statusEl.innerText = "Ready (New Archive)";
+                startEmptyOrDefault(); statusEl.innerText = "Ready (New Archive)";
             }
             isProgrammaticChange = false; 
+            renderOutlineMetaBar();
+        }
+
+        // Roles that cannot create outlines (Secretary) start with an empty archive instead of samples.
+        function startEmptyOrDefault() {
+            if (!auth.currentUser || canCreateHere()) { initDefaultDB(); return; }
+            dbState = { courses: {} }; activeCourseId = null; activeModuleId = null;
+            updateTopTitleStatus();
         }
 
         // --- BACKUP / IMPORT LOGIC ---
@@ -2433,8 +3163,11 @@ service cloud.firestore {
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (importedData && importedData.courses) {
-                        if(confirm("⚠️ WARNING: Importing a backup will REPLACE your current unsaved workspace. Do you want to proceed?")) {
-                            dbState = importedData;
+                        if (auth.currentUser && !canCreateHere()) { event.target.value = ""; return denied("Your role cannot import outlines into this archive."); }
+                        const replaceAll = canDeleteOutlines();
+                        if(confirm(replaceAll ? "⚠️ WARNING: Importing a backup will REPLACE your current unsaved workspace. Do you want to proceed?" : "Import this backup? Its courses will be ADDED to your archive (nothing existing is removed).")) {
+                            if (replaceAll) dbState = importedData;
+                            else dbState = { courses: Object.assign({}, dbState.courses, importedData.courses) };
                             const firstCourseId = Object.keys(dbState.courses)[0];
                             if (firstCourseId) {
                                 const firstModId = Object.keys(dbState.courses[firstCourseId].modules)[0];
@@ -2484,6 +3217,7 @@ service cloud.firestore {
         function readWordFile(event) {
             const file = event.target.files[0];
             if (!file) return;
+            if (auth.currentUser && !canCreateHere()) { event.target.value = ''; return denied(isOwnWorkspace() ? "Your role cannot create outlines." : "Imported outlines can only be created in your own archive."); }
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -2868,8 +3602,8 @@ service cloud.firestore {
             let nMid = genId("m");
 
             // Initialize empty shells in dbState
-            dbState.courses[nCid] = { id: nCid, name: pName, programData: { inputs: {}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {} };
-            dbState.courses[nCid].modules[nMid] = { id: nMid, name: mNameRtl, code: safeModCode, moduleData: { inputs: {} } };
+            dbState.courses[nCid] = { id: nCid, name: pName, programData: { inputs: {}, sCount: 0, aCount: 0, f3Count: 1 }, modules: {}, meta: newMeta() };
+            dbState.courses[nCid].modules[nMid] = { id: nMid, name: mNameRtl, code: safeModCode, moduleData: { inputs: {} }, meta: newMeta() };
 
             activeCourseId = nCid;
             activeModuleId = nMid;
