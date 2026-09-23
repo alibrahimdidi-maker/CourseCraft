@@ -21,7 +21,8 @@
         @font-face {
             font-family: 'Faruma';
             src: local('Faruma'), local('MV Faruma'), local('A_Faruma'), local('Faruma Regular'),
-                 url('fonts/NotoSansThaana-Regular.woff2') format('woff2');
+                 url('fonts/Faruma.woff2') format('woff2'),
+                 url('fonts/Faruma.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
             font-display: swap;
@@ -923,7 +924,6 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <img src="images/logo-with-name.png" alt="Islamic University of Maldives" style="max-width:100%; height:auto; max-height:110px; margin-bottom:15px;">
             <h2>RASFAHI</h2>
             <h4>MNQF Program Builder</h4>
             
@@ -3274,6 +3274,21 @@ service cloud.firestore {
                 o\\:* {behavior:url(#default#VML);}
                 w\\:* {behavior:url(#default#VML);}
                 .shape {behavior:url(#default#VML);}
+                /* The Preview modal renders this whole style block inside an <iframe srcdoc="">,
+                   which does NOT inherit the main page's <head> (including its @font-face rules) -
+                   so without a font-face declared here too, Thaana text in the Preview fell through
+                   to a generic system fallback and looked wrong. Declaring it again here (relative
+                   paths resolve fine inside a srcdoc iframe, against the hosting page's URL) fixes
+                   the Preview; it's a harmless no-op for the downloaded/portable Word file, which
+                   still prefers the local() system font names first anyway. */
+                @font-face {
+                    font-family: 'Faruma';
+                    src: local('Faruma'), local('MV Faruma'), local('A_Faruma'), local('Faruma Regular'),
+                         url('fonts/Faruma.woff2') format('woff2'),
+                         url('fonts/Faruma.ttf') format('truetype');
+                    font-weight: normal;
+                    font-style: normal;
+                }
                 @page Section1 {
                     size: 420.0mm 297.0mm;
                     mso-page-orientation: landscape;
