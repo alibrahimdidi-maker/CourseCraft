@@ -1039,6 +1039,28 @@
         .binder-body { padding:6px 12px 12px; overflow-x:auto; }
         .fac-hero-sub { direction:rtl; font-family:'Faruma','Noto Sans Thaana',serif; opacity:0.9; }
 
+        /* ===== COURSE ARCHIVE ===== */
+        .course-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:20px; }
+        .course-card { --fc:#1e3a8a; position:relative; cursor:pointer; background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 12px 30px rgba(15,23,42,0.10); border:1px solid #e8edf5; transition:0.25s; }
+        .course-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(11,31,77,0.18); }
+        .course-card .cc-top { background:linear-gradient(135deg, var(--fc) 0%, #0b1f4d 75%); color:#fff; padding:16px 18px 14px; border-bottom:3px solid #c9a227; }
+        .course-card .cc-code { font-size:0.75rem; font-weight:800; letter-spacing:1px; color:#f3d27a; }
+        .course-card .cc-name { font-family:'Playfair Display', serif; font-size:1.12rem; font-weight:700; margin-top:4px; line-height:1.3; }
+        .course-card .cc-dv { direction:rtl; text-align:right; font-family:'Faruma','Noto Sans Thaana',serif; font-size:0.9rem; opacity:0.9; margin-top:4px; }
+        .course-card .cc-body { padding:14px 18px 16px; }
+        .course-card .cc-facts { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; font-size:0.8rem; color:#334155; }
+        .course-card .cc-facts b { color:#0b1f4d; }
+        .course-card .cc-bar { height:8px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin:12px 0 6px; display:flex; }
+        .course-card .cc-bar span { display:block; height:100%; }
+        .course-card .cc-counts { display:flex; gap:5px; flex-wrap:wrap; }
+        .course-card .cc-cert { position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.15); border:1px solid rgba(243,210,122,0.6); color:#fff; border-radius:12px; padding:3px 9px; font-size:0.7rem; font-weight:700; }
+        .course-card.unregistered .cc-top { background:linear-gradient(135deg, #64748b, #1e293b); }
+        .course-info-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px; margin-top:14px; }
+        .course-info-grid div { background:rgba(255,255,255,0.12); border-radius:10px; padding:10px 12px; }
+        .course-info-grid span { display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.6px; opacity:0.85; }
+        .course-info-grid b { font-size:1rem; }
+        .lock-note { font-size:0.75rem; color:#64748b; white-space:nowrap; }
+
         /* STARTUP SPLASH */
         #rf-splash { position:fixed; inset:0; z-index:200000; background:radial-gradient(circle at 50% 40%, #ffffff 0%, #eef2f7 70%, #e2e8f0 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; transition:opacity 0.6s ease, visibility 0.6s ease; }
         #rf-splash.hide { opacity:0; visibility:hidden; }
@@ -1176,6 +1198,7 @@
                 <li id="nav-my-tasks" onclick="switchStep(18, this)" style="display:none; background: rgba(201, 162, 39, 0.3); border-color: #c9a227;"><i class="fas fa-calendar-check"></i> <span>My Tasks</span><span id="my-tasks-count" class="nav-count"></span></li>
                 <li id="nav-faculty-flow" onclick="switchStep(20, this)" style="display:none; background: rgba(6, 95, 70, 0.35); border-color: #c9a227;"><i class="fas fa-stamp"></i> <span>Faculty Approvals</span><span id="flow-count" class="nav-count"></span></li>
                 <li id="nav-curriculum" onclick="switchStep(19, this)" style="display:none; background: rgba(15, 118, 110, 0.45); border-color: #c9a227;"><i class="fas fa-landmark"></i> <span>Curriculum Review</span><span id="cur-count" class="nav-count"></span></li>
+                <li id="nav-course-archive" onclick="switchStep(21, this)" style="display:none; background: rgba(201, 162, 39, 0.28); border-color: #c9a227;"><i class="fas fa-book"></i> <span>Course Archive</span></li>
             </ul>
             
             <div class="sync-badge" id="sync-status">
@@ -1942,6 +1965,10 @@ service cloud.firestore {
                     <div id="flow-root"><p style="color:#888;">Loading...</p></div>
                 </div>
 
+                <div id="step-21" class="form-section">
+                    <div id="archive-root"><p style="color:#888;">Loading...</p></div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -2075,7 +2102,7 @@ service cloud.firestore {
             const col = db.collection(colName);
             return isUni() ? col : col.where('facultyId', '==', myFac() || '__none__');
         }
-        const selFac = { dash: 'ALL', alloc: '', ao: 'ALL', flow: '', cur: 'ALL', users: 'ALL' };
+        const selFac = { dash: 'ALL', alloc: '', ao: 'ALL', flow: '', cur: 'ALL', users: 'ALL', arch: 'ALL' };
         function facChipsHtml(key, current, opts = {}) {
             const items = (opts.all ? [{ id: 'ALL', label: 'ALL', title: 'All faculties & centres' }] : [])
                 .concat(FACULTIES.map(f => ({ id: f.id, label: f.id, title: f.name, color: f.color })))
@@ -2090,6 +2117,7 @@ service cloud.firestore {
             if (key === 'flow') renderFacultyFlow();
             if (key === 'cur') renderCurriculum();
             if (key === 'users') renderUserDirectory();
+            if (key === 'arch') { selCourse = null; renderCourseArchive(); }
         }
 
         let userDocRef = null;
@@ -2158,6 +2186,7 @@ service cloud.firestore {
             show('nav-dashboard', can('dashboard'));
             show('nav-allocation', can('allocate'));
             show('nav-curriculum', can('curriculum'));
+            show('nav-course-archive', can('viewAll'));
             show('nav-faculty-flow', can('viewAll') && (!can('curriculum') || can('manageUsers')));
             const nf = document.getElementById('new-user-faculty');
             if (nf && nf.options.length <= 1) FACULTIES.forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.id + ' - ' + f.name; nf.appendChild(o); });
@@ -2179,7 +2208,7 @@ service cloud.firestore {
             stopAssignmentsWatch();
             stopBindersWatch();
             accountsCache = null; facBackfillDone = false;
-            Object.assign(selFac, { dash: 'ALL', alloc: '', ao: 'ALL', flow: '', cur: 'ALL', users: 'ALL' });
+            Object.assign(selFac, { dash: 'ALL', alloc: '', ao: 'ALL', flow: '', cur: 'ALL', users: 'ALL', arch: 'ALL' }); selCourse = null; forceReadOnly = false;
             if (systemResetUnsub) { systemResetUnsub(); systemResetUnsub = null; }
             if (user) {
                 userDocRef = db.collection("rasfahi_users").doc(user.uid);
@@ -3029,6 +3058,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (isStepActive(12)) renderImportTaskPicker();
             if (isStepActive(19)) renderCurriculum();
             if (isStepActive(20)) renderFacultyFlow();
+            if (isStepActive(21)) renderCourseArchive();
             updateWorkflowBadges();
         }
         // Tasks allocated before faculties existed: give them their lecturer's faculty (Admin, once per session).
@@ -3098,6 +3128,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         function activeModuleObj() { const c = activeCourseId && dbState.courses[activeCourseId]; return c && activeModuleId && c.modules ? c.modules[activeModuleId] : null; }
         function isLockedForMe() {
             if (auth.currentUser && !isOwnWorkspace() && !can('editAll')) return true;          // Curriculum: read-only view
+            if (auth.currentUser && !isOwnWorkspace() && forceReadOnly) return true;              // released archive copy: view only
             const mod = activeModuleObj();
             return !!(mod && mod.meta && mod.meta.locked === true && isOwnWorkspace() && !can('editAll'));
         }
@@ -3459,7 +3490,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 ? `<div style="font-weight:700; color:var(--r-navy); margin-bottom:4px;"><i class="fas fa-university"></i> Allocate for faculty / centre:</div>` + facChipsHtml('alloc', fac)
                 : (fac ? `<div style="margin-bottom:12px;">${facTag(fac)} <b>${esc(facName(fac))}</b></div>` : '');
             if (!fac) { root.innerHTML = '<p style="color:var(--danger);">Your account has no faculty set yet. Ask the Admin to set your faculty in Manage Users.</p>'; return; }
-            const progs = Array.from(new Set(Object.values(assignmentsMap).filter(a => taskFac(a) === fac && a.programName).map(a => a.programName))).sort();
+            const progs = Array.from(new Set(Object.values(assignmentsMap).filter(a => taskFac(a) === fac && a.programName).map(a => a.programName)
+                .concat(Object.values(bindersMap).filter(b => b.facultyId === fac && b.programName).map(b => b.programName)))).sort();
             const q = (document.getElementById('alloc-filter').value || '').toLowerCase().trim();
             const people = allocPeople().filter(p => !q || String(p.name || '').toLowerCase().includes(q) || String(p.email || '').toLowerCase().includes(q));
             if (!people.length) { root.innerHTML = `<p style="color:#888;">No staff found in ${esc(facName(fac))}. Create accounts for this faculty (or set their faculty) on the Manage Users page first.</p>`; return; }
@@ -3901,6 +3933,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (isStepActive(19)) renderCurriculum();
             if (isStepActive(20)) renderFacultyFlow();
             if (isStepActive(16)) scheduleDashboardRender();
+            if (isStepActive(21)) renderCourseArchive();
             updateWorkflowBadges();
         }
         function updateWorkflowBadges() {
@@ -4022,6 +4055,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 bindersMap = {}; snap.forEach(d => { bindersMap[d.id] = Object.assign({ id: d.id }, d.data()); });
                 if (isStepActive(19)) renderCurriculum();
                 if (isStepActive(20)) renderFacultyFlow();
+                if (isStepActive(21)) renderCourseArchive();
+                if (isStepActive(17)) renderAllocation();
             }, err => console.warn('[RASFAHI] binders watch failed', err && err.code));
         }
         function stopBindersWatch() { if (bindersUnsub) { bindersUnsub(); bindersUnsub = null; } bindersScope = null; bindersMap = {}; }
@@ -4070,7 +4105,12 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     <button class="btn btn-green btn-mini" onclick="viewCertificate('${g.key}')"><i class="fas fa-eye"></i> View / download</button>
                     ${canEdit ? `<button class="btn btn-danger btn-mini" onclick="removeCertificate('${g.key}')"><i class="fas fa-times"></i></button>` : ''}` : '<span style="color:#92400e;">not uploaded yet</span>'} ${up}</div>`;
         }
-        function openBtn(a) { return a.courseId ? `<button class="btn btn-outline btn-mini" title="Open outline" onclick="openOutlineFor('${esc(a.lecturerUid)}','${esc(a.courseId)}','${esc(a.moduleId)}')"><i class="fas fa-eye"></i></button>` : ''; }
+        function openBtn(a) {
+            if (!a.courseId) return '';
+            const mode = taskOpenMode(a);
+            if (!mode) return `<span class="lock-note" title="Opens after MQA approval and certificate release"><i class="fas fa-lock"></i> locked</span>`;
+            return `<button class="btn btn-outline btn-mini" title="${mode === 'view' ? 'View outline (read only)' : 'Open outline'}" onclick="openOutlineFor('${esc(a.lecturerUid)}','${esc(a.courseId)}','${esc(a.moduleId)}')"><i class="fas fa-eye"></i>${mode === 'view' ? ' View' : ''}</button>`;
+        }
         function commentsBtn(a) { const n = taskComments(a).length; return `<button class="btn btn-outline btn-mini" title="Review comments" onclick="openTaskComments('${a.id}')"><i class="fas fa-comments"></i>${n ? ' ' + n : ''}</button>`; }
 
         // ----- Curriculum Review page -----
@@ -4166,11 +4206,180 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                         <td>${pipelineStepperHtml(a)}</td><td style="white-space:nowrap;">${openBtn(a)} ${commentsBtn(a)}</td></tr>`).join('')}
                     </tbody></table></div>` : '<p style="color:#94a3b8; margin:0;">No outlines have been allocated in this faculty yet.</p>'}</div>`;
             const groups = groupByBinder(tasks.filter(a => ['mqa', 'approved'].includes(a.stage) || bindersMap[binderKey(fac, (a.programName || '').trim() || 'General (no programme set)')]));
-            html += `<div class="dash-card"><h3><i class="fas fa-folder-open"></i> Programme binders</h3><div class="dash-sub">Certificate copies uploaded by the Curriculum Department after MQA approval</div>
+            html += `<div class="dash-card"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;"><div><h3><i class="fas fa-folder-open"></i> Programme binders</h3><div class="dash-sub">Certificate copies uploaded by the Curriculum Department after MQA approval</div></div>
+                <button class="btn btn-outline btn-mini" onclick="switchStep(21, document.getElementById('nav-course-archive'))"><i class="fas fa-book"></i> Open Course Archive</button></div>
                 ${groups.length ? groups.map(g => `<div class="binder-card" style="--fc:${facColor(g.fac)}; box-shadow:none; border:1px solid #e8edf5;"><div class="binder-head"><h4><i class="fas fa-folder"></i> ${esc(g.prog)}</h4>
                     <span>${g.tasks.filter(a => a.stage === 'approved').length}/${g.tasks.length} approved</span></div>${binderCertHtml(g, isUni())}</div>`).join('') : '<p style="color:#94a3b8; margin:0;">No programme has reached MQA yet.</p>'}</div>`;
             root.innerHTML = html;
             updateWorkflowBadges();
+        }
+
+
+        // =====================================================================================
+        //  COURSE ARCHIVE  -  one card per course (programme) with its modules and their status
+        // =====================================================================================
+        let selCourse = null;
+        const ARCH_STATUS = [
+            { key: 'approved',   label: 'MQA approved',                     color: '#059669' },
+            { key: 'mqa',        label: 'In MQA process',                   color: '#6d28d9' },
+            { key: 'curriculum', label: 'Being prepared by Curriculum for MQA', color: '#1e3a8a' },
+            { key: 'returned',   label: 'Returned to faculty for amendment', color: '#dc2626' },
+            { key: 'faculty',    label: 'Still at the faculty',             color: '#f59e0b' }
+        ];
+        function archStatus(a) { const s = pipeStep(a); return s === 'lecturer' || s === 'dean' ? 'faculty' : s; }
+        function courseList(facFilter) {
+            const map = {};
+            Object.values(bindersMap).forEach(b => {
+                if (!b.programName) return;
+                map[b.id] = { key: b.id, fac: b.facultyId || 'NONE', prog: b.programName, b: b, tasks: [] };
+            });
+            groupByBinder(Object.values(assignmentsMap)).forEach(g => {
+                if (map[g.key]) map[g.key].tasks = g.tasks; else map[g.key] = { key: g.key, fac: g.fac, prog: g.prog, b: null, tasks: g.tasks };
+            });
+            const order = f => { const i = FACULTIES.findIndex(x => x.id === f); return i < 0 ? 99 : i; };
+            return Object.values(map).filter(c => !facFilter || facFilter === 'ALL' || c.fac === facFilter)
+                .sort((x, y) => (order(x.fac) - order(y.fac)) || x.prog.localeCompare(y.prog));
+        }
+        function courseCounts(c) {
+            const n = { approved: 0, mqa: 0, curriculum: 0, returned: 0, faculty: 0 };
+            c.tasks.forEach(a => n[archStatus(a)]++);
+            const total = Math.max(parseInt((c.b && c.b.totalModules) || 0, 10) || 0, c.tasks.length);
+            n.missing = total - c.tasks.length; n.total = total;
+            return n;
+        }
+        function courseCardHtml(c) {
+            const b = c.b || {}, n = courseCounts(c), total = n.total || 1;
+            const seg = ARCH_STATUS.map(s => n[s.key] ? `<span style="width:${n[s.key] / total * 100}%; background:${s.color};" title="${s.label}: ${n[s.key]}"></span>` : '').join('');
+            return `<div class="course-card ${c.b ? '' : 'unregistered'}" style="--fc:${facColor(c.fac)}" onclick="openCourse('${c.key}')">
+                <div class="cc-top">${b.certificate ? `<span class="cc-cert">${b.released ? '✅ Certificate released' : '📎 Certificate'}</span>` : ''}
+                    <div class="cc-code">${facShort(c.fac)}${b.code ? ' · ' + esc(b.code) : ''}</div>
+                    <div class="cc-name">${esc(b.fullName || c.prog)}</div>${b.dvName ? `<div class="cc-dv">${esc(b.dvName)}</div>` : ''}</div>
+                <div class="cc-body">
+                    <div class="cc-facts"><div>Level: <b>${esc(b.level ? 'MNQF ' + b.level : '—')}</b></div><div>Credits: <b>${esc(b.credits || '—')}</b></div>
+                        <div>Modality: <b>${esc(b.modality || '—')}</b></div><div>Duration: <b>${esc(b.duration || '—')}</b></div>
+                        <div>Modules: <b>${n.total}</b></div><div>Approved: <b>${n.approved}/${n.total}</b></div></div>
+                    <div class="cc-bar">${seg}</div>
+                    <div class="cc-counts">${n.approved ? `<span class="pipe-badge pipe-approved">${n.approved} approved</span>` : ''}${n.mqa ? `<span class="pipe-badge pipe-mqa">${n.mqa} MQA</span>` : ''}${n.curriculum ? `<span class="pipe-badge pipe-curriculum">${n.curriculum} Curriculum</span>` : ''}${n.returned ? `<span class="pipe-badge pipe-returned">${n.returned} returned</span>` : ''}${n.faculty ? `<span class="pipe-badge pipe-dean">${n.faculty} at faculty</span>` : ''}${n.missing > 0 ? `<span class="pipe-badge pipe-lecturer">${n.missing} not allocated</span>` : ''}</div>
+                    ${c.b ? '' : '<div style="font-size:0.75rem; color:#b45309; margin-top:8px;"><i class="fas fa-info-circle"></i> Course details not registered yet</div>'}
+                </div></div>`;
+        }
+        function openCourse(key) { selCourse = key; renderCourseArchive(); const ca = document.querySelector('.content-area'); if (ca) ca.scrollTop = 0; }
+
+        function renderCourseArchive() {
+            const root = document.getElementById('archive-root'); if (!root) return;
+            if (!can('viewAll')) { root.innerHTML = '<p style="color:var(--danger);">No access.</p>'; return; }
+            const fac = isUni() ? (selFac.arch || 'ALL') : myFac();
+            if (!fac) { root.innerHTML = '<p style="color:var(--danger);">Your account has no faculty set yet. Ask the Admin to set your faculty in Manage Users.</p>'; return; }
+            if (selCourse) { const c = courseList('ALL').find(x => x.key === selCourse); if (c) { root.innerHTML = courseDetailHtml(c); return; } selCourse = null; }
+            const list = courseList(fac);
+            let html = `<div class="dash-hero"><div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+                    <div><h2><i class="fas fa-book"></i> Course Archive</h2><div class="gold-rule"></div>
+                    <p>${isUni() ? 'Every course of every faculty and centre - its details, its modules and where each module outline is in the Curriculum / MQA process.' : esc(facName(fac)) + ' - your courses and the progress of their module outlines with Curriculum and MQA.'}</p></div>
+                    ${can('curriculum') ? `<button class="btn btn-outline btn-mini" style="background:#fff;" onclick="openCourseEditor('')"><i class="fas fa-plus"></i> Register a course</button>` : ''}</div></div>
+                ${isUni() ? facChipsHtml('arch', fac, { all: true }) : ''}`;
+            html += list.length ? `<div class="course-grid">${list.map(courseCardHtml).join('')}</div>`
+                                : `<div class="dash-card"><p style="color:#64748b; margin:0;">No courses yet. ${can('curriculum') ? 'Register a course, or allocate module outlines with a programme / course name.' : 'Courses appear here once module outlines are allocated with a programme / course name.'}</p></div>`;
+            root.innerHTML = html;
+        }
+
+        function courseDetailHtml(c) {
+            const b = c.b || {}, n = courseCounts(c), cur = can('curriculum');
+            const g = { key: c.key, fac: c.fac, prog: c.prog, tasks: c.tasks };
+            binderMeta[c.key] = { fac: c.fac, prog: c.prog };
+            const released = !!(b.certificate && b.released);
+            let html = `<div class="dash-hero" style="background:linear-gradient(135deg, ${facColor(c.fac)} 0%, #0b1f4d 60%, #065f46 100%);">
+                <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <button class="btn btn-outline btn-mini" style="background:#fff;" onclick="selCourse=null; renderCourseArchive();"><i class="fas fa-arrow-left"></i> All courses</button>
+                    ${cur ? `<button class="btn btn-outline btn-mini" style="background:#fff;" onclick="openCourseEditor('${c.key}')"><i class="fas fa-pen"></i> ${c.b ? 'Edit course details' : 'Register course details'}</button>` : ''}</div>
+                <h2 style="margin-top:12px;">${esc(b.fullName || c.prog)}</h2><div class="gold-rule"></div>
+                ${b.dvName ? `<p class="fac-hero-sub">${esc(b.dvName)}</p>` : ''}<p>${facTag(c.fac)} ${esc(facName(c.fac))}${b.code ? ' · <b>' + esc(b.code) + '</b>' : ''}</p>
+                <div class="course-info-grid">
+                    <div><span>MNQF level</span><b>${esc(b.level || '—')}</b></div><div><span>Credits</span><b>${esc(b.credits || '—')}</b></div>
+                    <div><span>Modality</span><b>${esc(b.modality || '—')}</b></div><div><span>Mode of study</span><b>${esc(b.mode || '—')}</b></div>
+                    <div><span>Duration</span><b>${esc(b.duration || '—')}</b></div><div><span>Modules</span><b>${n.total}</b></div>
+                    <div><span>MQA approved</span><b>${n.approved} / ${n.total}</b></div><div><span>Certificate</span><b>${b.certificate ? (b.released ? 'Released to faculty' : 'Attached, not released') : 'Not yet'}</b></div>
+                </div>${b.notes ? `<p style="margin-top:12px; white-space:pre-wrap;">${esc(b.notes)}</p>` : ''}</div>`;
+            html += `<div class="kpi-grid">${ARCH_STATUS.map(s => `<div class="kpi" style="background:linear-gradient(135deg, ${s.color}, #0b1f4d);"><div class="kpi-val">${n[s.key]}</div><div class="kpi-lbl">${s.label}</div></div>`).join('')}
+                ${n.missing > 0 ? `<div class="kpi slate"><div class="kpi-val">${n.missing}</div><div class="kpi-lbl">Not allocated yet</div></div>` : ''}</div>`;
+            html += `<div class="binder-card" style="--fc:${facColor(c.fac)}">${binderCertHtml(g, cur)}
+                ${cur ? `<div class="binder-cert" style="background:#f0fdf4; border-bottom-color:#bbf7d0;"><i class="fas fa-share-square" style="color:#065f46;"></i> <b>Faculty access:</b>
+                    ${released ? `<span>The ${esc(c.fac)} Dean can view the approved outlines (read only) since ${fmtDate(b.releasedAt, false)}.</span> <button class="btn btn-outline btn-mini" onclick="releaseCourse('${c.key}', false)"><i class="fas fa-undo"></i> Withdraw</button>`
+                             : `<span>The faculty sees only the module names and their progress.</span> <button class="btn btn-green btn-mini" onclick="releaseCourse('${c.key}', true)"><i class="fas fa-share"></i> Release certificate &amp; approved outlines to the faculty</button>`}</div>`
+                     : `<div class="binder-cert" style="background:#f8fafc; border-bottom-color:#e2e8f0;"><i class="fas fa-info-circle"></i> ${released ? 'The Curriculum Department has released this course: the MQA-approved outlines can be viewed (read only).' : 'Module names and progress are shown here. The outlines open (read only) only after MQA approval, when the Curriculum Department attaches the certificate and releases the course.'}</div>`}
+                ${cur && (n.curriculum || n.mqa) ? `<div class="binder-cert" style="background:#fff; border-bottom-color:#e8edf5;">
+                    ${n.curriculum ? `<button class="btn btn-blue btn-mini" onclick="binderBulk('${c.key}','mqa')"><i class="fas fa-paper-plane"></i> Send all ready outlines to MQA (${n.curriculum})</button>` : ''}
+                    ${n.mqa ? `<button class="btn btn-green btn-mini" onclick="binderBulk('${c.key}','approve')"><i class="fas fa-award"></i> Mark all MQA approved (${n.mqa})</button>` : ''}</div>` : ''}
+                <div class="binder-body">`;
+            ARCH_STATUS.forEach(s => {
+                const rows = c.tasks.filter(a => archStatus(a) === s.key);
+                if (!rows.length) return;
+                html += `<h4 style="margin:14px 4px 8px; color:${s.color};"><i class="fas fa-circle" style="font-size:0.6rem;"></i> ${s.label} (${rows.length})</h4>
+                    <table class="royal-table"><thead><tr><th>Module</th><th>Lecturer</th><th style="min-width:300px;">Progress</th><th>Date</th><th>Actions</th></tr></thead><tbody>
+                    ${rows.map(a => `<tr><td><b>${esc(a.moduleCode)}</b> - ${esc(a.moduleName)}</td><td>${esc(a.lecturerName || a.lecturerEmail || '')}</td><td>${pipelineStepperHtml(a)}</td>
+                        <td style="font-size:0.8rem; white-space:nowrap;">${fmtDate(a.approvedAt || a.sentToMqaAt || a.returnedAt || a.sentToCurriculumAt || a.submittedAt, false)}</td>
+                        <td style="white-space:nowrap;">${isUni() || s.key === 'approved' || s.key === 'mqa' || s.key === 'curriculum' ? openBtn(a) : ''} ${(isUni() || can('deanApprove') || can('amend')) ? commentsBtn(a) : ''}
+                            ${cur && a.stage === 'curriculum' ? `<button class="btn btn-outline btn-mini" style="border-color:#dc2626; color:#b91c1c;" onclick="curReturn('${a.id}')"><i class="fas fa-undo"></i></button> <button class="btn btn-blue btn-mini" onclick="curSendToMqa('${a.id}')">MQA</button>` : ''}
+                            ${cur && a.stage === 'mqa' ? `<button class="btn btn-green btn-mini" onclick="curApprove('${a.id}')"><i class="fas fa-award"></i></button>` : ''}</td></tr>`).join('')}
+                    </tbody></table>`;
+            });
+            if (!c.tasks.length) html += '<p style="color:#94a3b8; padding:10px;">No module outlines have been allocated for this course yet.</p>';
+            html += `</div></div>`;
+            return html;
+        }
+
+        function releaseCourse(key, on) {
+            if (!can('curriculum')) return;
+            const b = bindersMap[key];
+            if (on) {
+                if (!b || !b.certificate) { alert("Please attach the MQA certificate copy first."); return; }
+                const c = courseList('ALL').find(x => x.key === key), n = c ? courseCounts(c) : null;
+                if (n && n.approved < n.total && !confirm(`Only ${n.approved} of ${n.total} modules are MQA approved. Release anyway? (Only the approved outlines will open for the faculty.)`)) return;
+                if (!confirm("Release the certificate and the MQA-approved outlines to the faculty (view only)?")) return;
+            }
+            const w = whoStamp();
+            db.collection('rasfahi_binders').doc(key).set(on ? { released: true, releasedAt: w.at, releasedBy: w.by } : { released: false, releasedAt: null, releasedBy: w.by }, { merge: true })
+                .then(() => showToast(on ? '📤 Released to the faculty.' : 'Release withdrawn.', true))
+                .catch(err => alert("❌ " + (err.code || err.message)));
+        }
+
+        function openCourseEditor(key) {
+            if (!can('curriculum')) return;
+            const existing = key ? (courseList('ALL').find(x => x.key === key) || null) : null;
+            const b = (existing && existing.b) || {};
+            const fac = existing ? existing.fac : (isUni() && selFac.arch && selFac.arch !== 'ALL' ? selFac.arch : FACULTIES[0].id);
+            const f = (id, label, val, ph) => `<label>${label}</label><input type="text" id="${id}" class="ltr-input" value="${esc(val || '')}" placeholder="${esc(ph || '')}">`;
+            openRfModal(`<h2 style="color:var(--r-navy); margin-bottom:6px;"><i class="fas fa-book"></i> ${key ? 'Course details' : 'Register a course'}</h2>
+                <div class="ad-form">
+                    <label>Faculty / Centre</label><select id="ce-fac" ${existing ? 'disabled' : ''}>${FACULTIES.map(x => `<option value="${x.id}" ${x.id === fac ? 'selected' : ''}>${x.id} - ${esc(x.name)}</option>`).join('')}</select>
+                    ${f('ce-prog', 'Programme / course name used in task allocation *', existing ? existing.prog : '', 'e.g. Diploma in Shariah')}
+                    ${existing ? '<div style="font-size:0.78rem; color:#64748b;">This name links the course to its allocated modules and cannot be changed here.</div>' : ''}
+                    ${f('ce-full', 'Full course name', b.fullName, 'e.g. Diploma in Islamic Shariah (MNQF Level 5)')}
+                    <label>Course name in Dhivehi</label><input type="text" id="ce-dv" class="rtl-input" value="${esc(b.dvName || '')}">
+                    ${f('ce-code', 'Course code', b.code, 'e.g. DIS5')}
+                    <label>MNQF level</label><select id="ce-level"><option value="">-</option>${[1,2,3,4,5,6,7,8,9,10].map(l => `<option value="${l}" ${String(b.level) === String(l) ? 'selected' : ''}>Level ${l}</option>`).join('')}</select>
+                    ${f('ce-credits', 'Total credits', b.credits, 'e.g. 120')}
+                    ${f('ce-modules', 'Number of modules in the course', b.totalModules, 'e.g. 8')}
+                    ${f('ce-modality', 'Delivery modality', b.modality, 'e.g. Face to face, Blended, E-learning')}
+                    ${f('ce-mode', 'Mode of study', b.mode, 'e.g. Full-time and Part-time')}
+                    ${f('ce-duration', 'Duration', b.duration, 'e.g. 1 year')}
+                    <label>Notes</label><textarea id="ce-notes" rows="3">${esc(b.notes || '')}</textarea>
+                </div>
+                <button class="btn btn-blue" style="margin-top:15px;" onclick="saveCourseDetails('${key}')"><i class="fas fa-save"></i> Save course</button>`);
+        }
+        function saveCourseDetails(key) {
+            const v = id => (document.getElementById(id).value || '').trim();
+            const prog = key ? ((courseList('ALL').find(x => x.key === key) || {}).prog || v('ce-prog')) : v('ce-prog');
+            const fac = key ? ((courseList('ALL').find(x => x.key === key) || {}).fac) : v('ce-fac');
+            if (!prog) { alert("Please enter the programme / course name."); return; }
+            const docKey = key || binderKey(fac, prog);
+            const mods = v('ce-modules');
+            if (mods && !/^\d+$/.test(mods)) { alert("Number of modules must be a whole number."); return; }
+            const w = whoStamp();
+            db.collection('rasfahi_binders').doc(docKey).set({ facultyId: fac, programName: prog, fullName: v('ce-full'), dvName: v('ce-dv'), code: v('ce-code'), level: v('ce-level'),
+                credits: v('ce-credits'), totalModules: mods ? parseInt(mods, 10) : null, modality: v('ce-modality'), mode: v('ce-mode'), duration: v('ce-duration'), notes: v('ce-notes'),
+                detailsUpdatedAt: w.at, detailsUpdatedBy: w.by }, { merge: true })
+                .then(() => { closeRfModal(); selCourse = docKey; showToast('💾 Course saved.', true); renderCourseArchive(); })
+                .catch(err => alert("❌ Could not save the course: " + (err.code || err.message)));
         }
 
         // --- WORKSPACES: reviewers (Dean / Secretary / Admin) can open another user's archive ---
@@ -4189,6 +4398,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             return flushSaves().then(() => {
                 const statusEl = document.getElementById('sync-status-text');
                 if (uid === auth.currentUser.uid) {
+                    forceReadOnly = false;
                     wsUid = uid; wsDocRef = userDocRef; wsOwnerInfo = null;
                     activeCourseId = null; activeModuleId = null; resetSyncTracking();
                     restoreData(uid);
@@ -4273,7 +4483,30 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             }).catch(err => { box.innerHTML = '<p style="color:var(--danger);">Could not load: ' + esc(err.code || err.message) + '</p>'; });
         }
 
+        // Faculty staff edit outlines while they are at the faculty. Once the Dean sends an outline to
+        // Curriculum it is closed to the faculty; it opens again - view only - after MQA approval, when
+        // the Curriculum Department has attached the certificate and released the course to the faculty.
+        let forceReadOnly = false;
+        function taskByModule(uid, mId) { return Object.values(assignmentsMap).find(a => a.lecturerUid === uid && a.moduleId === mId) || null; }
+        function courseReleased(a) { const b = bindersMap[binderKey(taskFac(a), (a.programName || '').trim() || 'General (no programme set)')]; return !!(b && b.certificate && b.released); }
+        function taskOpenMode(a) {
+            if (!a) return 'edit';
+            if (isUni()) return can('editAll') ? 'edit' : 'view';
+            if (auth.currentUser && a.lecturerUid === auth.currentUser.uid) return 'edit';
+            const st = a.stage || 'faculty';
+            if (st === 'faculty' || st === 'faculty_amend') return 'edit';
+            if (st === 'approved' && courseReleased(a)) return 'view';
+            return null;
+        }
         function openOutlineFor(uid, cId, mId) {
+            const t = taskByModule(uid, mId), mode = taskOpenMode(t);
+            if (!mode) {
+                alert(t && t.stage === 'approved'
+                    ? "This outline is approved by MQA. It will open (view only) once the Curriculum Department attaches the certificate and releases the course to the faculty."
+                    : "This outline is with the Curriculum Department / MQA. The faculty can follow its progress, but it opens only after MQA approval and the certificate is released.");
+                return;
+            }
+            forceReadOnly = (mode === 'view');
             switchWorkspace(uid, findAccount(uid), cId, mId).then(ok => {
                 if (ok) switchStep(5, document.querySelectorAll('.nav-links li')[4]);
             });
@@ -4317,7 +4550,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         });
 
         // Structural edits (adding/removing rows etc.) happen through buttons inside the outline steps.
-        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15', 'step-16', 'step-17', 'step-18', 'step-19', 'step-20']);
+        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15', 'step-16', 'step-17', 'step-18', 'step-19', 'step-20', 'step-21']);
         function isOutlineField(el) {
             if (el.id && (el.id.startsWith('hdr-') || el.id.startsWith('wm-'))) return false; // account branding, saved separately
             const sec = el.closest('.form-section');
@@ -4440,7 +4673,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if(num === 12) renderImportTaskPicker();
             if(num === 19) { if (!can('curriculum')) return denied("This page is for the Curriculum Department."); renderCurriculum(); }
             if(num === 20) { loadAccounts(false).then(renderFacultyFlow); renderFacultyFlow(); }
-            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18, 19, 20].includes(num));
+            if(num === 21) { if (!can('viewAll')) return denied("The Course Archive is for the Curriculum Department, Deans, Secretaries and the Admin."); renderCourseArchive(); }
+            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18, 19, 20, 21].includes(num));
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
 
