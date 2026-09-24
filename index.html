@@ -4774,7 +4774,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
 
         function cleanText(txt) {
             if (!txt) return "";
-            return txt.replace(/^[\r\n\s:]+|[\r\n\s:]+$/g, '').trim();
+            return String(txt).replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n')
+                .replace(/^[\r\n\s:]+|[\r\n\s:]+$/g, '').trim();
         }
 
         function extractSection(text, startTokens, endTokens) {
@@ -4824,20 +4825,35 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             return t;
         }
 
+        // Reads a cell's text the way a person sees it: paragraphs, list items and <br> become new
+        // lines, numbered lists keep their numbers, and Word's source line-wrapping is ignored.
+        // Works on detached elements (innerText does not).
         function cellText(el) {
-            // .innerText only resolves correctly for elements that are part of a rendered page;
-            // on a detached element (like tempDiv below, which is never added to the document)
-            // real browsers silently return an empty string. This is a reliable, attachment-
-            // independent replacement: it still turns <br> tags into line breaks like innerText
-            // does, but works purely off the DOM tree via textContent.
             if (!el) return '';
-            let html = el.innerHTML || '';
-            // Word's "Web Page" format wraps long source lines in the middle of sentences; those line
-            // breaks are not real ones, so fold them into spaces before turning <br> into new lines.
-            html = html.replace(/[\r\n\t]+/g, ' ').replace(/<br\s*\/?>/gi, '\n');
-            let tmp = document.createElement('div');
-            tmp.innerHTML = html;
-            return (tmp.textContent || '').replace(/\u00a0/g, ' ').replace(/[ ]{2,}/g, ' ').replace(/ *\n */g, '\n').trim();
+            let buf = '';
+            const nl = () => { if (buf && !buf.endsWith('\n')) buf += '\n'; };
+            const BLOCK = /^(P|DIV|H[1-6]|UL|OL|TABLE|TR|BLOCKQUOTE|SECTION|ARTICLE|HEADER|FOOTER)$/;
+            (function walk(node) {
+                for (const n of Array.from(node.childNodes)) {
+                    if (n.nodeType === 3) { buf += n.nodeValue.replace(/[\r\n\t]+/g, ' '); continue; }
+                    if (n.nodeType !== 1) continue;
+                    const tag = n.tagName.toUpperCase();
+                    if (tag === 'BR') { buf += '\n'; continue; }
+                    if (tag === 'STYLE' || tag === 'SCRIPT' || tag === 'HEAD' || tag === 'TITLE') continue;
+                    if (tag === 'OL') {
+                        let k = parseInt(n.getAttribute('start'), 10) || 1;
+                        Array.from(n.children).forEach(li => { nl(); if (li.tagName.toUpperCase() === 'LI') buf += (k++) + '. '; walk(li); nl(); });
+                        continue;
+                    }
+                    if (tag === 'LI') { nl(); walk(n); nl(); continue; }
+                    if (tag === 'TD' || tag === 'TH') { walk(n); buf += ' '; continue; }
+                    const block = BLOCK.test(tag);
+                    if (block) nl();
+                    walk(n);
+                    if (block) nl();
+                }
+            })(el);
+            return buf.replace(/\u00a0/g, ' ').replace(/[ ]{2,}/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
         }
 
         function parseWordToForms(rawText, rawHtml) {
@@ -4907,14 +4923,23 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             // ----------------------------------------------------
             let tds = Array.from(tempDiv.querySelectorAll('td'));
             
+            // Section titles that sit in their own cell ("11.12" | "Course Materials ...") must be
+            // skipped so the value is taken from the cell that really holds the content.
+            const LABEL_CELL = /^(11\.\d+|module name|module description|module code|module level|credits|total learning hours|contact hours|non-contact hours|delivery modality|methods of delivery|minimum qualification|prerequisites?|co-requisites?|expected learning outcomes|list of reference materials.*|course materials.*|teaching and learning methods|additional information|assessment methods.*)$/i;
             function getNextCell(idx) {
                 for(let j = idx + 1; j < tds.length && j <= idx + 3; j++) {
                     let txt = cellText(tds[j]);
-                    if(txt !== "" && !txt.match(/^11\.\d+$/) && !txt.toLowerCase().includes("students will be able to")) {
+                    if(txt !== "" && !LABEL_CELL.test(txt.trim()) && !txt.toLowerCase().includes("students will be able to")) {
                         return cleanText(txt);
                     }
                 }
                 return "";
+            }
+            function stripOutcomeIntro(t) {
+                let out = cleanText(String(t || '').replace(/^[\s\S]*?(students|learners)\s+will\s+be\s+able\s+to\s*:?/i, ''));
+                const lines = out.split('\n').map(l => l.trim()).filter(Boolean);
+                if (lines.length > 1 && !lines.some(l => /^\d+\s*[.)-]/.test(l))) out = lines.map((l, k) => (k + 1) + '. ' + l.replace(/^[•\-–·▪◦*]\s*/, '')).join('\n');   // bulleted list -> numbered
+                return out;
             }
 
             for (let i = 0; i < tds.length; i++) {
@@ -4952,7 +4977,21 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     if(!data.mCo) data.mCo = getNextCell(i);
                 }
                 if (txt.includes("expected learning outcomes") || txt === "11.8 expected learning outcomes") {
-                    if(!data.mOutcomes) data.mOutcomes = getNextCell(i);
+                    if (!data.mOutcomes) {
+                        for (let j = i + 1; j < tds.length && j <= i + 2; j++) {
+                            const t = stripOutcomeIntro(cellText(tds[j]));
+                            if (t && !LABEL_CELL.test(t)) { data.mOutcomes = t; break; }
+                        }
+                    }
+                }
+                if (txt === "module level" || txt === "11.2 module level") {
+                    const lv = (getNextCell(i).match(/(\d{1,2})/) || [])[1];
+                    if (lv && !data.mLevel) data.mLevel = lv;
+                }
+                if (/^core texts?\s*:/i.test(rawTxt) && !data.refCore) {
+                    const parts = rawTxt.split(/additional\s+references?\s*:/i);
+                    data.refCore = cleanText(parts[0].replace(/^core texts?\s*:/i, ''));
+                    if (parts[1]) data.refAdd = cleanText(parts[1]);
                 }
                 
                 if (txt.includes("course materials") || txt.includes("11.12")) {
@@ -4994,6 +5033,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             data.matrixData = [];
             data.assessData = [];
 
+            const normTxtS = x => String(x || '').toLowerCase().replace(/\s+/g, ' ').trim();
             tables.forEach(tbl => {
                 let tText = tbl.textContent.toLowerCase().replace(/\s+/g, ' ');
 
@@ -5002,13 +5042,17 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 // since rowspan/colspan headers often get mangled when a doc round-trips through Word.
                 let schKeywords = ["topics", "pedagogy", "resources", "credits", "learning hours", "curricular content", "week"];
                 let schHits = schKeywords.filter(k => tText.includes(k)).length;
-                if (schHits >= 2) {
-                    let rows = tbl.querySelectorAll('tr');
-                    rows.forEach(r => {
-                        let cells = Array.from(r.querySelectorAll('td, th')).map(td => cellText(td));
+                if (schHits >= 2 && !tbl.querySelector('table') && /pedagogy|topics/.test(tText)) {
+                    let autoWeek = 0;
+                    Array.from(tbl.rows).forEach(r => {
+                        let cells = Array.from(r.cells).map(td => cellText(td));
                         if (cells.length < 5) return;
+                        const first = normTxtS(cells[0]);
+                        if (/^(week|total|face to face|11\.9)/.test(first)) return;
                         let wkMatch = cells[0].match(/\d+/);
+                        if (!wkMatch && !cells[0] && cells[1]) wkMatch = [String(++autoWeek)];   // Word auto-numbered week column
                         if (!wkMatch) return; // header/total rows won't start with a number - safely skipped
+                        autoWeek = parseInt(wkMatch[0], 10) || autoWeek;
                         let c = cells.slice();
                         while (c.length < 13) c.push('');
                         data.schData.push({
@@ -5055,13 +5099,22 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 }
 
                 // --- Assessment Table (11.10) ---
-                if(tText.includes("assessment task title") || tText.includes("weightage")) {
-                    let rows = tbl.querySelectorAll('tr');
-                    rows.forEach(r => {
-                        let cells = Array.from(r.querySelectorAll('td')).map(td => cellText(td));
-                        if(cells.length >= 5 && cells[0].match(/\d+/)) {
-                            data.assessData.push(cells);
+                if (!tbl.querySelector('table') && (/assessment\s*task\s*title/.test(tText) || /weight\s*age/.test(tText))) {
+                    Array.from(tbl.rows).forEach(r => {
+                        let cells = Array.from(r.cells).map(td => cellText(td));
+                        if (cells.length < 5) return;
+                        const joined = normTxtS(cells.join(' '));
+                        if (/assessment\s*task\s*title|weight\s*age/.test(joined) || /^total/.test(normTxtS(cells[0])) || /^total/.test(normTxtS(cells[1]))) return;
+                        if (cells.every(c => !c)) return;
+                        let row;
+                        if (cells.length >= 6) row = cells.slice(0, 6);
+                        else row = [''].concat(cells.slice(0, 5));              // table without a "#" column
+                        if (!row[1] && !row[2]) return;
+                        if (row[0] && !/^\d+[.)]?$/.test(row[0].trim())) {        // first cell is text, not a number
+                            if (cells.length === 5) row = [''].concat(cells); else return;
                         }
+                        row[5] = String(row[5] || '').replace(/%/g, '').trim();
+                        data.assessData.push(row);
                     });
                 }
             });
@@ -5159,6 +5212,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
 
             // Populate Static Inputs
             setVal('p-name', pName);
+            if (data.mLevel && /^(10|[1-9])$/.test(data.mLevel)) setVal('p-level', data.mLevel);   // module-only files: use the module's MNQF level
             setVal('a-inst', data.aInst || "ޒާދް އެކަޑެމީ");
             setVal('a-1-1', data.a1_1 || "");
             setVal('a-1-2', data.a1_2 || "");
