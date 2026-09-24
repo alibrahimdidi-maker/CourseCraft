@@ -1076,6 +1076,15 @@
         .struct-my { background:#fef9c3 !important; }
         .struct-warn { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:0.88rem; }
 
+        .alloc-table input[readonly] { background:#f1f5f9; color:#0b1f4d; font-weight:600; cursor:not-allowed; border-color:#e2e8f0; }
+        .alloc-auto { font-size:0.72rem; color:#475569; margin-top:4px; line-height:1.5; }
+        .alloc-auto b { color:#0b1f4d; }
+        .pick-box { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px; }
+        .pick-item { display:inline-flex; align-items:center; gap:6px; border:2px solid #cbd5e1; border-radius:20px; padding:5px 12px; margin:4px; font-size:0.82rem; cursor:pointer; background:#fff; }
+        .pick-item.on { border-color:#1e3a8a; background:#eef2ff; color:#1e3a8a; font-weight:700; }
+        .pick-item.off { opacity:0.55; cursor:not-allowed; }
+        .pick-item input { width:auto; margin:0; }
+
         /* STARTUP SPLASH */
         #rf-splash { position:fixed; inset:0; z-index:200000; background:radial-gradient(circle at 50% 40%, #ffffff 0%, #eef2f7 70%, #e2e8f0 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; transition:opacity 0.6s ease, visibility 0.6s ease; }
         #rf-splash.hide { opacity:0; visibility:hidden; }
@@ -1910,21 +1919,31 @@ service cloud.firestore {
     // Deans may register / edit the details of their own faculty's courses (not the certificate or release).
     function courseDetailKeys() {
       return ['facultyId', 'programName', 'fullName', 'dvName', 'code', 'level', 'credits', 'totalModules', 'modality', 'mode',
-              'duration', 'notes', 'detailsUpdatedAt', 'detailsUpdatedBy', 'structure', 'structureUpdatedAt', 'structureUpdatedBy'];
+              'duration', 'notes', 'detailsUpdatedAt', 'detailsUpdatedBy', 'structure', 'structureUpdatedAt', 'structureUpdatedBy', 'structureAuth'];
     }
-    function structureKeys() { return ['structure', 'structureUpdatedAt', 'structureUpdatedBy']; }
+    function structureKeys() { return ['structure', 'structureUpdatedAt', 'structureUpdatedBy', 'structureAuth']; }
+    // Amending or deleting an EXISTING structure needs a fresh two-factor token (issued by the server helper).
+    function twoFactorOk() {
+      return exists(/databases/$(database)/documents/rasfahi_2fa/$(request.auth.uid))
+             &amp;&amp; get(/databases/$(database)/documents/rasfahi_2fa/$(request.auth.uid)).data.token == request.resource.data.get('structureAuth', '')
+             &amp;&amp; get(/databases/$(database)/documents/rasfahi_2fa/$(request.auth.uid)).data.expiresAt > request.time;
+    }
+    function structureChangeOk() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['structure'])
+             || resource.data.get('structure', null) == null || twoFactorOk();
+    }
     match /rasfahi_binders/{id} {
       allow read:   if active() &amp;&amp; (uni() || resource.data.get('facultyId', '') == myFac());
       allow create: if active() &amp;&amp; (role() == 'admin'
                       || (role() == 'curriculum' &amp;&amp; !request.resource.data.keys().hasAny(structureKeys()))
                       || (role() == 'dean' &amp;&amp; myFac() != '' &amp;&amp; request.resource.data.facultyId == myFac()
                           &amp;&amp; request.resource.data.keys().hasOnly(courseDetailKeys())));
-      allow update: if active() &amp;&amp; (role() == 'admin'
+      allow update: if active() &amp;&amp; structureChangeOk() &amp;&amp; (role() == 'admin'
                       || (role() == 'curriculum' &amp;&amp; !request.resource.data.diff(resource.data).affectedKeys().hasAny(structureKeys()))
                       || (role() == 'dean' &amp;&amp; myFac() != '' &amp;&amp; resource.data.get('facultyId', '') == myFac()
                           &amp;&amp; request.resource.data.get('facultyId', '') == myFac()
                           &amp;&amp; request.resource.data.diff(resource.data).affectedKeys().hasOnly(courseDetailKeys())));
-      allow delete: if active() &amp;&amp; role() in ['admin', 'curriculum'];
+      allow delete: if isAdmin() &amp;&amp; resource.data.get('structure', null) == null;
     }
 
     // University-wide register of module codes (so duplicates are found across faculties).
@@ -1947,6 +1966,10 @@ service cloud.firestore {
       allow read:  if signedIn();
       allow write: if isAdmin();
     }
+
+    // Two-factor codes and tokens - handled only by the server helper.
+    match /rasfahi_2fa/{uid} { allow read, write: if false; }
+    match /rasfahi_otp/{uid} { allow read, write: if false; }
 
     // E-mail queue - written only by the server helper (Cloud Functions), never by browsers.
     match /mail/{id} {
@@ -2938,7 +2961,10 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
 
         function openRfModal(html) { document.getElementById('rf-modal-body').innerHTML = html; document.getElementById('rf-modal').style.display = 'flex'; }
-        function closeRfModal() { document.getElementById('rf-modal').style.display = 'none'; }
+        function closeRfModal() {
+            document.getElementById('rf-modal').style.display = 'none';
+            if (twoFaReject) { const r = twoFaReject; twoFaReject = twoFaResolve = null; r(new Error('cancelled')); }
+        }
 
         function historyTableHtml(meta) {
             const h = (meta && meta.history) ? meta.history.slice().reverse() : [];
@@ -3528,6 +3554,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const d = (allocDrafts[uid] || []).find(x => x.k === k);
             const person = findAccount(uid);
             if (!d) return;
+            if (!d.courseKey) { alert("Please choose the course (tick its structure above first)."); return; }
+            if (!d.structModuleId) { alert("Please choose the module from the course structure. Module name, code, credits and modality are taken from the structure and cannot be typed by hand."); return; }
             const err = validTask(d); if (err) { alert(err); return; }
             if (!d._dupOk) {
                 const clash = findCodeClash(d.moduleCode, null);
@@ -3601,7 +3629,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (!people.length) { root.innerHTML = `<p style="color:#888;">No staff found in ${esc(facName(fac))}. Create accounts for this faculty (or set their faculty) on the Manage Users page first.</p>`; return; }
             const byUid = {};
             Object.values(assignmentsMap).forEach(a => { (byUid[a.lecturerUid] || (byUid[a.lecturerUid] = [])).push(a); });
-            let html = `<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+            let html = allocPickerHtml(fac) + `<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
                 <div>${facTag(fac)} <b>Parent faculty running the courses:</b> ${esc(facName(fac))}<br><span style="font-size:0.82rem; color:#64748b;">Choose the course each module belongs to and its delivery modality - the outline is archived under that course with its full details.</span></div>
                 ${canEditCourses(fac) ? `<button class="btn btn-outline btn-mini" onclick="openCourseEditor('', { fac: '${fac}' })"><i class="fas fa-plus"></i> Register a new course</button>` : ''}</div>
                 <table class="royal-table alloc-table"><thead><tr><th>Lecturer</th><th>Module / Course / Modality</th><th>Code</th><th>Contact hrs</th><th>Assigned date</th><th>Finish by</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
@@ -3614,12 +3642,16 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 tasks.forEach(a => {
                     const ed = allocEdits[a.id] || {};
                     const v = f => esc(ed[f] !== undefined ? ed[f] : (a[f] || ''));
+                    const fromStruct = !!a.structModuleId;
                     html += `<tr class="${first ? 'grp-start' : ''}">${nameCell}
-                        <td><input class="w-lg" value="${v('moduleName')}" oninput="allocEditInput('${a.id}','moduleName',this.value)">
+                        ${fromStruct ? `<td><input class="w-lg" readonly value="${v('moduleName')}"><div class="alloc-auto">${esc(a.courseFullName || a.programName || '')}<br>${esc(a.semester || '')} · <b>${esc(a.credits || '—')}</b> credits · <b>${esc(a.modality || '—')}</b> <i class="fas fa-lock" title="Taken from the course structure"></i></div></td>
+                        <td><input class="w-sm" readonly value="${v('moduleCode')}">${codeDupPill(a)}</td>
+                        <td><input class="w-sm" readonly value="${v('contactHours')}"></td>`
+                        : `<td><input class="w-lg" value="${v('moduleName')}" oninput="allocEditInput('${a.id}','moduleName',this.value)">
                             ${courseSelectHtml(fac, ed.courseKey !== undefined ? ed.courseKey : taskCourseKey(a), `allocEditCourse('${a.id}', this.value)`)}
                             ${modalitySelectHtml(ed.modality !== undefined ? ed.modality : (a.modality || ''), `allocEditInput('${a.id}','modality',this.value)`)}</td>
                         <td><input class="w-sm" value="${v('moduleCode')}" oninput="allocEditInput('${a.id}','moduleCode',this.value)">${codeDupPill(a)}</td>
-                        <td><input class="w-sm" type="number" min="0" value="${v('contactHours')}" oninput="allocEditInput('${a.id}','contactHours',this.value)"></td>
+                        <td><input class="w-sm" type="number" min="0" value="${v('contactHours')}" oninput="allocEditInput('${a.id}','contactHours',this.value)"></td>`}
                         <td><input type="date" value="${v('assignedAt')}" oninput="allocEditInput('${a.id}','assignedAt',this.value)"></td>
                         <td><input type="date" value="${v('dueAt')}" oninput="allocEditInput('${a.id}','dueAt',this.value)"></td>
                         <td>${asBadge(a.status)}<div style="margin-top:4px;">${duePill(dueState(a), dueText(a))}</div><div style="margin-top:4px;">${pipeBadge(a)}</div></td>
@@ -3633,12 +3665,12 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 });
                 drafts.forEach(d => {
                     html += `<tr class="alloc-draft ${first ? 'grp-start' : ''}">${nameCell}
-                        <td>${courseSelectHtml(fac, d.courseKey, `allocDraftCourse('${p.uid}','${d.k}', this.value)`)}
+                        <td>${draftCourseSelectHtml(fac, d, p.uid)}
                             ${structModuleSelectHtml(d, p.uid)}
-                            <input class="w-lg" placeholder="Module name" style="margin-top:4px;" value="${esc(d.moduleName)}" oninput="allocDraftInput('${p.uid}','${d.k}','moduleName',this.value)">
-                            ${modalitySelectHtml(d.modality, `allocDraftInput('${p.uid}','${d.k}','modality',this.value)`)}</td>
-                        <td><input class="w-sm" placeholder="Code" value="${esc(d.moduleCode)}" oninput="allocDraftInput('${p.uid}','${d.k}','moduleCode',this.value)" onchange="liveCodeCheck(this, null)"></td>
-                        <td><input class="w-sm" type="number" min="0" placeholder="Hrs" value="${esc(d.contactHours)}" oninput="allocDraftInput('${p.uid}','${d.k}','contactHours',this.value)"></td>
+                            <input class="w-lg" readonly placeholder="Module name (from the structure)" style="margin-top:4px;" value="${esc(d.moduleName)}">
+                            ${d.structModuleId ? `<div class="alloc-auto">${esc(d.semester)} · <b>${esc(d.credits || '—')}</b> credits · <b>${esc(d.modality || '—')}</b></div>` : ''}</td>
+                        <td><input class="w-sm" readonly placeholder="Code" value="${esc(d.moduleCode)}">${d.moduleCode && findCodeClash(d.moduleCode, null).length ? '<div class="alloc-auto" style="color:#b91c1c;"><i class="fas fa-exclamation-triangle"></i> code in use</div>' : ''}</td>
+                        <td><input class="w-sm" readonly placeholder="Hrs" value="${esc(d.contactHours)}"></td>
                         <td><input type="date" value="${esc(d.assignedAt)}" oninput="allocDraftInput('${p.uid}','${d.k}','assignedAt',this.value)"></td>
                         <td><input type="date" value="${esc(d.dueAt)}" oninput="allocDraftInput('${p.uid}','${d.k}','dueAt',this.value)"></td>
                         <td><span class="as-badge as-assigned">Not assigned yet</span></td>
@@ -4564,7 +4596,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (key === '__new') { openCourseEditor('', { fac: allocFaculty(), target: { uid, k } }); renderAllocation(true); return; }
             const b = bindersMap[key] || {};
             d.courseKey = key; d.programName = b.programName || ''; d.courseFullName = b.fullName || b.programName || '';
-            d.structModuleId = ''; d.semester = '';
+            d.structModuleId = ''; d.semester = ''; d.moduleName = ''; d.moduleCode = ''; d.contactHours = ''; d.credits = ''; d.modality = '';
             if (!d.modality) d.modality = defaultModality(b);
             renderAllocation(true);
         }
@@ -4894,7 +4926,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             st.semesters.forEach((sem, si) => (sem.modules || []).forEach(m => { if (m.id === mid) { found = m; semName = sem.name || 'Semester ' + (si + 1); } }));
             if (!found) { d.structModuleId = ''; renderAllocation(true); return; }
             const c = structCalc(found, b.level, parseInt(st.teachWeeks, 10) || 15);
-            Object.assign(d, { structModuleId: found.id, semester: semName, moduleName: found.name || '', moduleCode: found.code || '', modality: found.modality || d.modality || '', contactHours: String(c.ch), credits: String(found.credits || '') });
+            Object.assign(d, { structModuleId: found.id, semester: semName, moduleName: found.name || '', moduleCode: found.code || '', modality: found.modality || defaultModality(b) || '', contactHours: String(c.ch), credits: String(found.credits || '') });
             const taken = structTasks(d.courseKey, found);
             if (taken.length) showToast(`ℹ️ ${esc(found.code)} is already allocated to ${taken.map(a => esc(a.lecturerName || a.lecturerEmail)).join(', ')}.`, true);
             renderAllocation(true);
@@ -4942,7 +4974,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
                         ${can('viewAll') ? `<button class="btn btn-outline btn-mini" style="background:#fff;" onclick="switchStep(21, document.getElementById('nav-course-archive')); openCourse('${key}')"><i class="fas fa-book"></i> Course card</button>` : ''}
                         ${edit ? `<button class="btn btn-outline btn-mini" style="background:#fff;" onclick="startStructureEdit('${key}')"><i class="fas fa-pen"></i> ${st ? 'Edit structure' : 'Build structure'}</button>` : ''}
-                        ${st ? `<button class="btn btn-outline btn-mini" style="background:#fff;" onclick="printStructure('${key}')"><i class="fas fa-print"></i> Print</button>` : ''}</div></div>
+                        ${st ? `<button class="btn btn-outline btn-mini" style="background:#fff;" onclick="printStructure('${key}')"><i class="fas fa-print"></i> Print</button>` : ''}
+                        ${st && edit ? `<button class="btn btn-danger btn-mini" onclick="deleteStructure('${key}')"><i class="fas fa-trash"></i> Delete structure</button>` : ''}</div></div>
+                ${st && edit ? '<div style="font-size:0.78rem; opacity:0.85; margin-top:8px;"><i class="fas fa-shield-alt"></i> Amending or deleting this structure needs two-factor verification (password + e-mailed code).</div>' : ''}
                 <h2 style="margin-top:12px;">${esc(b.fullName || b.programName)}</h2><div class="gold-rule"></div>
                 ${b.dvName ? `<p class="fac-hero-sub">${esc(b.dvName)}</p>` : ''}<p>${facTag(b.facultyId)} ${esc(facName(b.facultyId))}${b.code ? ' · <b>' + esc(b.code) + '</b>' : ''}</p>
                 <div class="course-info-grid">
@@ -5001,6 +5035,11 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const fac = b.facultyId || (meta && meta.fac) || '', prog = b.programName || (meta && meta.prog) || '';
             if (!canEditStructure(fac)) return denied("Only the Dean of this faculty or the Admin can edit the course structure.");
             const st = structOf(b);
+            if (st && !(meta && meta.verified)) {
+                require2FA('Amending the structure of ' + (b.fullName || prog)).then(() => startStructureEdit(key, Object.assign({}, meta || {}, { verified: true })))
+                    .catch(err => { if (err && err.message !== 'cancelled') alert("❌ " + (err.code || err.message)); });
+                return;
+            }
             const draft = st ? JSON.parse(JSON.stringify(st)) : { teachWeeks: 15, semesters: [{ name: 'Semester 1', modules: [] }, { name: 'Semester 2', modules: [] }] };
             draft.semesters.forEach(sem => (sem.modules || (sem.modules = [])).forEach(m => { if (!m.id) m.id = 'sm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }));
             structEdit = { key, fac, prog, draft };
@@ -5091,20 +5130,120 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         function saveStructure() {
             const E = structEdit; if (!E) return;
             const D = E.draft, missing = [];
-            D.semesters.forEach((sem, si) => sem.modules.forEach((m, mi) => { if (!String(m.name || '').trim() || !String(m.code || '').trim()) missing.push((sem.name || 'Semester ' + (si + 1)) + ', row ' + (mi + 1)); }));
-            if (missing.length) { alert("Every module needs a name and a code:\n" + missing.join('\n')); return; }
+            D.semesters.forEach((sem, si) => sem.modules.forEach((m, mi) => { if (!String(m.name || '').trim() || !String(m.code || '').trim() || !m.modality || !(parseFloat(m.credits) > 0)) missing.push((sem.name || 'Semester ' + (si + 1)) + ', row ' + (mi + 1)); }));
+            if (missing.length) { alert("Every module needs a name, a code, a modality and its credits (they are copied into the allocation):\n" + missing.join('\n')); return; }
             const internal = {}; let twice = null;
             D.semesters.forEach(sem => sem.modules.forEach(m => { const k = dupKey(m.code); if (internal[k]) twice = k; internal[k] = true; }));
             if (twice) { alert(`⛔ The code ${twice} is used twice in this structure. Every module in a course needs its own code.`); return; }
             const outside = structDupList();
             if (outside.length && !confirm("⚠️ Some codes are already used elsewhere in the university:\n\n" + outside.map(x => x.replace(/<[^>]+>/g, '')).join('\n') + "\n\nSave anyway? (Resolve them with the Curriculum Department.)")) return;
             const b = bindersMap[E.key] || {}, sm = structSummary(D, b.level), w = whoStamp();
+            if (structOf(b) && !(structure2fa && structure2fa.exp > Date.now() + 30000)) {
+                require2FA('Saving the amended structure').then(() => saveStructure()).catch(err => { if (err && err.message !== 'cancelled') alert("❌ " + (err.code || err.message)); });
+                return;
+            }
             const clean = { teachWeeks: parseInt(D.teachWeeks, 10) || 15, semesters: D.semesters.map((sem, si) => ({ name: String(sem.name || 'Semester ' + (si + 1)).trim(),
                 modules: sem.modules.map(m => ({ id: m.id, name: String(m.name).trim(), code: dupKey(m.code), type: m.type || '', modality: m.modality || '', credits: m.credits === '' ? '' : String(m.credits) })) })) };
-            db.collection('rasfahi_binders').doc(E.key).set({ facultyId: E.fac, programName: E.prog, structure: clean, totalModules: sm.total.mods, credits: String(r1(sm.total.cr)),
-                structureUpdatedAt: w.at, structureUpdatedBy: w.by }, { merge: true })
+            const payload = { facultyId: E.fac, programName: E.prog, structure: clean, totalModules: sm.total.mods, credits: String(r1(sm.total.cr)), structureUpdatedAt: w.at, structureUpdatedBy: w.by };
+            if (structOf(b)) payload.structureAuth = structure2fa.token;
+            db.collection('rasfahi_binders').doc(E.key).set(payload, { merge: true })
                 .then(() => { structEdit = null; structView = E.key; showToast('💾 Course structure saved.', true); renderStructures(); })
                 .catch(err => alert("❌ Could not save the structure: " + (err.code || err.message) + "\nIf this says permission-denied, publish the updated Firestore rules."));
+        }
+
+
+        // ----- allocation: choose which course structures to allocate from -----
+        const allocStructPick = {};
+        function allocPickerHtml(fac) {
+            const list = facultyCourses(fac);
+            const withStruct = list.filter(b => structOf(b));
+            if (withStruct.length === 1 && allocStructPick[withStruct[0].id] === undefined) allocStructPick[withStruct[0].id] = true;
+            const n = withStruct.filter(b => allocStructPick[b.id]).length;
+            return `<div class="pick-box"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <div><b><i class="fas fa-sitemap"></i> Course structures to allocate from</b> <span style="font-size:0.8rem; color:#64748b;">- tick the structures; their courses and modules appear in the dropdowns below.</span></div>
+                    <div style="display:flex; gap:6px;">${withStruct.length > 1 ? `<button class="btn btn-outline btn-mini" onclick="pickAllStructs('${fac}', ${n < withStruct.length})">${n < withStruct.length ? 'Tick all' : 'Clear'}</button>` : ''}
+                        ${canEditStructure(fac) ? `<button class="btn btn-outline btn-mini" onclick="switchStep(24, document.getElementById('nav-structures'))"><i class="fas fa-drafting-compass"></i> Build a structure</button>` : ''}</div></div>
+                <div style="margin-top:6px;">${list.length ? list.map(b => structOf(b)
+                    ? `<label class="pick-item ${allocStructPick[b.id] ? 'on' : ''}"><input type="checkbox" ${allocStructPick[b.id] ? 'checked' : ''} onchange="allocStructPick['${b.id}']=this.checked; renderAllocation(true);"> ${esc(b.fullName || b.programName)} <small>(${structModuleCount(b)} modules)</small></label>`
+                    : `<span class="pick-item off" title="Build the structure of this course first">${esc(b.fullName || b.programName)} <small>- no structure yet</small></span>`).join('')
+                  : '<span style="color:#94a3b8; font-size:0.85rem;">No courses registered for this faculty yet.</span>'}</div></div>`;
+        }
+        function structModuleCount(b) { const st = structOf(b); return st ? st.semesters.reduce((x, sem) => x + (sem.modules || []).length, 0) : 0; }
+        function pickAllStructs(fac, on) { facultyCourses(fac).filter(b => structOf(b)).forEach(b => { allocStructPick[b.id] = !!on; }); renderAllocation(true); }
+        function draftCourseSelectHtml(fac, d, uid) {
+            const list = facultyCourses(fac).filter(b => structOf(b) && (allocStructPick[b.id] || b.id === d.courseKey));
+            return `<select class="w-lg" style="font-size:0.78rem;" onchange="allocDraftCourse('${uid}','${d.k}', this.value)">
+                <option value="">${list.length ? '- choose course -' : '- tick a course structure above -'}</option>
+                ${list.map(b => `<option value="${esc(b.id)}" ${b.id === d.courseKey ? 'selected' : ''}>${esc(courseLabel(b))}</option>`).join('')}</select>`;
+        }
+
+        // ----- two-factor verification: password + e-mailed code (amending or deleting a structure) -----
+        let structure2fa = null, twoFaResolve = null, twoFaReject = null;
+        function reauthWithPassword(pw) {
+            const u = auth.currentUser; if (!u || !u.email) return Promise.reject(new Error('Not signed in'));
+            return u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, pw));
+        }
+        function call2fa(data) { return firebase.app().functions().httpsCallable('rasfahi2fa')(data).then(r => r.data || {}); }
+        function require2FA(purpose) {
+            if (structure2fa && structure2fa.exp > Date.now() + 30000) return Promise.resolve(structure2fa.token);
+            return new Promise((res, rej) => {
+                twoFaResolve = res; twoFaReject = rej;
+                document.getElementById('rf-modal-body').innerHTML = `<h2 style="color:var(--r-navy); margin-bottom:6px;"><i class="fas fa-shield-alt"></i> Two-factor verification</h2>
+                    <p style="color:#555;"><b>${esc(purpose)}</b> needs two-factor verification: your password, then a 6-digit code sent to your e-mail.</p>
+                    <div id="tfa-step1" class="ad-form"><label>Step 1 - your password</label><input type="password" id="tfa-pw" autocomplete="current-password" onkeydown="if(event.key==='Enter') tfaStep1()">
+                        <button class="btn btn-blue" style="margin-top:12px;" onclick="tfaStep1()"><i class="fas fa-arrow-right"></i> Continue</button></div>
+                    <div id="tfa-step2" class="ad-form" style="display:none;"><label>Step 2 - the 6-digit code sent to <b id="tfa-to"></b></label>
+                        <input type="text" id="tfa-code" maxlength="6" inputmode="numeric" style="font-size:1.4rem; letter-spacing:6px; text-align:center; max-width:220px;" onkeydown="if(event.key==='Enter') tfaStep2()">
+                        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;"><button class="btn btn-green" onclick="tfaStep2()"><i class="fas fa-check"></i> Verify</button>
+                        <button class="btn btn-outline btn-mini" onclick="tfaSend()">Send the code again</button></div></div>
+                    <div id="tfa-msg" style="margin-top:12px; font-weight:600;"></div>`;
+                document.getElementById('rf-modal').style.display = 'flex';
+                setTimeout(() => { const el = document.getElementById('tfa-pw'); if (el) el.focus(); }, 50);
+                window._tfaPurpose = purpose;
+            });
+        }
+        function tfaMsg(t, ok) { const el = document.getElementById('tfa-msg'); if (el) { el.style.color = ok ? '#15803d' : '#b91c1c'; el.innerHTML = t; } }
+        function tfaStep1() {
+            const pw = (document.getElementById('tfa-pw') || {}).value || '';
+            if (!pw) return tfaMsg('Please enter your password.');
+            tfaMsg('<i class="fas fa-spinner fa-spin"></i> Checking...', true);
+            reauthWithPassword(pw).then(() => (auth.currentUser && auth.currentUser.getIdToken ? auth.currentUser.getIdToken(true) : null)).then(() => tfaSend(), err => tfaMsg(/wrong-password|invalid-credential|invalid-login/.test(String(err && err.code)) ? 'The password is not correct.' : 'Could not check the password: ' + esc(err.code || err.message)));
+        }
+        function tfaSend() {
+            tfaMsg('<i class="fas fa-spinner fa-spin"></i> Sending the code...', true);
+            call2fa({ action: 'send', purpose: window._tfaPurpose || '' }).then(r => {
+                document.getElementById('tfa-step1').style.display = 'none';
+                document.getElementById('tfa-step2').style.display = 'block';
+                document.getElementById('tfa-to').textContent = r.to || (auth.currentUser && auth.currentUser.email) || 'your e-mail';
+                tfaMsg('A code has been sent. It is valid for 10 minutes.', true);
+                setTimeout(() => { const el = document.getElementById('tfa-code'); if (el) el.focus(); }, 50);
+            }).catch(err => tfaMsg(/not-found|internal|unavailable/.test(String(err && (err.code || err.message))) || String(err && err.message) === 'x'
+                ? 'Two-factor verification needs the server helper (functions/index.js) to be deployed. Please ask the Admin.'
+                : 'Could not send the code: ' + esc(err.message || err.code)));
+        }
+        function tfaStep2() {
+            const code = String((document.getElementById('tfa-code') || {}).value || '').trim();
+            if (!/^\d{6}$/.test(code)) return tfaMsg('Please enter the 6-digit code.');
+            tfaMsg('<i class="fas fa-spinner fa-spin"></i> Verifying...', true);
+            call2fa({ action: 'verify', code: code }).then(r => {
+                if (!r.token) throw new Error('No token');
+                structure2fa = { token: r.token, exp: Date.now() + 14 * 60000 };
+                const res = twoFaResolve; twoFaResolve = twoFaReject = null;
+                document.getElementById('rf-modal').style.display = 'none';
+                showToast('🛡️ Verified. Structure changes are allowed for the next 15 minutes.', true);
+                res(r.token);
+            }).catch(err => tfaMsg(esc((err && err.message) || 'The code is not correct.')));
+        }
+        function deleteStructure(key) {
+            const b = bindersMap[key]; if (!b || !structOf(b)) return;
+            if (!canEditStructure(b.facultyId)) return denied("Only the Dean of this faculty or the Admin can delete the course structure.");
+            const used = Object.values(assignmentsMap).filter(a => a.courseKey === key && a.structModuleId).length;
+            if (!confirm(`Delete the structure of "${b.fullName || b.programName}"?${used ? `\n\n${used} allocated module(s) were taken from it; they stay allocated.` : ''}`)) return;
+            require2FA('Deleting the structure of ' + (b.fullName || b.programName)).then(token => {
+                const w = whoStamp();
+                return db.collection('rasfahi_binders').doc(key).set({ structure: null, structureAuth: token, structureUpdatedAt: w.at, structureUpdatedBy: w.by }, { merge: true })
+                    .then(() => { showToast('🗑️ Course structure deleted.', true); renderStructures(); });
+            }).catch(err => { if (err && err.message !== 'cancelled') alert("❌ Could not delete the structure: " + (err.code || err.message)); });
         }
 
         // --- WORKSPACES: reviewers (Dean / Secretary / Admin) can open another user's archive ---
