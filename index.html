@@ -1199,6 +1199,7 @@
                 <li id="nav-my-tasks" onclick="switchStep(18, this)" style="display:none; background: rgba(201, 162, 39, 0.3); border-color: #c9a227;"><i class="fas fa-calendar-check"></i> <span>My Tasks</span><span id="my-tasks-count" class="nav-count"></span></li>
                 <li id="nav-faculty-flow" onclick="switchStep(20, this)" style="display:none; background: rgba(6, 95, 70, 0.35); border-color: #c9a227;"><i class="fas fa-stamp"></i> <span>Faculty Approvals</span><span id="flow-count" class="nav-count"></span></li>
                 <li id="nav-curriculum" onclick="switchStep(19, this)" style="display:none; background: rgba(15, 118, 110, 0.45); border-color: #c9a227;"><i class="fas fa-landmark"></i> <span>Curriculum Review</span><span id="cur-count" class="nav-count"></span></li>
+                <li id="nav-module-search" onclick="switchStep(23, this)" style="display:none;"><i class="fas fa-search"></i> <span>Module Search</span></li>
                 <li id="nav-course-archive" onclick="switchStep(21, this)" style="display:none; background: rgba(201, 162, 39, 0.28); border-color: #c9a227;"><i class="fas fa-book"></i> <span>Course Archive</span></li>
                 <li id="nav-codes" onclick="switchStep(22, this)" style="display:none; background: rgba(153, 27, 27, 0.35); border-color: #f87171;"><i class="fas fa-barcode"></i> <span>Module Code Check</span><span id="dup-count" class="nav-count" style="background:#dc2626;"></span></li>
             </ul>
@@ -1227,6 +1228,8 @@
                     </div>
                 </div>
                 <div class="top-buttons-group">
+                    <div id="global-search-wrap" style="display:none; position:relative;"><i class="fas fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8;"></i>
+                        <input type="text" id="global-search" placeholder="Search modules, codes, courses..." style="padding:10px 12px 10px 34px; width:260px; font-size:0.9rem; border-radius:20px;" onkeydown="if(event.key==='Enter') goModuleSearch(this.value)"></div>
                     <button class="btn btn-blue" onclick="performSave(true, false)"><i class="fas fa-cloud-upload-alt"></i> Cloud Save</button>
                     <button class="btn btn-outline" onclick="performSave(true, true)"><i class="fas fa-hdd"></i> Local Save</button>
                 </div>
@@ -1995,6 +1998,10 @@ service cloud.firestore {
                     <div id="flow-root"><p style="color:#888;">Loading...</p></div>
                 </div>
 
+                <div id="step-23" class="form-section">
+                    <div id="msearch-root"></div>
+                </div>
+
                 <div id="step-21" class="form-section">
                     <div id="archive-root"><p style="color:#888;">Loading...</p></div>
                 </div>
@@ -2222,6 +2229,8 @@ service cloud.firestore {
             show('nav-allocation', can('allocate'));
             show('nav-curriculum', can('curriculum'));
             show('nav-course-archive', can('viewAll'));
+            show('nav-module-search', !!auth.currentUser);
+            show('global-search-wrap', !!auth.currentUser, 'block');
             show('nav-codes', can('viewAll'));
             startCodesWatch();
             show('nav-faculty-flow', can('viewAll') && (!can('curriculum') || can('manageUsers')));
@@ -3268,6 +3277,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
 
         // ---------- linking an outline (made by hand OR imported from Word) to an allocated task ----------
         function normCode(c) { return String(c || '').toUpperCase().replace(/[\s\-_.]/g, ''); }
+        // Duplicate check: a code is a duplicate only when it is EXACTLY the same (ignoring upper/lower case and outer spaces).
+        function dupKey(c) { return String(c || '').trim().toUpperCase(); }
         function openTasksForLinking() { return myAssignmentsList().filter(t => t.status !== 'submitted').sort((x, y) => String(x.dueAt).localeCompare(String(y.dueAt))); }
         function matchTaskByCode(code) {
             const c = normCode(code); if (!c) return null;
@@ -3510,7 +3521,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const merged = Object.assign({ modality: cur.modality || 'x' }, cur, ed);
             if (!merged.programName) merged.programName = 'x';           // older tasks: course can be set later
             const err = validTask(merged); if (err) { alert(err); return; }
-            if (ed.moduleCode !== undefined && normCode(ed.moduleCode) !== normCode(cur.moduleCode) && !dupOk) {
+            if (ed.moduleCode !== undefined && dupKey(ed.moduleCode) !== dupKey(cur.moduleCode) && !dupOk) {
                 const clash = findCodeClash(ed.moduleCode, aid);
                 if (clash.length) { showDupAlert(ed.moduleCode, clash, () => allocSave(aid, true)); return; }
             }
@@ -4463,7 +4474,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         // =====================================================================================
         //  COURSES IN ALLOCATION  +  MODULE CODE DUPLICATE CONTROL
         // =====================================================================================
-        const MODULE_MODALITIES = ['Face to face', 'Blended', 'Fully online'];
+        const MODULE_MODALITIES = ['Face to face', 'Blended', 'Fully online', 'All modalities'];
+        const MODALITY_LABELS = { 'All modalities': 'All modalities (fits Face to face, Blended & Fully online)' };
         const COURSE_MODALITIES = ['Face to face', 'Blended', 'Fully online', 'Face to face and Blended', 'Blended and Fully online', 'Face to face, Blended and Fully online'];
         function canEditCourses(fac) { return can('curriculum') || (can('deanApprove') && !isUni() && (!fac || fac === myFac())); }
         function canMoveTasks(fac) { return can('curriculum') || can('manageUsers') || (normalizeRole(currentRole) === 'dean' && fac === myFac()); }
@@ -4480,9 +4492,28 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
         function modalitySelectHtml(value, onchange) {
             return `<select class="w-lg" style="margin-top:4px; font-size:0.78rem;" onchange="${onchange}"><option value="">- delivery modality -</option>
-                ${MODULE_MODALITIES.map(m => `<option ${value === m ? 'selected' : ''}>${m}</option>`).join('')}</select>`;
+                ${MODULE_MODALITIES.map(m => `<option value="${m}" ${value === m ? 'selected' : ''}>${MODALITY_LABELS[m] || m}</option>`).join('')}</select>`;
         }
-        function defaultModality(b) { const m = String((b && b.modality) || ''); return MODULE_MODALITIES.includes(m) ? m : ''; }
+        function defaultModality(b) {
+            const m = String((b && b.modality) || '');
+            if (m === 'Face to face, Blended and Fully online') return 'All modalities';
+            return MODULE_MODALITIES.includes(m) ? m : '';
+        }
+        // Does a module / course modality serve the chosen modality? "All modalities" fits every one.
+        function modalityFits(mod, want) {
+            if (!want || want === 'ALL') return true;
+            mod = String(mod || '');
+            if (mod === 'All modalities' || mod === 'Face to face, Blended and Fully online') return true;
+            if (want === 'All modalities') return mod === 'All modalities' || mod === 'Face to face, Blended and Fully online';
+            return mod.toLowerCase().includes(want.toLowerCase());
+        }
+        function filterTableRows(input, tableId) {
+            const q = String(input.value || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+            const tb = document.getElementById(tableId); if (!tb) return;
+            let shown = 0;
+            tb.querySelectorAll('tbody tr').forEach(tr => { const hit = q.every(w => (tr.dataset.s || '').includes(w)); tr.style.display = hit ? '' : 'none'; if (hit) shown++; });
+            const empty = document.getElementById(tableId + '-empty'); if (empty) empty.style.display = shown ? 'none' : 'block';
+        }
         function courseFieldsFor(key) { const b = bindersMap[key] || {}; return { courseKey: key, programName: b.programName || '', courseFullName: b.fullName || b.programName || '', courseLevel: b.level || '' }; }
         function allocDraftCourse(uid, k, key) {
             const d = (allocDrafts[uid] || []).find(x => x.k === k); if (!d) return;
@@ -4531,7 +4562,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             }
         }
         function codeEntryFor(a) {
-            return { code: String(a.moduleCode || '').trim().toUpperCase(), norm: normCode(a.moduleCode), moduleName: a.moduleName || '', facultyId: taskFac(a),
+            return { code: String(a.moduleCode || '').trim().toUpperCase(), norm: dupKey(a.moduleCode), moduleName: a.moduleName || '', facultyId: taskFac(a),
                      programName: a.programName || '', courseFullName: a.courseFullName || (bindersMap[taskCourseKey(a)] || {}).fullName || a.programName || '',
                      lecturerName: a.lecturerName || a.lecturerEmail || '', stage: pipeStep(a) };
         }
@@ -4560,11 +4591,29 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
         function codeEntries() {
             const map = {};
-            Object.values(codesMap).forEach(c => { map[c.id] = c; });
-            Object.values(assignmentsMap).forEach(a => { map[a.id] = Object.assign({ id: a.id }, codeEntryFor(a)); });
+            const tasksLoaded = !!assignScope && !assignFirstLoad;
+            Object.values(codesMap).forEach(c => {
+                // Register entries of tasks this user can see are checked against the live task list,
+                // so an entry left behind by a deleted task never raises a false alarm.
+                if (tasksLoaded && (isUni() || c.facultyId === myFac()) && !assignmentsMap[c.id]) return;
+                map[c.id] = Object.assign({}, c, { norm: dupKey(c.code) });
+            });
+            Object.values(assignmentsMap).forEach(a => { map[a.id] = Object.assign({ id: a.id }, codeEntryFor(a), { norm: dupKey(a.moduleCode) }); });
             return Object.values(map).filter(e => e.norm);
         }
-        function findCodeClash(code, excludeId) { const n = normCode(code); return n ? codeEntries().filter(e => e.norm === n && e.id !== excludeId) : []; }
+        function showCodeClashes(aid) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            const clash = findCodeClash(a.moduleCode, aid);
+            openRfModal(`<h2 style="color:#b91c1c; margin-bottom:6px;"><i class="fas fa-exclamation-triangle"></i> ${esc(dupKey(a.moduleCode))} is used more than once</h2>
+                <p style="color:#555;">This module: <b>${esc(a.moduleName)}</b> · ${esc(a.courseFullName || a.programName || '—')} · ${esc(taskFac(a))}</p>
+                <p style="color:#555; margin-top:8px;">The same code is also given to:</p>
+                <table class="royal-table"><thead><tr><th>Module</th><th>Course</th><th>Faculty</th><th>Lecturer</th></tr></thead><tbody>
+                ${clash.map(e => `<tr><td><b>${esc(e.code)}</b> - ${esc(e.moduleName)}</td><td>${esc(e.courseFullName || e.programName || '—')}</td><td>${facTag(e.facultyId)}</td><td>${esc(e.lecturerName || '')}</td></tr>`).join('')}</tbody></table>
+                <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+                    ${canWriteCode(taskFac(a)) ? `<button class="btn btn-outline btn-mini" onclick="closeRfModal(); changeTaskCode('${aid}')"><i class="fas fa-pen"></i> Change this code</button>` : ''}
+                    <button class="btn btn-blue btn-mini" onclick="closeRfModal(); switchStep(22, document.getElementById('nav-codes'))"><i class="fas fa-barcode"></i> Module Code Check</button></div>`);
+        }
+        function findCodeClash(code, excludeId) { const n = dupKey(code); return n ? codeEntries().filter(e => e.norm === n && e.id !== excludeId) : []; }
         function duplicateGroups(fac) {
             const by = {};
             codeEntries().forEach(e => { (by[e.norm] || (by[e.norm] = [])).push(e); });
@@ -4574,9 +4623,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
         function codeDupPill(a) {
             const n = findCodeClash(a.moduleCode, a.id).length; if (!n) return '';
-            const ok = codeOkMap[normCode(a.moduleCode)] && codeOkMap[normCode(a.moduleCode)].ok;
+            const ok = codeOkMap[dupKey(a.moduleCode)] && codeOkMap[dupKey(a.moduleCode)].ok;
             return ok ? `<span class="pipe-badge pipe-approved" title="Confirmed as a module shared by several courses">shared code</span>`
-                      : `<span class="pipe-badge pipe-returned" style="cursor:pointer;" title="This code is also used by ${n} other module(s) - click to see" onclick="switchStep(22, document.getElementById('nav-codes'))"><i class="fas fa-exclamation-triangle"></i> DUPLICATE CODE</span>`;
+                      : `<span class="pipe-badge pipe-returned" style="cursor:pointer;" title="Also used by: ${esc(findCodeClash(a.moduleCode, a.id).map(e => e.moduleName + ' (' + (e.facultyId || '') + ')').join(', '))} - click to see" onclick="showCodeClashes('${a.id}')"><i class="fas fa-exclamation-triangle"></i> DUPLICATE CODE</span>`;
         }
         function updateDupBadge() {
             const el = document.getElementById('dup-count'); if (!el) return;
@@ -4616,7 +4665,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const a = assignmentsMap[aid]; if (!a) return denied("You can change codes only for modules of your own faculty.");
             if (!canWriteCode(taskFac(a))) return denied("You can change codes only for modules of your own faculty.");
             const nc = prompt(`New module code for "${a.moduleName}" (current: ${a.moduleCode}):`, a.moduleCode);
-            if (!nc || normCode(nc) === normCode(a.moduleCode)) return;
+            if (!nc || dupKey(nc) === dupKey(a.moduleCode)) return;
             const run = (ack) => {
                 const upd = { moduleCode: nc.trim().toUpperCase() }; if (ack) upd.codeDuplicateAck = true;
                 updateTask(aid, upd, `🔁 Code changed to <b>${esc(upd.moduleCode)}</b>. Remember to change the code inside the outline too.`).then(() => syncCodeIndexFor(Object.assign({}, a, upd)));
@@ -4650,6 +4699,19 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     <div style="display:flex; gap:10px; flex-wrap:wrap;"><input type="text" id="code-probe" class="ltr-input" placeholder="e.g. SHA0302" value="${esc(q)}" style="max-width:260px;" onkeydown="if(event.key==='Enter') renderCodeCheck()">
                     <button class="btn btn-blue btn-mini" onclick="renderCodeCheck()"><i class="fas fa-search"></i> Check</button></div>
                     ${probe ? (probe.length ? `<p style="color:#b91c1c; font-weight:700; margin-top:10px;"><i class="fas fa-times-circle"></i> ${esc(q.toUpperCase())} is already used:</p>${dupRowsHtml(probe)}` : `<p style="color:#15803d; font-weight:700; margin-top:10px;"><i class="fas fa-check-circle"></i> ${esc(q.toUpperCase())} is free to use.</p>`) : ''}</div>`;
+            if (groups.length) {
+                const rows = [];
+                groups.forEach(g => g.list.forEach(e => rows.push({ e, ok: g.ok })));
+                html += `<div class="dash-card"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <div><h3><i class="fas fa-list"></i> Repeated modules list</h3><div class="dash-sub">Every module whose code is used more than once - ${rows.length} module(s) under ${groups.length} code(s)</div></div>
+                        <input type="text" id="dup-search" class="ltr-input" placeholder="Search module, code, course or faculty..." style="max-width:320px;" oninput="filterTableRows(this, 'dup-list-table')"></div>
+                    <div style="overflow-x:auto; max-height:460px; overflow-y:auto; margin-top:10px;"><table class="royal-table" id="dup-list-table"><thead><tr><th>Code</th><th>Module</th><th>Course</th><th>Faculty</th><th>Lecturer</th><th>Status</th></tr></thead><tbody>
+                    ${rows.map(({ e, ok }) => `<tr data-s="${esc([e.code, e.moduleName, e.courseFullName, e.programName, e.facultyId, facName(e.facultyId), e.lecturerName].join(' ').toLowerCase())}">
+                        <td><b>${esc(e.code)}</b></td><td>${esc(e.moduleName)}</td><td>${esc(e.courseFullName || e.programName || '—')}</td>
+                        <td>${facTag(e.facultyId)} <span style="font-size:0.78rem;">${esc(facName(e.facultyId))}</span></td><td>${esc(e.lecturerName || '')}</td>
+                        <td>${ok ? '<span class="pipe-badge pipe-approved">shared - OK</span>' : '<span class="pipe-badge pipe-returned">duplicate</span>'}</td></tr>`).join('')}
+                    </tbody></table><p id="dup-list-table-empty" style="display:none; color:#94a3b8; padding:10px;">Nothing matches.</p></div></div>`;
+            }
             if (!groups.length) html += `<div class="dash-card"><p style="color:#15803d; margin:0;"><i class="fas fa-check-circle"></i> No duplicate module codes. 👏</p></div>`;
             groups.forEach(g => {
                 const canShare = can('curriculum') || can('manageUsers');
@@ -4665,6 +4727,73 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             });
             root.innerHTML = html;
             updateDupBadge();
+        }
+
+
+        // =====================================================================================
+        //  MODULE SEARCH  -  by module name, module code, course, faculty; filter by modality
+        // =====================================================================================
+        const msState = { q: '', modality: 'ALL', fac: 'ALL' };
+        let msTimer = null;
+        function goModuleSearch(q) { msState.q = String(q || ''); switchStep(23, document.getElementById('nav-module-search')); }
+        function setMsModality(m) { msState.modality = m; renderModuleSearch(); }
+        function setMsFac(f) { msState.fac = f; renderModuleSearch(); }
+        function msTaskModality(a) { const b = bindersMap[a.courseKey || ''] || {}; return a.modality || b.modality || ''; }
+        function msHay(a) {
+            const b = bindersMap[a.courseKey || ''] || {};
+            return [a.moduleCode, a.moduleName, a.courseFullName, a.programName, b.fullName, b.dvName, b.code, taskFac(a), facName(taskFac(a)), a.lecturerName, a.lecturerEmail, msTaskModality(a)].join(' ').toLowerCase();
+        }
+        function renderModuleSearch() {
+            const root = document.getElementById('msearch-root'); if (!root) return;
+            const mods = ['ALL', 'Face to face', 'Blended', 'Fully online', 'All modalities'];
+            root.innerHTML = `<div class="dash-hero"><h2><i class="fas fa-search"></i> Module Search</h2><div class="gold-rule"></div>
+                    <p>Type a module name, a module code or a course name. A course name lists all the modules of that course; a code finds that module.${isUni() ? ' Search covers every faculty and centre.' : (can('viewAll') ? ' Search covers ' + esc(facName(myFac())) + '.' : ' Search covers the modules allocated to you.')}</p></div>
+                <div class="dash-card">
+                    <input type="text" id="ms-q" class="ltr-input" placeholder="e.g. Janazah · SHA0302 · Diploma in Shariah" value="${esc(msState.q)}" style="font-size:1.1rem;" oninput="msState.q=this.value; clearTimeout(msTimer); msTimer=setTimeout(renderMsResults, 180);">
+                    <div style="font-weight:700; color:var(--r-navy); margin:14px 0 4px;"><i class="fas fa-chalkboard"></i> Modality</div>
+                    <div class="fac-chips">${mods.map(m => `<button type="button" class="fac-chip ${msState.modality === m ? 'active' : ''}" onclick="setMsModality('${m}')">${m === 'ALL' ? 'Any modality' : esc(m)}</button>`).join('')}</div>
+                    ${isUni() ? `<div style="font-weight:700; color:var(--r-navy); margin:4px 0 4px;"><i class="fas fa-university"></i> Faculty</div>
+                        <div class="fac-chips">${['ALL'].concat(FACULTIES.map(f => f.id)).map(f => `<button type="button" class="fac-chip ${msState.fac === f ? 'active' : ''}" ${f !== 'ALL' ? `style="--fc:${facColor(f)}"` : ''} onclick="setMsFac('${f}')">${f}</button>`).join('')}</div>` : ''}
+                </div>
+                <div id="ms-results"></div>`;
+            renderMsResults();
+            const inp = document.getElementById('ms-q'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+        }
+        function renderMsResults() {
+            const box = document.getElementById('ms-results'); if (!box) return;
+            const words = msState.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+            let tasks = can('viewAll') ? Object.values(assignmentsMap) : myAssignmentsList();
+            tasks = tasks.filter(a => (msState.fac === 'ALL' || taskFac(a) === msState.fac) && modalityFits(msTaskModality(a), msState.modality));
+            // The whole phrase first (e.g. a full course name); only if nothing matches, every word anywhere.
+            const phrase = msState.q.toLowerCase().trim().replace(/\s+/g, ' ');
+            const byPhrase = phrase ? tasks.filter(a => msHay(a).replace(/\s+/g, ' ').includes(phrase)) : tasks;
+            tasks = byPhrase.length || !phrase ? byPhrase : tasks.filter(a => words.every(w => msHay(a).includes(w)));
+            const exact = msState.q.trim() ? tasks.filter(a => dupKey(a.moduleCode) === dupKey(msState.q)) : [];
+            // registered courses that match (so a course with no modules yet is still found)
+            const courses = Object.values(bindersMap).filter(b => b.programName && (msState.fac === 'ALL' || b.facultyId === msState.fac) && modalityFits(b.modality, msState.modality)
+                && words.length && [b.fullName, b.programName, b.dvName, b.code, b.facultyId, facName(b.facultyId), b.modality].join(' ').toLowerCase().replace(/\s+/g, ' ').includes(phrase));
+            if (!words.length && msState.modality === 'ALL' && msState.fac === 'ALL' && tasks.length > 60) {
+                box.innerHTML = `<div class="dash-card"><p style="color:#64748b; margin:0;"><i class="fas fa-info-circle"></i> ${tasks.length} modules. Type a module name, code or course, or choose a modality, to narrow the list.</p></div>`;
+                return;
+            }
+            const groups = groupByBinder(tasks);
+            courses.forEach(b => { if (!groups.some(g => g.key === b.id)) groups.push({ key: b.id, fac: b.facultyId, prog: b.programName, tasks: [] }); });
+            const rowHtml = a => `<tr><td><b>${esc(a.moduleCode)}</b> ${codeDupPill(a)}</td><td>${esc(a.moduleName)}</td><td>${esc(a.lecturerName || a.lecturerEmail || '')}</td>
+                <td><span style="font-size:0.8rem;">${esc(msTaskModality(a) || '—')}</span></td><td>${pipeBadge(a)}</td>
+                <td style="white-space:nowrap;">${can('viewAll') ? openBtn(a) : (a.courseId ? `<button class="btn btn-outline btn-mini" onclick="openAssignmentOutline('${a.id}')"><i class="fas fa-eye"></i></button>` : '')}</td></tr>`;
+            let html = `<p style="color:#475569; margin:4px 2px 12px;"><b>${tasks.length}</b> module(s) in <b>${groups.length}</b> course(s)</p>`;
+            if (exact.length) html += `<div class="dash-card" style="border-top-color:#059669;"><h3><i class="fas fa-bullseye"></i> Exact code: ${esc(dupKey(msState.q))}</h3>
+                <table class="royal-table"><thead><tr><th>Code</th><th>Module</th><th>Lecturer</th><th>Modality</th><th>Stage</th><th></th></tr></thead><tbody>${exact.map(rowHtml).join('')}</tbody></table>
+                <div class="dash-sub" style="margin-top:6px;">${exact.map(a => esc(a.courseFullName || a.programName || 'No course') + ' · ' + esc(facName(taskFac(a)))).join('<br>')}</div></div>`;
+            if (!groups.length) html += `<div class="dash-card"><p style="color:#94a3b8; margin:0;">No modules found.</p></div>`;
+            groups.forEach(g => {
+                const b = bindersMap[g.key] || {};
+                html += `<div class="binder-card" style="--fc:${facColor(g.fac)}"><div class="binder-head">
+                    <h4>${facTag(g.fac)} ${esc(b.fullName || g.prog)} <small style="color:#64748b; font-family:'Segoe UI';">· ${g.tasks.length} module(s)${b.level ? ' · MNQF ' + esc(b.level) : ''}${b.modality ? ' · ' + esc(b.modality) : ''}</small></h4>
+                    ${can('viewAll') ? `<button class="btn btn-outline btn-mini" onclick="switchStep(21, document.getElementById('nav-course-archive')); openCourse('${g.key}')"><i class="fas fa-book"></i> Course card</button>` : ''}</div>
+                    <div class="binder-body">${g.tasks.length ? `<table class="royal-table"><thead><tr><th>Code</th><th>Module</th><th>Lecturer</th><th>Modality</th><th>Stage</th><th></th></tr></thead><tbody>${g.tasks.map(rowHtml).join('')}</tbody></table>` : '<p style="color:#94a3b8; padding:8px;">No modules allocated in this course yet.</p>'}</div></div>`;
+            });
+            box.innerHTML = html;
         }
 
         // --- WORKSPACES: reviewers (Dean / Secretary / Admin) can open another user's archive ---
@@ -4835,7 +4964,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         });
 
         // Structural edits (adding/removing rows etc.) happen through buttons inside the outline steps.
-        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15', 'step-16', 'step-17', 'step-18', 'step-19', 'step-20', 'step-21', 'step-22']);
+        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15', 'step-16', 'step-17', 'step-18', 'step-19', 'step-20', 'step-21', 'step-22', 'step-23']);
         function isOutlineField(el) {
             if (el.id && (el.id.startsWith('hdr-') || el.id.startsWith('wm-'))) return false; // account branding, saved separately
             const sec = el.closest('.form-section');
@@ -4959,8 +5088,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if(num === 19) { if (!can('curriculum')) return denied("This page is for the Curriculum Department."); renderCurriculum(); }
             if(num === 20) { loadAccounts(false).then(renderFacultyFlow); renderFacultyFlow(); }
             if(num === 22) { if (!can('viewAll')) return denied("Module Code Check is for the Curriculum Department, Deans, Secretaries and the Admin."); renderCodeCheck(); }
+            if(num === 23) renderModuleSearch();
             if(num === 21) { if (!can('viewAll')) return denied("The Course Archive is for the Curriculum Department, Deans, Secretaries and the Admin."); renderCourseArchive(); }
-            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18, 19, 20, 21, 22].includes(num));
+            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18, 19, 20, 21, 22, 23].includes(num));
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
 
@@ -5421,7 +5551,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 snap.forEach(d => {
                     const a = d.data();
                     if (onlyUid && a.lecturerUid !== onlyUid) return;
-                    if (mode === 'delete') { ops.push(b => b.delete(d.ref)); return; }
+                    if (mode === 'delete') { ops.push(b => b.delete(d.ref)); ops.push(b => b.delete(db.collection('rasfahi_codes').doc(d.id))); return; }
                     if (onlyUid && !a.courseId) return;
                     ops.push(b => b.update(d.ref, { status: 'assigned', courseId: null, moduleId: null, startedAt: null, submittedAt: null, resubmittedAt: null,
                         submission: null, locked: false, amendNote: null, amendCount: 0, amendHistory: [], reminders: { dayBefore: false, overdue: false }, updatedAt: t }));
