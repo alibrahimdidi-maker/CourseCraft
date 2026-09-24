@@ -2168,8 +2168,91 @@ service cloud.firestore {
                     renderUserDirectory();
                 });
             }).catch(err => {
+                if (err && err.code === 'auth/email-already-in-use') return handleExistingEmail(email, pass, name, role);
                 alert("❌ Could not create the account: " + (err.message || err.code || 'unknown error'));
             });
+        }
+
+        function clearNewUserForm() {
+            ['new-lect-name', 'new-lect-email', 'new-lect-pass'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            const r = document.getElementById('new-user-role'); if (r) r.value = 'lecturer';
+        }
+
+        // The e-mail already has a Firebase login (e.g. an account that was deleted earlier).
+        // Instead of failing, bring that login back into the system.
+        function handleExistingEmail(email, pass, name, role) {
+            const lower = email.toLowerCase();
+            loadAccounts(true).then(accs => {
+                const acc = accs.find(a => String(a.email || '').toLowerCase() === lower);
+                if (acc && !acc.deleted) {
+                    alert(`ℹ️ ${email} is already an active account in the User Directory${acc.disabled ? ' (currently disabled - press Enable)' : ''}.
+
+You can change its role, name or password there.`);
+                    renderUserDirectory();
+                    return;
+                }
+                if (acc && acc.deleted) {
+                    if (!confirm(`${email} belonged to an account that was deleted earlier${acc.name ? ' (' + acc.name + ')' : ''}.
+
+Restore it as a ${ROLE_LABELS[role]} with the name and password you entered?`)) return;
+                    return restoreAccount(acc, { name: name, role: role, pass: pass }).then(clearNewUserForm);
+                }
+                // A login exists but the system has no record of it: it can be taken over only with its current password.
+                return trySecondarySignIn(email, pass).then(uid => {
+                    if (uid) {
+                        return db.collection('rasfahi_accounts').doc(uid).set({ email: email, name: name, role: role, disabled: false, deleted: false, createdAt: nowIso(), createdBy: auth.currentUser.email }, { merge: true })
+                            .then(() => { alert(`✅ ${email} has been added as a ${ROLE_LABELS[role]}.`); clearNewUserForm(); renderUserDirectory(); });
+                    }
+                    alert(`⚠️ ${email} is already registered in Firebase Authentication, but it is not linked to any user in this system, so it cannot be added automatically.
+
+To add it again, open Firebase Console → Authentication → Users, delete ${email}, then press "Create Account" again.
+(If the server helper in functions/index.js is deployed, deleted users are removed there automatically.)`);
+                });
+            }).catch(e => alert("❌ Could not check the existing account: " + (e.code || e.message)));
+        }
+
+        function trySecondarySignIn(email, pass) {
+            if (!pass) return Promise.resolve(null);
+            const sec = getSecondaryAuth();
+            return sec.signInWithEmailAndPassword(email, pass).then(cred => { const uid = cred.user.uid; return sec.signOut().then(() => uid); }).catch(() => null);
+        }
+
+        // Brings a deleted account back: unblocks it, sets role/name, and gives it a working password.
+        function restoreAccount(acc, opts = {}) {
+            const role = normalizeRole(opts.role || acc.role);
+            const t = nowIso();
+            return db.collection('rasfahi_accounts').doc(acc.uid).set({
+                email: acc.email, name: opts.name || acc.name || '', role: role, disabled: false, deleted: false,
+                deletedAt: null, deletedBy: null, restoredAt: t, restoredBy: auth.currentUser.email
+            }, { merge: true }).then(() => {
+                callAdminFunction('setDisabled', { uid: acc.uid, disabled: false }).catch(() => {});
+                if (!opts.pass) return 'none';
+                return callAdminFunction('setPassword', { uid: acc.uid, password: opts.pass }).then(() => 'set')
+                    .catch(() => trySecondarySignIn(acc.email, opts.pass).then(uid => uid ? 'same' : 'reset'));
+            }).then(res => {
+                const who = acc.email;
+                if (res === 'reset' || res === 'none') {
+                    return auth.sendPasswordResetEmail(who).then(() => {
+                        alert(`✅ ${who} has been restored as a ${ROLE_LABELS[role]}.
+
+A password-reset e-mail has been sent to ${who} so they can choose a new password${res === 'reset' ? ' (the temporary password could not be set directly without the server helper)' : ''}.`);
+                    }).catch(() => alert(`✅ ${who} has been restored as a ${ROLE_LABELS[role]}. They can sign in with their previous password, or use "Password" in the directory to send a reset e-mail.`));
+                }
+                alert(`✅ ${who} has been restored as a ${ROLE_LABELS[role]}. They can sign in with the password you entered.`);
+            }).then(() => renderUserDirectory())
+              .catch(e => alert("❌ Could not restore the account: " + (e.code || e.message)));
+        }
+
+        function restoreDeletedUser(uid) {
+            if (!can('manageUsers')) return denied("Admin only.");
+            const acc = findAccount(uid); if (!acc || !acc.email) return;
+            const roleIn = prompt(`Restore ${acc.email}.
+Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
+            if (roleIn === null) return;
+            const pass = prompt("New temporary password (min. 6 characters) - or leave empty to send them a password-reset e-mail:", "");
+            if (pass === null) return;
+            if (pass && pass.length < 6) { alert("Password must be at least 6 characters."); return; }
+            restoreAccount(acc, { role: String(roleIn).trim().toLowerCase(), pass: pass });
         }
         const createLecturerAccount = createUserAccount;
 
@@ -2206,7 +2289,13 @@ service cloud.firestore {
                         </div></td></tr>`;
                 });
                 html += '</tbody></table>';
-                if (deletedCount) html += `<p style="font-size:0.8rem; color:#888; margin-top:8px;">${deletedCount} deleted account(s) hidden.</p>`;
+                if (deletedCount) {
+                    const del = accs.filter(a => a.deleted).sort((x, y) => String(x.email).localeCompare(String(y.email)));
+                    html += `<details style="margin-top:14px;"><summary style="cursor:pointer; color:#475569; font-weight:600;">Deleted accounts (${deletedCount}) - their e-mails can be restored</summary>
+                        <table class="user-table" style="margin-top:8px;"><tbody>${del.map(a => `<tr><td><b>${esc(a.name || '(no name)')}</b><br><span style="color:#555;">${esc(a.email)}</span></td>
+                        <td style="font-size:0.8rem; color:#888;">Deleted ${fmtDate(a.deletedAt, false)}</td>
+                        <td><button class="btn btn-green btn-mini" onclick="restoreDeletedUser('${a.uid}')"><i class="fas fa-trash-restore"></i> Restore</button></td></tr>`).join('')}</tbody></table></details>`;
+                }
                 list.innerHTML = html;
             }).catch(err => {
                 console.error('[RASFAHI] user directory load failed', err);
