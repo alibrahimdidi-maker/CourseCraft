@@ -1001,6 +1001,44 @@
         body.rf-outline-locked .content-area .form-section select:disabled { background:#f1f5f9 !important; cursor:not-allowed; }
         .nav-count { background:#f59e0b; color:#fff; border-radius:10px; font-size:0.7rem; padding:1px 7px; margin-left:6px; display:none; }
 
+        /* ===== FACULTIES / CURRICULUM WORKFLOW ===== */
+        .role-curriculum { background:#0f766e; }
+        .fac-tag { display:inline-block; color:#fff; font-size:0.7rem; font-weight:800; letter-spacing:0.6px; padding:3px 8px; border-radius:7px; vertical-align:middle; }
+        .fac-chips { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 16px; }
+        .fac-chip { --fc:#0b1f4d; border:2px solid var(--fc); background:#fff; color:var(--fc); font-weight:800; letter-spacing:0.6px; border-radius:22px; padding:6px 14px; cursor:pointer; font-size:0.82rem; transition:0.2s; }
+        .fac-chip:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,0.12); }
+        .fac-chip.active { background:var(--fc); color:#fff; box-shadow:0 0 0 3px rgba(201,162,39,0.45); }
+        .fac-chip-n { background:#c9a227; color:#fff; border-radius:10px; padding:0 7px; margin-left:6px; font-size:0.72rem; }
+        .fac-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:18px; margin-bottom:24px; }
+        .fac-card { --fc:#1e3a8a; position:relative; cursor:pointer; border-radius:18px; padding:18px 18px 16px; color:#fff; overflow:hidden;
+            background:linear-gradient(145deg, var(--fc) 0%, #0b1f4d 70%, #052e21 100%); border:1px solid rgba(243,210,122,0.55);
+            box-shadow:0 14px 30px rgba(11,31,77,0.25); transition:0.25s; }
+        .fac-card:hover { transform:translateY(-4px); box-shadow:0 20px 40px rgba(11,31,77,0.35); }
+        .fac-card.active { outline:3px solid #c9a227; }
+        .fac-card::after { content:''; position:absolute; right:-40px; top:-40px; width:140px; height:140px; border-radius:50%; border:2px solid rgba(243,210,122,0.25); }
+        .fac-card .fac-short { font-family:'Playfair Display', serif; font-size:1.9rem; font-weight:700; letter-spacing:1px; color:#f3d27a; }
+        .fac-card .fac-name { font-size:0.86rem; font-weight:600; margin-top:2px; min-height:2.3em; }
+        .fac-card .fac-dv { direction:rtl; text-align:right; font-family:'Faruma','Noto Sans Thaana',serif; font-size:0.85rem; opacity:0.85; margin-top:4px; }
+        .fac-card .fac-stats { display:flex; gap:10px; margin-top:12px; }
+        .fac-card .fac-stats div { flex:1; background:rgba(255,255,255,0.1); border-radius:10px; padding:6px 4px; text-align:center; }
+        .fac-card .fac-stats b { display:block; font-size:1.25rem; font-family:'Playfair Display', serif; }
+        .fac-card .fac-stats span { font-size:0.68rem; opacity:0.85; text-transform:uppercase; letter-spacing:0.5px; }
+        .fac-card .fac-bar { height:7px; background:rgba(255,255,255,0.2); border-radius:6px; overflow:hidden; margin-top:12px; }
+        .fac-card .fac-bar span { display:block; height:100%; background:linear-gradient(90deg, #f3d27a, #10b981); }
+        .fac-card small { display:block; margin-top:6px; font-size:0.74rem; opacity:0.9; }
+        .stepper { display:flex; gap:4px; margin-top:10px; }
+        .stepper .step { flex:1; font-size:0.64rem; font-weight:700; text-align:center; padding:4px 2px; border-radius:6px; background:#e2e8f0; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .stepper .step.done { background:#dcfce7; color:#166534; } .stepper .step.cur { background:#1e3a8a; color:#fff; } .stepper .step.ret { background:#fee2e2; color:#991b1b; }
+        .pipe-badge { display:inline-block; font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+        .pipe-lecturer { background:#f1f5f9; color:#475569; } .pipe-dean { background:#fef3c7; color:#92400e; } .pipe-returned { background:#fee2e2; color:#991b1b; }
+        .pipe-curriculum { background:#e0e7ff; color:#1e3a8a; } .pipe-mqa { background:#ede9fe; color:#5b21b6; } .pipe-approved { background:#dcfce7; color:#166534; }
+        .binder-card { background:#fff; border-radius:16px; box-shadow:0 10px 28px rgba(15,23,42,0.08); border-left:6px solid var(--fc, #1e3a8a); margin-bottom:22px; overflow:hidden; }
+        .binder-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding:14px 18px; background:linear-gradient(90deg, #f8fafc, #fff); border-bottom:1px solid #e8edf5; }
+        .binder-head h4 { margin:0; font-family:'Playfair Display', serif; color:#0b1f4d; font-size:1.1rem; }
+        .binder-cert { padding:10px 18px; background:#fffbeb; border-bottom:1px solid #fde68a; font-size:0.88rem; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .binder-body { padding:6px 12px 12px; overflow-x:auto; }
+        .fac-hero-sub { direction:rtl; font-family:'Faruma','Noto Sans Thaana',serif; opacity:0.9; }
+
         /* STARTUP SPLASH */
         #rf-splash { position:fixed; inset:0; z-index:200000; background:radial-gradient(circle at 50% 40%, #ffffff 0%, #eef2f7 70%, #e2e8f0 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; transition:opacity 0.6s ease, visibility 0.6s ease; }
         #rf-splash.hide { opacity:0; visibility:hidden; }
@@ -1136,6 +1174,8 @@
                 <li id="nav-dashboard" onclick="switchStep(16, this)" style="display:none; background: rgba(6, 95, 70, 0.45); border-color: #c9a227;"><i class="fas fa-chart-pie"></i> <span>Dashboard</span></li>
                 <li id="nav-allocation" onclick="switchStep(17, this)" style="display:none; background: rgba(30, 58, 138, 0.45); border-color: #c9a227;"><i class="fas fa-user-tag"></i> <span>Task Allocation</span></li>
                 <li id="nav-my-tasks" onclick="switchStep(18, this)" style="display:none; background: rgba(201, 162, 39, 0.3); border-color: #c9a227;"><i class="fas fa-calendar-check"></i> <span>My Tasks</span><span id="my-tasks-count" class="nav-count"></span></li>
+                <li id="nav-faculty-flow" onclick="switchStep(20, this)" style="display:none; background: rgba(6, 95, 70, 0.35); border-color: #c9a227;"><i class="fas fa-stamp"></i> <span>Faculty Approvals</span><span id="flow-count" class="nav-count"></span></li>
+                <li id="nav-curriculum" onclick="switchStep(19, this)" style="display:none; background: rgba(15, 118, 110, 0.45); border-color: #c9a227;"><i class="fas fa-landmark"></i> <span>Curriculum Review</span><span id="cur-count" class="nav-count"></span></li>
             </ul>
             
             <div class="sync-badge" id="sync-status">
@@ -1699,7 +1739,7 @@ Upon successful completion of this Module, students will have the knowledge and 
 
                 <div id="step-14" class="form-section">
                     <h2 class="section-header"><i class="fas fa-user-shield"></i> Manage Users (Admin)</h2>
-                    <p style="margin-bottom: 25px; color:#555; font-size:1.05rem;">Create accounts and choose each person's role. <b>Lecturer</b>: creates and edits their own outlines, cannot delete. <b>Secretary</b>: edits every outline, cannot create or delete. <b>Dean</b>: reviews and corrects every outline, leaves correction notes, can create own outlines, cannot delete. <b>Admin</b>: everything, including deleting outlines and managing users.</p>
+                    <p style="margin-bottom: 25px; color:#555; font-size:1.05rem;">Create accounts, choose each person's <b>faculty / centre</b> and role. Faculty staff only ever see their own faculty. <b>Lecturer</b>: creates and edits their own outlines. <b>Secretary</b>: edits every outline of the faculty. <b>Dean</b>: corrects every outline of the faculty, allocates tasks and approves finished outlines to Curriculum. <b>Curriculum Department</b>: reviews outlines from every faculty, comments, returns them for amendment, sends them to MQA and records MQA comments and approval. <b>Admin</b>: everything, for all faculties.</p>
 
                     <div style="background: var(--light-bg); border: 2px dashed var(--royal-blue); border-radius: 10px; padding: 25px; margin-bottom: 30px;">
                         <h3 style="color:var(--royal-blue); margin-bottom:15px;"><i class="fas fa-user-plus"></i> Create New Account</h3>
@@ -1712,8 +1752,12 @@ Upon successful completion of this Module, students will have the knowledge and 
                                     <option value="lecturer" selected>Lecturer</option>
                                     <option value="secretary">Secretary</option>
                                     <option value="dean">Dean</option>
+                                    <option value="curriculum">Curriculum Department</option>
                                     <option value="admin">Admin</option>
                                 </select>
+                            </div>
+                            <div class="form-group"><label>Faculty / Centre</label>
+                                <select id="new-user-faculty"><option value="">- University level (Admin / Curriculum) -</option></select>
                             </div>
                         </div>
                         <button class="btn btn-blue" style="margin-top:15px;" onclick="createUserAccount()"><i class="fas fa-user-plus"></i> Create Account</button>
@@ -1723,6 +1767,7 @@ Upon successful completion of this Module, students will have the knowledge and 
                         <h3 style="color:var(--royal-blue); margin:0;"><i class="fas fa-users"></i> User Directory</h3>
                         <button class="btn btn-outline btn-mini" onclick="renderUserDirectory()"><i class="fas fa-sync"></i> Refresh</button>
                     </div>
+                    <div id="users-fac-chips"></div>
                     <div id="lecturer-directory-list" style="overflow-x:auto;"><p style="color:#888;">Loading...</p></div>
                     <p style="font-size:0.85rem; color:#666; margin-top:12px;">Disabling or deleting an account blocks that person from the system immediately. Changing a password directly (and fully removing a login) needs the small server helper in <b>functions/index.js</b> to be deployed once; without it, the app sends the user a password-reset email instead, and a deleted user's login record stays in Firebase Console &rarr; Authentication (it can no longer access anything).</p>
 
@@ -1742,28 +1787,35 @@ service cloud.firestore {
     function hasAcct() { return exists(acctPath()); }
     function acct() { return get(acctPath()).data; }
     function role() { return isBootstrapAdmin() ? 'admin' : (hasAcct() ? acct().get('role', 'lecturer') : 'lecturer'); }
+    function myFac() { return hasAcct() ? acct().get('facultyId', '') : ''; }
     function active() {
       return signedIn() &amp;&amp; (isBootstrapAdmin() || !hasAcct() ||
              (acct().get('disabled', false) != true &amp;&amp; acct().get('deleted', false) != true));
     }
-    function isAdmin()   { return active() &amp;&amp; role() == 'admin'; }
-    function reviewer()  { return active() &amp;&amp; role() in ['admin', 'dean', 'secretary']; }
-    function canCreate() { return active() &amp;&amp; role() in ['admin', 'dean', 'lecturer']; }
+    function isAdmin()     { return active() &amp;&amp; role() == 'admin'; }
+    function uni()         { return active() &amp;&amp; role() in ['admin', 'curriculum']; }       // whole university
+    function facReviewer() { return active() &amp;&amp; role() in ['dean', 'secretary'] &amp;&amp; myFac() != ''; }
+    function canCreate()   { return active() &amp;&amp; role() in ['admin', 'dean', 'lecturer']; }
+    function sameFacUser(uid) {
+      return exists(/databases/$(database)/documents/rasfahi_accounts/$(uid))
+             &amp;&amp; get(/databases/$(database)/documents/rasfahi_accounts/$(uid)).data.get('facultyId', '') == myFac();
+    }
 
     match /rasfahi_accounts/{uid} {
-      allow read:  if signedIn() &amp;&amp; (request.auth.uid == uid || reviewer());
+      allow read:  if signedIn() &amp;&amp; (request.auth.uid == uid || uni()
+                    || (facReviewer() &amp;&amp; resource.data.get('facultyId', '') == myFac()));
       allow write: if isAdmin();
     }
 
     match /rasfahi_users/{uid} {
-      allow read:  if active() &amp;&amp; (request.auth.uid == uid || reviewer());
+      allow read:  if active() &amp;&amp; (request.auth.uid == uid || uni() || (facReviewer() &amp;&amp; sameFacUser(uid)));
       allow write: if active() &amp;&amp; (request.auth.uid == uid || isAdmin());
 
       match /courses/{cid} {
-        allow read:   if active() &amp;&amp; (request.auth.uid == uid || reviewer());
+        allow read:   if active() &amp;&amp; (request.auth.uid == uid || uni() || (facReviewer() &amp;&amp; sameFacUser(uid)));
         allow create: if canCreate() &amp;&amp; request.auth.uid == uid;
         // Only the admin may remove modules from a course document.
-        allow update: if ((active() &amp;&amp; request.auth.uid == uid) || reviewer())
+        allow update: if ((active() &amp;&amp; request.auth.uid == uid) || isAdmin() || (facReviewer() &amp;&amp; sameFacUser(uid)))
                       &amp;&amp; (isAdmin() || request.resource.data.get('modules', {}).keys()
                                          .hasAll(resource.data.get('modules', {}).keys()));
         allow delete: if isAdmin();
@@ -1777,26 +1829,43 @@ service cloud.firestore {
     }
 
     match /rasfahi_status/{id} {
-      allow read:   if active() &amp;&amp; (reviewer() || resource.data.ownerUid == request.auth.uid);
-      allow create: if active() &amp;&amp; (request.resource.data.ownerUid == request.auth.uid || reviewer());
-      allow update: if active() &amp;&amp; (resource.data.ownerUid == request.auth.uid || reviewer())
+      allow read:   if active() &amp;&amp; (uni() || resource.data.ownerUid == request.auth.uid
+                      || (facReviewer() &amp;&amp; resource.data.get('facultyId', '') == myFac()));
+      allow create: if active() &amp;&amp; (request.resource.data.ownerUid == request.auth.uid || isAdmin()
+                      || (facReviewer() &amp;&amp; request.resource.data.get('facultyId', '') == myFac()));
+      allow update: if active() &amp;&amp; (resource.data.ownerUid == request.auth.uid || isAdmin()
+                      || (facReviewer() &amp;&amp; resource.data.get('facultyId', '') == myFac()))
                     &amp;&amp; request.resource.data.ownerUid == resource.data.ownerUid;
       allow delete: if isAdmin();
     }
 
     match /rasfahi_assignments/{id} {
-      allow read:   if active() &amp;&amp; (reviewer() || resource.data.lecturerUid == request.auth.uid);
-      allow create, delete: if active() &amp;&amp; role() in ['admin', 'dean'];
+      allow read:   if active() &amp;&amp; (uni() || resource.data.lecturerUid == request.auth.uid
+                      || (facReviewer() &amp;&amp; resource.data.get('facultyId', '') == myFac()));
+      allow create: if isAdmin() || (active() &amp;&amp; role() == 'dean' &amp;&amp; myFac() != '' &amp;&amp; request.resource.data.facultyId == myFac());
+      allow delete: if isAdmin() || (active() &amp;&amp; role() == 'dean' &amp;&amp; resource.data.get('facultyId', '') == myFac());
       allow update: if active() &amp;&amp; (
-          role() in ['admin', 'dean']
-          || (role() == 'secretary' &amp;&amp; request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['status', 'locked', 'amendNote', 'amendRequestedAt', 'amendRequestedBy', 'amendCount', 'amendHistory', 'dueAt', 'reminders', 'updatedAt']))
+          isAdmin()
+          || (role() == 'dean' &amp;&amp; myFac() != '' &amp;&amp; resource.data.get('facultyId', '') == myFac()
+              &amp;&amp; request.resource.data.get('facultyId', '') == myFac())
+          || (role() == 'curriculum' &amp;&amp; request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['stage', 'curriculumComments', 'mqaComments', 'sentToMqaAt', 'sentToMqaBy', 'approvedAt', 'approvedBy',
+                          'returnedAt', 'returnedBy', 'returnNote', 'returnSource', 'updatedAt']))
+          || (role() == 'secretary' &amp;&amp; myFac() != '' &amp;&amp; resource.data.get('facultyId', '') == myFac()
+              &amp;&amp; request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['stage', 'status', 'locked', 'amendNote', 'amendRequestedAt', 'amendRequestedBy', 'amendCount', 'amendHistory', 'dueAt', 'reminders', 'updatedAt']))
           || (resource.data.lecturerUid == request.auth.uid
               &amp;&amp; request.resource.data.diff(resource.data).affectedKeys()
                    .hasOnly(['status', 'startedAt', 'courseId', 'moduleId', 'submittedAt', 'resubmittedAt', 'submission', 'locked', 'updatedAt'])
               &amp;&amp; request.resource.data.status in ['started', 'submitted', 'amend']
               &amp;&amp; !(resource.data.status == 'submitted' &amp;&amp; request.resource.data.status != 'submitted'))
       );
+    }
+
+    // Programme binders: MQA certificate copies (written by Curriculum / Admin, read by the faculty).
+    match /rasfahi_binders/{id} {
+      allow read:  if active() &amp;&amp; (uni() || resource.data.get('facultyId', '') == myFac());
+      allow write: if active() &amp;&amp; role() in ['admin', 'curriculum'];
     }
 
     // System-wide reset marker (written by the Admin's "Hard Reset - entire system").
@@ -1823,6 +1892,7 @@ service cloud.firestore {
 
                 <div id="step-15" class="form-section">
                     <h2 class="section-header"><i class="fas fa-clipboard-check"></i> All Outlines (Progress, Review &amp; Correction)</h2>
+                    <div id="ao-fac-chips"></div>
 
                     <div style="background:#fff; border:2px solid var(--royal-blue); border-radius:10px; padding:20px; margin-bottom:30px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
@@ -1856,11 +1926,20 @@ service cloud.firestore {
                         <input type="text" id="alloc-filter" class="ltr-input" placeholder="Filter by lecturer name or email..." oninput="renderAllocation(true)" style="max-width:340px;">
                         <label style="display:flex; gap:6px; align-items:center; font-size:0.9rem;"><input type="checkbox" id="alloc-lect-only" style="width:auto;" onchange="renderAllocation(true)"> Show lecturers only</label>
                     </div>
+                    <div id="alloc-fac-chips"></div>
                     <div id="alloc-root" style="overflow-x:auto;"><p style="color:#888;">Loading...</p></div>
                 </div>
 
                 <div id="step-18" class="form-section">
                     <div id="my-tasks-root"><p style="color:#888;">Loading your tasks...</p></div>
+                </div>
+
+                <div id="step-19" class="form-section">
+                    <div id="cur-root"><p style="color:#888;">Loading...</p></div>
+                </div>
+
+                <div id="step-20" class="form-section">
+                    <div id="flow-root"><p style="color:#888;">Loading...</p></div>
                 </div>
 
             </div>
@@ -1932,12 +2011,15 @@ service cloud.firestore {
         // --- ROLES & PERMISSIONS ---
         // Edit this table to adjust what each role may do. The Firestore rules (Manage Users page /
         // firestore.rules) enforce the same model on the server.
-        const ROLE_LABELS = { admin: 'Admin', dean: 'Dean', secretary: 'Secretary', lecturer: 'Lecturer' };
+        const ROLE_LABELS = { admin: 'Admin', curriculum: 'Curriculum', dean: 'Dean', secretary: 'Secretary', lecturer: 'Lecturer' };
+        // university: sees every faculty. curriculum: Curriculum Department review & MQA workflow.
+        // deanApprove: approves finished outlines and sends them to Curriculum.
         const ROLE_PERMS = {
-            admin:     { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: true,  manageUsers: true,  addNotes: true,  completeAny: true,  allocate: true,  dashboard: true,  amend: true  },
-            dean:      { createOutline: true,  viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: true,  completeAny: true,  allocate: true,  dashboard: true,  amend: true  },
-            secretary: { createOutline: false, viewAll: true,  editAll: true,  deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false, allocate: false, dashboard: false, amend: true  },
-            lecturer:  { createOutline: true,  viewAll: false, editAll: false, deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false, allocate: false, dashboard: false, amend: false }
+            admin:      { createOutline: true,  viewAll: true, editAll: true,  deleteOutline: true,  manageUsers: true,  addNotes: true,  completeAny: true,  allocate: true,  dashboard: true,  amend: true,  university: true,  curriculum: true,  deanApprove: true  },
+            curriculum: { createOutline: false, viewAll: true, editAll: false, deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false, allocate: false, dashboard: true,  amend: false, university: true,  curriculum: true,  deanApprove: false },
+            dean:       { createOutline: true,  viewAll: true, editAll: true,  deleteOutline: false, manageUsers: false, addNotes: true,  completeAny: true,  allocate: true,  dashboard: true,  amend: true,  university: false, curriculum: false, deanApprove: true  },
+            secretary:  { createOutline: false, viewAll: true, editAll: true,  deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false, allocate: false, dashboard: false, amend: true,  university: false, curriculum: false, deanApprove: false },
+            lecturer:   { createOutline: true,  viewAll: false, editAll: false, deleteOutline: false, manageUsers: false, addNotes: false, completeAny: false, allocate: false, dashboard: false, amend: false, university: false, curriculum: false, deanApprove: false }
         };
         let currentRole = null;        // resolved at login from rasfahi_accounts/{uid}
         let currentAccount = null;
@@ -1967,6 +2049,48 @@ service cloud.firestore {
             return { email: u ? u.email : 'guest', name: (currentAccount && currentAccount.name) || '', role: normalizeRole(currentRole) };
         }
         function denied(msg) { alert("⛔ " + msg); }
+
+        // --- FACULTIES & CENTRES of the Islamic University of Maldives (from www.ium.edu.mv) ---
+        const FACULTIES = [
+            { id: 'KSL',    name: "Kulliyyah of Shari'ah and Law",                               dv: 'ކުއްލިއްޔާ އޮފް ޝަރީއާ އެންޑް ލޯ',                                   color: '#1e3a8a' },
+            { id: 'KOE',    name: 'Kulliyyah of Education',                                     dv: 'ކުއްލިއްޔާ އޮފް އެޑިއުކޭޝަން',                                       color: '#047857' },
+            { id: 'KEMS',   name: 'Kulliyyah of Economics and Management Studies',              dv: 'ކުއްލިއްޔާ އޮފް އެކޮނޮމިކްސް އެންޑް މެނޭޖްމެންޓް ސްޓަޑީޒް',             color: '#b45309' },
+            { id: 'KIRKHS', name: 'Kulliyyah of Islamic Revealed Knowledge and Human Sciences', dv: 'ކުއްލިއްޔާ އޮފް އިސްލާމިކް ރިވީލްޑް ނޮލެޖް އެންޑް ހިޔުމަން ސައިންސަސް', color: '#6d28d9' },
+            { id: 'KQS',    name: 'Kulliyyah of Quran & Sunnah',                                dv: 'ކުއްލިއްޔާ އޮފް ޤުރުއާން އެންޑް ސުންނަތް',                             color: '#0e7490' },
+            { id: 'KAL',    name: 'Kulliyyah of Arabic Language',                               dv: 'ކުއްލިއްޔާ އޮފް އަރަބިކް ލެންގުއެޖް',                                  color: '#be123c' },
+            { id: 'CCE',    name: 'Centre for Continuing Education',                            dv: 'ސެންޓަރ ފޯ ކޮންޓިނިއުއިންގ އެޑިއުކޭޝަން',                              color: '#4d7c0f' },
+            { id: 'CPS',    name: 'Centre for Postgraduate Studies',                            dv: 'ސެންޓަރ ފޯ ޕޯސްޓްގްރެޖުއޭޓް ސްޓަޑީޒް',                                color: '#334155' }
+        ];
+        function facById(id) { return FACULTIES.find(f => f.id === id) || null; }
+        function facName(id) { const f = facById(id); return f ? f.name : (id ? id : 'No faculty'); }
+        function facShort(id) { return facById(id) ? id : '—'; }
+        function facColor(id) { const f = facById(id); return f ? f.color : '#64748b'; }
+        function facTag(id) { return `<span class="fac-tag" style="background:${facColor(id)}" title="${esc(facName(id))}">${esc(facShort(id))}</span>`; }
+        function myFac() { return (currentAccount && currentAccount.facultyId) || ''; }
+        function isUni() { return can('university'); }
+        function accFac(uid) { const a = (typeof accountsCache !== 'undefined' && accountsCache || []).find(x => x.uid === uid); return (a && a.facultyId) || ''; }
+        function taskFac(t) { return (t && t.facultyId) || accFac(t && t.lecturerUid) || ''; }
+        // Faculty staff (Dean / Secretary) only ever query their own faculty; Admin & Curriculum see all.
+        function scopedQuery(colName) {
+            const col = db.collection(colName);
+            return isUni() ? col : col.where('facultyId', '==', myFac() || '__none__');
+        }
+        const selFac = { dash: 'ALL', alloc: '', ao: 'ALL', flow: '', cur: 'ALL', users: 'ALL' };
+        function facChipsHtml(key, current, opts = {}) {
+            const items = (opts.all ? [{ id: 'ALL', label: 'ALL', title: 'All faculties & centres' }] : [])
+                .concat(FACULTIES.map(f => ({ id: f.id, label: f.id, title: f.name, color: f.color })))
+                .concat(opts.none ? [{ id: 'NONE', label: 'No faculty', title: 'Accounts with no faculty set' }] : []);
+            return `<div class="fac-chips">${items.map(i => `<button type="button" class="fac-chip ${current === i.id ? 'active' : ''}" ${i.color ? `style="--fc:${i.color}"` : ''} title="${esc(i.title)}" onclick="setFacFilter('${key}','${i.id}')">${esc(i.label)}${opts.counts && opts.counts[i.id] ? `<span class="fac-chip-n">${opts.counts[i.id]}</span>` : ''}</button>`).join('')}</div>`;
+        }
+        function setFacFilter(key, id) {
+            selFac[key] = id;
+            if (key === 'dash') renderDashboard();
+            if (key === 'alloc') renderAllocation(true);
+            if (key === 'ao') { renderAllOutlines(true); renderStatusDashboard(); }
+            if (key === 'flow') renderFacultyFlow();
+            if (key === 'cur') renderCurriculum();
+            if (key === 'users') renderUserDirectory();
+        }
 
         let userDocRef = null;
         let saveTimeout;
@@ -2033,6 +2157,11 @@ service cloud.firestore {
             show('btn-rebuild-status', can('viewAll'), 'inline-flex');
             show('nav-dashboard', can('dashboard'));
             show('nav-allocation', can('allocate'));
+            show('nav-curriculum', can('curriculum'));
+            show('nav-faculty-flow', can('viewAll') && (!can('curriculum') || can('manageUsers')));
+            const nf = document.getElementById('new-user-faculty');
+            if (nf && nf.options.length <= 1) FACULTIES.forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.id + ' - ' + f.name; nf.appendChild(o); });
+            startBindersWatch();
             if (can('viewAll')) startStatusWatch(); else stopStatusWatch();
             startAssignmentsWatch();
             updateTaskNav();
@@ -2048,6 +2177,9 @@ service cloud.firestore {
             if (accountUnsub) { accountUnsub(); accountUnsub = null; }
             stopStatusWatch();
             stopAssignmentsWatch();
+            stopBindersWatch();
+            accountsCache = null; facBackfillDone = false;
+            Object.assign(selFac, { dash: 'ALL', alloc: '', ao: 'ALL', flow: '', cur: 'ALL', users: 'ALL' });
             if (systemResetUnsub) { systemResetUnsub(); systemResetUnsub = null; }
             if (user) {
                 userDocRef = db.collection("rasfahi_users").doc(user.uid);
@@ -2122,8 +2254,10 @@ service cloud.firestore {
         let accountsCache = null;
         function loadAccounts(force) {
             if (accountsCache && !force) return Promise.resolve(accountsCache);
-            const pAcc = db.collection('rasfahi_accounts').get();
-            const pDir = db.collection('lecturer_directory').get().catch(() => null);
+            const uni = isUni();
+            const pAcc = uni ? db.collection('rasfahi_accounts').get()
+                             : db.collection('rasfahi_accounts').where('facultyId', '==', myFac() || '__none__').get();
+            const pDir = can('manageUsers') ? db.collection('lecturer_directory').get().catch(() => null) : Promise.resolve(null);
             return Promise.all([pAcc, pDir]).then(([accSnap, dirSnap]) => {
                 const map = {};
                 accSnap.forEach(d => { map[d.id] = Object.assign({ uid: d.id }, d.data()); });
@@ -2133,24 +2267,24 @@ service cloud.firestore {
                         const x = d.data();
                         const rec = { email: x.email || '', name: x.name || '', role: 'lecturer', disabled: false, deleted: false, createdAt: x.createdAt || null, createdBy: x.createdBy || '' };
                         map[d.id] = Object.assign({ uid: d.id, legacy: true }, rec);
-                        // One-time migration of pre-role accounts into the new account records.
-                        if (can('manageUsers')) db.collection('rasfahi_accounts').doc(d.id).set(rec, { merge: true }).catch(() => {});
+                        db.collection('rasfahi_accounts').doc(d.id).set(rec, { merge: true }).catch(() => {});
                     });
                 }
                 const me = auth.currentUser;
-                if (me && !map[me.uid]) map[me.uid] = { uid: me.uid, email: me.email, name: (currentAccount && currentAccount.name) || '', role: currentRole };
+                if (me && !map[me.uid]) map[me.uid] = { uid: me.uid, email: me.email, name: (currentAccount && currentAccount.name) || '', role: currentRole, facultyId: myFac() };
                 accountsCache = Object.values(map);
                 return accountsCache;
             });
         }
-
         function createUserAccount() {
             if (!can('manageUsers')) return denied("Only the admin can create accounts.");
             const name = document.getElementById('new-lect-name').value.trim();
             const email = document.getElementById('new-lect-email').value.trim();
             const pass = document.getElementById('new-lect-pass').value;
             const role = normalizeRole(document.getElementById('new-user-role').value);
+            const facultyId = (document.getElementById('new-user-faculty') || {}).value || '';
             if (!email || !pass) { alert("Please enter an email and a temporary password."); return; }
+            if (['lecturer', 'dean', 'secretary'].includes(role) && !facultyId) { alert("Please choose the faculty / centre this person belongs to."); return; }
             if (pass.length < 6) { alert("Password must be at least 6 characters (Firebase's minimum)."); return; }
 
             const secondaryAuth = getSecondaryAuth();
@@ -2158,10 +2292,10 @@ service cloud.firestore {
                 const newUid = cred.user.uid;
                 secondaryAuth.signOut();
                 return db.collection('rasfahi_accounts').doc(newUid).set({
-                    email: email, name: name, role: role, disabled: false, deleted: false,
+                    email: email, name: name, role: role, facultyId: facultyId, disabled: false, deleted: false,
                     createdAt: nowIso(), createdBy: auth.currentUser ? auth.currentUser.email : 'admin'
                 }).then(() => {
-                    alert("✅ " + ROLE_LABELS[role] + " account created for " + email + ". Share the email and temporary password with them securely.");
+                    alert("✅ " + ROLE_LABELS[role] + " account created for " + email + (facultyId ? " (" + facultyId + ")" : "") + ". Share the email and temporary password with them securely.");
                     document.getElementById('new-lect-name').value = '';
                     document.getElementById('new-lect-email').value = '';
                     document.getElementById('new-lect-pass').value = '';
@@ -2177,6 +2311,7 @@ service cloud.firestore {
         function clearNewUserForm() {
             ['new-lect-name', 'new-lect-email', 'new-lect-pass'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
             const r = document.getElementById('new-user-role'); if (r) r.value = 'lecturer';
+            const f = document.getElementById('new-user-faculty'); if (f) f.value = '';
         }
 
         // The e-mail already has a Firebase login (e.g. an account that was deleted earlier).
@@ -2196,12 +2331,12 @@ You can change its role, name or password there.`);
                     if (!confirm(`${email} belonged to an account that was deleted earlier${acc.name ? ' (' + acc.name + ')' : ''}.
 
 Restore it as a ${ROLE_LABELS[role]} with the name and password you entered?`)) return;
-                    return restoreAccount(acc, { name: name, role: role, pass: pass }).then(clearNewUserForm);
+                    return restoreAccount(acc, { name: name, role: role, pass: pass, facultyId: (document.getElementById('new-user-faculty') || {}).value || '' }).then(clearNewUserForm);
                 }
                 // A login exists but the system has no record of it: it can be taken over only with its current password.
                 return trySecondarySignIn(email, pass).then(uid => {
                     if (uid) {
-                        return db.collection('rasfahi_accounts').doc(uid).set({ email: email, name: name, role: role, disabled: false, deleted: false, createdAt: nowIso(), createdBy: auth.currentUser.email }, { merge: true })
+                        return db.collection('rasfahi_accounts').doc(uid).set({ email: email, name: name, role: role, facultyId: (document.getElementById('new-user-faculty') || {}).value || '', disabled: false, deleted: false, createdAt: nowIso(), createdBy: auth.currentUser.email }, { merge: true })
                             .then(() => { alert(`✅ ${email} has been added as a ${ROLE_LABELS[role]}.`); clearNewUserForm(); renderUserDirectory(); });
                     }
                     alert(`⚠️ ${email} is already registered in Firebase Authentication, but it is not linked to any user in this system, so it cannot be added automatically.
@@ -2223,7 +2358,7 @@ To add it again, open Firebase Console → Authentication → Users, delete ${em
             const role = normalizeRole(opts.role || acc.role);
             const t = nowIso();
             return db.collection('rasfahi_accounts').doc(acc.uid).set({
-                email: acc.email, name: opts.name || acc.name || '', role: role, disabled: false, deleted: false,
+                email: acc.email, name: opts.name || acc.name || '', role: role, facultyId: opts.facultyId !== undefined && opts.facultyId !== '' ? opts.facultyId : (acc.facultyId || ''), disabled: false, deleted: false,
                 deletedAt: null, deletedBy: null, restoredAt: t, restoredBy: auth.currentUser.email
             }, { merge: true }).then(() => {
                 callAdminFunction('setDisabled', { uid: acc.uid, disabled: false }).catch(() => {});
@@ -2264,12 +2399,18 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             list.innerHTML = '<p style="color:#888;">Loading...</p>';
             loadAccounts(true).then(accs => {
                 const me = auth.currentUser ? auth.currentUser.uid : '';
-                const live = accs.filter(a => !a.deleted);
+                let live = accs.filter(a => !a.deleted);
                 const deletedCount = accs.length - live.length;
+                const facCounts = { ALL: live.length, NONE: live.filter(a => !a.facultyId).length };
+                live.forEach(a => { if (a.facultyId) facCounts[a.facultyId] = (facCounts[a.facultyId] || 0) + 1; });
+                const chipsEl = document.getElementById('users-fac-chips');
+                if (chipsEl) chipsEl.innerHTML = facChipsHtml('users', selFac.users, { all: true, none: true, counts: facCounts });
+                if (selFac.users === 'NONE') live = live.filter(a => !a.facultyId);
+                else if (selFac.users !== 'ALL') live = live.filter(a => a.facultyId === selFac.users);
                 if (!live.length) { list.innerHTML = '<p style="color:#888;">No accounts yet.</p>'; return; }
-                const order = { admin: 0, dean: 1, secretary: 2, lecturer: 3 };
+                const order = { admin: 0, curriculum: 1, dean: 2, secretary: 3, lecturer: 4 };
                 live.sort((a, b) => (order[normalizeRole(a.role)] - order[normalizeRole(b.role)]) || String(a.name || a.email).localeCompare(String(b.name || b.email)));
-                let html = '<table class="user-table"><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+                let html = '<table class="user-table"><thead><tr><th>User</th><th>Role</th><th>Faculty / Centre</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
                 live.forEach(a => {
                     const isMe = a.uid === me;
                     const isBoot = ADMIN_EMAILS.includes(String(a.email || '').toLowerCase());
@@ -2279,6 +2420,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     html += `<tr>
                         <td><div style="display:flex; gap:6px; align-items:center;"><input type="text" id="un-${a.uid}" value="${esc(a.name || '')}" placeholder="Full name" style="padding:6px; min-width:170px;"><button class="btn btn-outline btn-mini" title="Save name" onclick="setUserName('${a.uid}')"><i class="fas fa-save"></i></button></div>${isMe ? '<small>(you)</small> ' : ''}<span style="color:#555;">${esc(a.email)}</span></td>
                         <td><select ${locked ? 'disabled' : ''} onchange="setUserRole('${a.uid}', this.value)">${opts}</select></td>
+                        <td><select onchange="setUserFaculty('${a.uid}', this.value)"><option value="">${['admin', 'curriculum'].includes(r) ? 'University' : '- choose -'}</option>${FACULTIES.map(f => `<option value="${f.id}" ${a.facultyId === f.id ? 'selected' : ''}>${f.id}</option>`).join('')}</select></td>
                         <td>${a.disabled ? '<span class="status-badge status-disabled">Disabled</span>' : '<span class="status-badge status-active">Active</span>'}</td>
                         <td style="font-size:0.8rem; color:#666;">${fmtDate(a.createdAt, false)}<br>${esc(a.createdBy || '')}</td>
                         <td><div class="actions">
@@ -2320,6 +2462,22 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 showToast('💾 Name saved: <b>' + esc(name) + '</b>', true);
                 renderUserDirectory();
             }).catch(err => alert("❌ Could not save the name: " + (err.code || err.message)));
+        }
+
+        // Moving a person to another faculty also moves their tasks and progress records with them.
+        function setUserFaculty(uid, facultyId) {
+            if (!can('manageUsers')) return denied("Admin only.");
+            const a = findAccount(uid);
+            db.collection('rasfahi_accounts').doc(uid).set({ facultyId: facultyId, updatedAt: nowIso(), updatedBy: auth.currentUser.email }, { merge: true }).then(() => {
+                Object.values(assignmentsMap).filter(t => t.lecturerUid === uid && t.facultyId !== facultyId)
+                    .forEach(t => db.collection('rasfahi_assignments').doc(t.id).update({ facultyId: facultyId, updatedAt: nowIso() }).catch(() => {}));
+                db.collection('rasfahi_status').where('ownerUid', '==', uid).get().then(snap => {
+                    const b = db.batch(); snap.forEach(d => b.update(d.ref, { facultyId: facultyId })); return b.commit();
+                }).catch(() => {});
+                if (auth.currentUser && uid === auth.currentUser.uid) { currentAccount = Object.assign({}, currentAccount || {}, { facultyId: facultyId }); applyRoleUI(); }
+                showToast('🏛️ ' + esc(a.name || a.email) + ' → <b>' + esc(facultyId || 'University level') + '</b>', true);
+                renderUserDirectory();
+            }).catch(err => alert("❌ Could not change faculty: " + (err.code || err.message)));
         }
 
         function setUserRole(uid, role) {
@@ -2457,13 +2615,13 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         const indexedThisSession = new Set();
         function statusKey(uid, mId) { return uid + '__' + mId; }
         function workspaceOwner() {
-            if (isOwnWorkspace()) { const a = actor(); return { uid: wsUid, email: a.email, name: a.name }; }
-            const o = wsOwnerInfo || {}; return { uid: wsUid, email: o.email || '', name: o.name || '' };
+            if (isOwnWorkspace()) { const a = actor(); return { uid: wsUid, email: a.email, name: a.name, facultyId: myFac() }; }
+            const o = wsOwnerInfo || {}; return { uid: wsUid, email: o.email || '', name: o.name || '', facultyId: o.facultyId || accFac(wsUid) };
         }
         function buildStatusDoc(owner, cId, course, mId, mod) {
             const m = mod.meta || {}; const sub = m.submission || {};
             return {
-                ownerUid: owner.uid, ownerEmail: owner.email || sub.email || '', ownerName: sub.name || owner.name || '',
+                ownerUid: owner.uid, ownerEmail: owner.email || sub.email || '', ownerName: sub.name || owner.name || '', facultyId: owner.facultyId || '',
                 courseId: cId, courseName: course.name || '', moduleId: mId, moduleCode: mod.code || '', moduleName: mod.name || '',
                 status: getWorkStatus(m), createdAt: m.createdAt || null, startedAt: m.startedAt || null,
                 lastEditedAt: m.lastEditedAt || null, lastEditedBy: m.lastEditedBy || '',
@@ -2473,6 +2631,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
         function syncStatusIndex(cId, mId, force) {
             if (!auth.currentUser || !wsUid || wsUid === 'guest') return;
+            if (!isOwnWorkspace() && !can('editAll')) return;     // read-only viewers (Curriculum) never write progress records
             const course = dbState.courses[cId]; const mod = course && course.modules && course.modules[mId];
             if (!mod) return;
             const key = statusKey(wsUid, mId);
@@ -2565,7 +2724,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         function startStatusWatch() {
             if (statusUnsub || !auth.currentUser || !can('viewAll')) return;
             statusFirstLoad = true;
-            statusUnsub = db.collection('rasfahi_status').onSnapshot(snap => {
+            statusUnsub = scopedQuery('rasfahi_status').onSnapshot(snap => {
                 const next = {};
                 snap.forEach(d => { next[d.id] = d.data(); });
                 if (!statusFirstLoad) {
@@ -2607,7 +2766,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const box = document.getElementById('status-dashboard'); if (!box) return;
             if (!can('viewAll')) { box.innerHTML = ''; return; }
             const deleted = new Set((accountsCache || []).filter(a => a.deleted).map(a => a.uid));
-            const rows = Object.entries(statusRows).map(([id, r]) => Object.assign({ _id: id }, r)).filter(r => !deleted.has(r.ownerUid));
+            const aoF = isUni() ? selFac.ao : 'ALL';
+            const rows = Object.entries(statusRows).map(([id, r]) => Object.assign({ _id: id }, r)).filter(r => !deleted.has(r.ownerUid) && (aoF === 'ALL' || (r.facultyId || accFac(r.ownerUid)) === aoF));
             const counts = { all: rows.length, not_started: 0, in_progress: 0, submitted: 0, amend: 0 };
             rows.forEach(r => { counts[WORK_STATUS_LABELS[r.status] ? r.status : 'not_started']++; });
             const chip = (key, label) => `<div class="status-chip ${statusFilter === key ? 'active' : ''}" onclick="setStatusFilter('${key}')"><b>${counts[key]}</b>${label}</div>`;
@@ -2649,7 +2809,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     snap.forEach(d => {
                         const c = d.data();
                         Object.entries(c.modules || {}).forEach(([mId, mod]) => {
-                            batch.set(db.collection('rasfahi_status').doc(statusKey(a.uid, mId)), buildStatusDoc({ uid: a.uid, email: a.email, name: a.name }, d.id, c, mId, mod), { merge: true });
+                            batch.set(db.collection('rasfahi_status').doc(statusKey(a.uid, mId)), buildStatusDoc({ uid: a.uid, email: a.email, name: a.name, facultyId: a.facultyId || '' }, d.id, c, mId, mod), { merge: true });
                             n++;
                         });
                     });
@@ -2753,7 +2913,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const lockedMe = isLockedForMe();
             bar.innerHTML = `<div class="meta-items">
                     <span><i class="fas fa-file-alt"></i> <b>${esc(mod.code || 'MOD')}</b></span>
-                    ${lockedMe ? '<span class="lock-chip"><i class="fas fa-lock"></i> Submitted - locked</span>' : ''}
+                    ${lockedMe ? `<span class="lock-chip"><i class="fas fa-lock"></i> ${isOwnWorkspace() ? 'Submitted - locked' : 'Read-only view'}</span>` : ''}
                     ${asg ? `<span class="module-chip" title="This outline is the work for this allocated task"><i class="fas fa-link"></i> Task: ${esc(asg.moduleCode)}</span>` : ''}
                     ${dueAt ? `<span><i class="fas fa-calendar-alt"></i> Due: <b>${fmtDay(dueAt)}</b> ${st === 'submitted' ? '' : duePill(dueState({ status: st === 'submitted' ? 'submitted' : 'started', dueAt: dueAt }))}</span>` : ''}
                     <span>Created: <b>${fmtDate(m.createdAt)}</b></span>
@@ -2766,6 +2926,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     ${canCompleteHere() && st === 'submitted' && can('editAll') ? `<button class="btn btn-green btn-mini" onclick="openAllDoneForm()"><i class="fas fa-redo"></i> All Done again</button>` : ''}
                     ${!isOwnWorkspace() ? `<span style="font-size:0.78rem; color:#64748b;" title="All Done is pressed by the person the outline belongs to, in their own archive."><i class="fas fa-info-circle"></i> Viewing another user's outline</span>` : ''}
                     ${can('amend') && !isOwnWorkspace() && st === 'submitted' ? `<button class="btn btn-outline btn-mini" style="border-color:#f97316; color:#c2410c;" onclick="openAmendModalForActive()"><i class="fas fa-pen-fancy"></i> Send for amendment</button>` : ''}
+                    ${asg && (can('viewAll') || can('curriculum')) ? `<button class="btn btn-outline btn-mini" onclick="openTaskComments('${asg.id}')"><i class="fas fa-comments"></i> Review comments${taskComments(asg).length ? ' (' + taskComments(asg).length + ')' : ''}</button>` : ''}
                     <button class="btn btn-outline btn-mini" onclick="showModuleHistory()"><i class="fas fa-history"></i> Edit history</button>
                     ${(notesCount || can('addNotes')) ? `<button class="btn btn-outline btn-mini" onclick="showModuleNotes()"><i class="fas fa-comment-dots"></i> Notes${notesCount ? ' (' + notesCount + ')' : ''}</button>` : ''}
                 </div>
@@ -2820,12 +2981,12 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         // ---------- live data ----------
         function startAssignmentsWatch() {
             if (!auth.currentUser) return;
-            const scope = can('viewAll') ? 'all' : 'mine';
+            const scope = isUni() ? 'all' : (can('viewAll') ? 'fac:' + myFac() : 'mine');
             if (assignUnsub && assignScope === scope) return;
             stopAssignmentsWatch();
             assignScope = scope; assignFirstLoad = true;
             const col = db.collection('rasfahi_assignments');
-            const q = scope === 'all' ? col : col.where('lecturerUid', '==', auth.currentUser.uid);
+            const q = scope === 'all' ? col : (scope === 'mine' ? col.where('lecturerUid', '==', auth.currentUser.uid) : col.where('facultyId', '==', myFac() || '__none__'));
             assignUnsub = q.onSnapshot(snap => {
                 const next = {};
                 snap.forEach(d => { next[d.id] = Object.assign({ id: d.id }, d.data()); });
@@ -2849,6 +3010,16 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 }
             });
             if (first && !alertToastShown) { alertToastShown = true; toastUrgentTasks(); }
+            if (!first) Object.values(next).forEach(a => {
+                const old = prev[a.id]; if (!old) return;
+                const so = old.stage || 'faculty', sn = a.stage || 'faculty'; if (so === sn) return;
+                const code = `<b>${esc(a.moduleCode)}</b>`, fac = esc(taskFac(a) || '');
+                if (sn === 'curriculum' && can('curriculum')) showToast(`📥 ${fac} sent ${code} to Curriculum for review.`, true);
+                if (sn === 'faculty_amend' && !isUni()) showToast(`↩ Curriculum returned ${code} for amendment.`);
+                if (sn === 'mqa' && !isUni()) showToast(`➜ ${code} has been sent to MQA.`, true);
+                if (sn === 'approved' && !isUni()) showToast(`🎉 ${code} has been APPROVED by MQA.`);
+            });
+            if (first && can('manageUsers')) backfillTaskFaculties();
             updateTaskNav();
             renderTaskAlerts();
             renderOutlineMetaBar();
@@ -2856,6 +3027,21 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (isStepActive(17)) renderAllocation();
             if (isStepActive(18)) renderMyTasks();
             if (isStepActive(12)) renderImportTaskPicker();
+            if (isStepActive(19)) renderCurriculum();
+            if (isStepActive(20)) renderFacultyFlow();
+            updateWorkflowBadges();
+        }
+        // Tasks allocated before faculties existed: give them their lecturer's faculty (Admin, once per session).
+        let facBackfillDone = false;
+        function backfillTaskFaculties() {
+            if (facBackfillDone) return; facBackfillDone = true;
+            loadAccounts(false).then(accs => {
+                Object.values(assignmentsMap).forEach(a => {
+                    if (a.facultyId) return;
+                    const f = (accs.find(x => x.uid === a.lecturerUid) || {}).facultyId;
+                    if (f) db.collection('rasfahi_assignments').doc(a.id).update({ facultyId: f }).catch(() => {});
+                });
+            }).catch(() => {});
         }
         function isStepActive(n) { const el = document.getElementById('step-' + n); return !!el && el.classList.contains('active'); }
 
@@ -2911,6 +3097,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         // ---------- locking after "All Done" ----------
         function activeModuleObj() { const c = activeCourseId && dbState.courses[activeCourseId]; return c && activeModuleId && c.modules ? c.modules[activeModuleId] : null; }
         function isLockedForMe() {
+            if (auth.currentUser && !isOwnWorkspace() && !can('editAll')) return true;          // Curriculum: read-only view
             const mod = activeModuleObj();
             return !!(mod && mod.meta && mod.meta.locked === true && isOwnWorkspace() && !can('editAll'));
         }
@@ -3118,7 +3305,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 <div class="tc-meta"><i class="fas fa-clock"></i> Contact hours: <b>${esc(a.contactHours || '—')}</b><br>
                     <i class="fas fa-calendar-plus"></i> Assigned: <b>${fmtDay(a.assignedAt)}</b> &nbsp; <i class="fas fa-flag-checkered"></i> Due: <b>${fmtDay(a.dueAt)}</b></div>
                 <div class="tc-bar"><span style="width:${pct}%"></span></div>
-                <div>${duePill(ds, dueText(a))}</div>
+                <div>${duePill(ds, dueText(a))} ${pipeBadge(a)}</div>
+                ${pipelineStepperHtml(a)}
                 ${a.status === 'amend' && a.amendNote ? `<div class="amend-box"><b>✏️ Amendment requested${a.amendRequestedAt ? ' - ' + fmtDate(a.amendRequestedAt) : ''}:</b>\n${esc(a.amendNote)}</div>` : ''}
                 <div class="tc-actions">
                     ${a.status === 'assigned' && !linked ? `<button class="btn btn-green btn-mini" onclick="startAssignmentTask('${esc(a.id)}')"><i class="fas fa-play"></i> Start working</button>` : ''}
@@ -3184,13 +3372,22 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
 
         // ---------- ALLOCATION (Dean / Admin) ----------
+        function allocFaculty() {
+            if (!isUni()) return myFac();
+            if (!selFac.alloc) {
+                const withPeople = FACULTIES.find(f => (accountsCache || []).some(a => a.facultyId === f.id && !a.deleted));
+                selFac.alloc = withPeople ? withPeople.id : FACULTIES[0].id;
+            }
+            return selFac.alloc;
+        }
         function allocPeople() {
+            const fac = allocFaculty();
             const includeAll = !(document.getElementById('alloc-lect-only') && document.getElementById('alloc-lect-only').checked);
-            const withTasks = new Set(Object.values(assignmentsMap).map(a => a.lecturerUid));
-            return (accountsCache || []).filter(a => !a.deleted && ((includeAll ? normalizeRole(a.role) !== 'secretary' : normalizeRole(a.role) === 'lecturer') || withTasks.has(a.uid)))
+            const withTasks = new Set(Object.values(assignmentsMap).filter(a => taskFac(a) === fac).map(a => a.lecturerUid));
+            return (accountsCache || []).filter(a => !a.deleted && ((a.facultyId === fac && (includeAll ? !['secretary', 'curriculum'].includes(normalizeRole(a.role)) : normalizeRole(a.role) === 'lecturer')) || withTasks.has(a.uid)))
                 .sort((x, y) => String(x.name || x.email).localeCompare(String(y.name || y.email)));
         }
-        function newDraft() { return { k: 'd' + Date.now() + Math.random().toString(36).slice(2, 6), moduleName: '', moduleCode: '', contactHours: '', assignedAt: localDay(), dueAt: '' }; }
+        function newDraft() { return { k: 'd' + Date.now() + Math.random().toString(36).slice(2, 6), moduleName: '', moduleCode: '', programName: '', contactHours: '', assignedAt: localDay(), dueAt: '' }; }
         function allocAddRow(uid) { (allocDrafts[uid] || (allocDrafts[uid] = [])).push(newDraft()); renderAllocation(true); }
         function allocDraftInput(uid, k, field, val) { const d = (allocDrafts[uid] || []).find(x => x.k === k); if (d) d[field] = val; }
         function allocRemoveDraft(uid, k) { allocDrafts[uid] = (allocDrafts[uid] || []).filter(x => x.k !== k); renderAllocation(true); }
@@ -3214,6 +3411,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const t = nowIso(), who = actor();
             const doc = {
                 lecturerUid: uid, lecturerEmail: person.email || '', lecturerName: person.name || '',
+                facultyId: person.facultyId || allocFaculty(), programName: String(d.programName || '').trim(), stage: 'faculty',
                 moduleName: d.moduleName.trim(), moduleCode: d.moduleCode.trim().toUpperCase(), contactHours: String(d.contactHours || '').trim(),
                 assignedAt: d.assignedAt, dueAt: d.dueAt, status: 'assigned', locked: false,
                 createdAt: t, createdBy: who.email, createdByRole: who.role, updatedAt: t,
@@ -3233,7 +3431,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const merged = Object.assign({}, cur, ed);
             const err = validTask(merged); if (err) { alert(err); return; }
             const upd = {};
-            ['moduleName', 'moduleCode', 'contactHours', 'assignedAt', 'dueAt'].forEach(f => { if (ed[f] !== undefined) upd[f] = f === 'moduleCode' ? String(ed[f]).trim().toUpperCase() : String(ed[f]).trim(); });
+            ['moduleName', 'moduleCode', 'programName', 'contactHours', 'assignedAt', 'dueAt'].forEach(f => { if (ed[f] !== undefined) upd[f] = f === 'moduleCode' ? String(ed[f]).trim().toUpperCase() : String(ed[f]).trim(); });
             if (upd.dueAt && upd.dueAt !== cur.dueAt) upd.reminders = { dayBefore: false, overdue: false };
             upd.updatedAt = nowIso();
             db.collection('rasfahi_assignments').doc(aid).update(upd).then(() => { delete allocEdits[aid]; showToast('💾 Task updated.', true); renderAllocation(true); })
@@ -3255,12 +3453,19 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 if (!allocRenderPending) { allocRenderPending = true; root.addEventListener('focusout', function h() { root.removeEventListener('focusout', h); setTimeout(() => { allocRenderPending = false; if (!root.contains(document.activeElement)) renderAllocation(true); }, 50); }); }
                 return;
             }
+            const fac = allocFaculty();
+            const chipsEl = document.getElementById('alloc-fac-chips');
+            if (chipsEl) chipsEl.innerHTML = isUni()
+                ? `<div style="font-weight:700; color:var(--r-navy); margin-bottom:4px;"><i class="fas fa-university"></i> Allocate for faculty / centre:</div>` + facChipsHtml('alloc', fac)
+                : (fac ? `<div style="margin-bottom:12px;">${facTag(fac)} <b>${esc(facName(fac))}</b></div>` : '');
+            if (!fac) { root.innerHTML = '<p style="color:var(--danger);">Your account has no faculty set yet. Ask the Admin to set your faculty in Manage Users.</p>'; return; }
+            const progs = Array.from(new Set(Object.values(assignmentsMap).filter(a => taskFac(a) === fac && a.programName).map(a => a.programName))).sort();
             const q = (document.getElementById('alloc-filter').value || '').toLowerCase().trim();
             const people = allocPeople().filter(p => !q || String(p.name || '').toLowerCase().includes(q) || String(p.email || '').toLowerCase().includes(q));
-            if (!people.length) { root.innerHTML = '<p style="color:#888;">No lecturers found. Create lecturer accounts on the Manage Users page first.</p>'; return; }
+            if (!people.length) { root.innerHTML = `<p style="color:#888;">No staff found in ${esc(facName(fac))}. Create accounts for this faculty (or set their faculty) on the Manage Users page first.</p>`; return; }
             const byUid = {};
             Object.values(assignmentsMap).forEach(a => { (byUid[a.lecturerUid] || (byUid[a.lecturerUid] = [])).push(a); });
-            let html = `<table class="royal-table alloc-table"><thead><tr><th>Lecturer</th><th>Module name</th><th>Code</th><th>Contact hrs</th><th>Assigned date</th><th>Finish by</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+            let html = `<datalist id="prog-list">${progs.map(p => `<option value="${esc(p)}">`).join('')}</datalist><table class="royal-table alloc-table"><thead><tr><th>Lecturer</th><th>Module name / Programme</th><th>Code</th><th>Contact hrs</th><th>Assigned date</th><th>Finish by</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
             people.forEach(p => {
                 const tasks = (byUid[p.uid] || []).sort((x, y) => String(x.createdAt || '').localeCompare(String(y.createdAt || '')));
                 if (!tasks.length && !(allocDrafts[p.uid] || []).length) allocDrafts[p.uid] = [newDraft()];
@@ -3271,12 +3476,12 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     const ed = allocEdits[a.id] || {};
                     const v = f => esc(ed[f] !== undefined ? ed[f] : (a[f] || ''));
                     html += `<tr class="${first ? 'grp-start' : ''}">${nameCell}
-                        <td><input class="w-lg" value="${v('moduleName')}" oninput="allocEditInput('${a.id}','moduleName',this.value)"></td>
+                        <td><input class="w-lg" value="${v('moduleName')}" oninput="allocEditInput('${a.id}','moduleName',this.value)"><input class="w-lg" list="prog-list" placeholder="Programme / course" style="margin-top:4px; font-size:0.78rem;" value="${v('programName')}" oninput="allocEditInput('${a.id}','programName',this.value)"></td>
                         <td><input class="w-sm" value="${v('moduleCode')}" oninput="allocEditInput('${a.id}','moduleCode',this.value)"></td>
                         <td><input class="w-sm" type="number" min="0" value="${v('contactHours')}" oninput="allocEditInput('${a.id}','contactHours',this.value)"></td>
                         <td><input type="date" value="${v('assignedAt')}" oninput="allocEditInput('${a.id}','assignedAt',this.value)"></td>
                         <td><input type="date" value="${v('dueAt')}" oninput="allocEditInput('${a.id}','dueAt',this.value)"></td>
-                        <td>${asBadge(a.status)}<div style="margin-top:4px;">${duePill(dueState(a), dueText(a))}</div></td>
+                        <td>${asBadge(a.status)}<div style="margin-top:4px;">${duePill(dueState(a), dueText(a))}</div><div style="margin-top:4px;">${pipeBadge(a)}</div></td>
                         <td style="white-space:nowrap;">
                             <button class="btn btn-outline btn-mini" title="Save changes" onclick="allocSave('${a.id}')"><i class="fas fa-save"></i></button>
                             ${a.status === 'submitted' ? `<button class="btn btn-outline btn-mini" title="Send for amendment" style="border-color:#f97316; color:#c2410c;" onclick="openAmendModalForAssignment('${a.id}')"><i class="fas fa-pen-fancy"></i></button>` : ''}
@@ -3287,7 +3492,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 });
                 drafts.forEach(d => {
                     html += `<tr class="alloc-draft ${first ? 'grp-start' : ''}">${nameCell}
-                        <td><input class="w-lg" placeholder="Module name" value="${esc(d.moduleName)}" oninput="allocDraftInput('${p.uid}','${d.k}','moduleName',this.value)"></td>
+                        <td><input class="w-lg" placeholder="Module name" value="${esc(d.moduleName)}" oninput="allocDraftInput('${p.uid}','${d.k}','moduleName',this.value)"><input class="w-lg" list="prog-list" placeholder="Programme / course" style="margin-top:4px; font-size:0.78rem;" value="${esc(d.programName || '')}" oninput="allocDraftInput('${p.uid}','${d.k}','programName',this.value)"></td>
                         <td><input class="w-sm" placeholder="Code" value="${esc(d.moduleCode)}" oninput="allocDraftInput('${p.uid}','${d.k}','moduleCode',this.value)"></td>
                         <td><input class="w-sm" type="number" min="0" placeholder="Hrs" value="${esc(d.contactHours)}" oninput="allocDraftInput('${p.uid}','${d.k}','contactHours',this.value)"></td>
                         <td><input type="date" value="${esc(d.assignedAt)}" oninput="allocDraftInput('${p.uid}','${d.k}','assignedAt',this.value)"></td>
@@ -3311,7 +3516,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             openRfModal(`<h2 style="color:#c2410c; margin-bottom:6px;"><i class="fas fa-pen-fancy"></i> Send for amendment</h2>
                 <p style="color:#555;"><b>${esc(ctx.label || '')}</b><br>The outline will be unlocked for the lecturer, and they will see this note (and receive it by e-mail when the e-mail helper is active).</p>
                 <div class="ad-form">
-                    <label>Amendment note from curriculum review *</label><textarea id="am-note" rows="6" placeholder="Paste the requested changes here..."></textarea>
+                    <label>Amendment note from curriculum review *</label><textarea id="am-note" rows="6" placeholder="Paste the requested changes here...">${esc(ctx.prefill || '')}</textarea>
                     <label>New finish-by date (optional)</label><input type="date" id="am-due" value="${esc(a && a.dueAt && a.dueAt >= localDay() ? a.dueAt : '')}">
                 </div>
                 <button class="btn btn-blue" style="margin-top:15px; background:#c2410c;" onclick="submitAmendment()"><i class="fas fa-paper-plane"></i> Send for amendment</button>`);
@@ -3360,7 +3565,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             }
             if (ctx.aid) {
                 const cur = assignmentsMap[ctx.aid] || {};
-                const upd = { status: 'amend', locked: false, amendNote: note, amendRequestedAt: t, amendRequestedBy: who.email,
+                const upd = { stage: 'faculty', status: 'amend', locked: false, amendNote: note, amendRequestedAt: t, amendRequestedBy: who.email,
                               amendCount: (cur.amendCount || 0) + 1, amendHistory: (cur.amendHistory || []).concat([{ note: note, at: t, by: who.email, role: who.role }]), updatedAt: t };
                 if (newDue) { upd.dueAt = newDue; upd.reminders = { dayBefore: false, overdue: false }; }
                 jobs.push(db.collection('rasfahi_assignments').doc(ctx.aid).update(upd));
@@ -3394,14 +3599,33 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             return chartJsPromise;
         }
 
-        function dashData() {
-            const tasks = Object.values(assignmentsMap);
-            const accs = (accountsCache || []).filter(a => !a.deleted);
+        // ---------- approval pipeline: Lecturer -> Dean -> Curriculum -> MQA -> Approved ----------
+        const PIPE_ORDER = ['lecturer', 'dean', 'curriculum', 'mqa', 'approved'];
+        const PIPE_LABELS = { lecturer: 'With lecturer', dean: 'Awaiting Dean approval', returned: 'Returned to faculty', curriculum: 'With Curriculum', mqa: 'With MQA', approved: 'MQA approved' };
+        function pipeStep(a) {
+            const st = a.stage || 'faculty';
+            if (st === 'approved' || st === 'mqa' || st === 'curriculum') return st;
+            if (st === 'faculty_amend') return 'returned';
+            return a.status === 'submitted' ? 'dean' : 'lecturer';
+        }
+        function pipeBadge(a) { const s = pipeStep(a); return `<span class="pipe-badge pipe-${s}">${PIPE_LABELS[s]}</span>`; }
+        function pipelineStepperHtml(a) {
+            const s = pipeStep(a); const idx = s === 'returned' ? 1 : PIPE_ORDER.indexOf(s);
+            return `<div class="stepper">${['Lecturer', 'Dean', 'Curriculum', 'MQA', 'Approved'].map((n, i) => {
+                const cls = i < idx ? 'done' : (i === idx ? (s === 'returned' ? 'ret' : (s === 'approved' ? 'done' : 'cur')) : '');
+                return `<div class="step ${cls}">${n}</div>`; }).join('')}</div>`;
+        }
+        function pipeCounts(tasks) { const c = { lecturer: 0, dean: 0, returned: 0, curriculum: 0, mqa: 0, approved: 0 }; tasks.forEach(a => c[pipeStep(a)]++); return c; }
+
+        function dashData(fac) {
+            let tasks = Object.values(assignmentsMap);
+            let accs = (accountsCache || []).filter(a => !a.deleted);
+            if (fac && fac !== 'ALL') { tasks = tasks.filter(a => taskFac(a) === fac); accs = accs.filter(a => a.facultyId === fac); }
             const byUid = {};
             tasks.forEach(a => { (byUid[a.lecturerUid] || (byUid[a.lecturerUid] = [])).push(a); });
-            const lecturers = accs.filter(a => ['lecturer', 'dean', 'admin'].includes(normalizeRole(a.role)) || byUid[a.uid]);
-            const personName = uid => { const p = accs.find(x => x.uid === uid); const t = (byUid[uid] || [])[0] || {}; return (p && (p.name || p.email)) || t.lecturerName || t.lecturerEmail || 'Unknown'; };
-            const allocated = Object.keys(byUid).map(uid => ({ uid, name: personName(uid), email: ((accs.find(x => x.uid === uid) || {}).email) || (byUid[uid][0] || {}).lecturerEmail || '', tasks: byUid[uid] }));
+            const lecturers = accs.filter(a => ['lecturer', 'dean'].includes(normalizeRole(a.role)) || byUid[a.uid]);
+            const personName = uid => { const p = (accountsCache || []).find(x => x.uid === uid); const t = (byUid[uid] || [])[0] || {}; return (p && (p.name || p.email)) || t.lecturerName || t.lecturerEmail || 'Unknown'; };
+            const allocated = Object.keys(byUid).map(uid => ({ uid, name: personName(uid), email: (((accountsCache || []).find(x => x.uid === uid) || {}).email) || (byUid[uid][0] || {}).lecturerEmail || '', tasks: byUid[uid] }));
             allocated.sort((x, y) => x.name.localeCompare(y.name));
             const finishedAll = allocated.filter(p => p.tasks.length && p.tasks.every(a => a.status === 'submitted'));
             const started = allocated.filter(p => !p.tasks.every(a => a.status === 'submitted') && p.tasks.some(a => a.status !== 'assigned'));
@@ -3410,24 +3634,58 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const count = st => tasks.filter(a => a.status === st).length;
             const health = { done_ontime: 0, done_late: 0, on_track: 0, due_soon: 0, overdue: 0, no_due: 0 };
             tasks.forEach(a => { health[dueState(a)]++; });
-            return { tasks, allocated, finishedAll, started, notStarted, unallocated, lecturers,
+            let facStats = null;
+            if (isUni() && (!fac || fac === 'ALL')) {
+                const allT = Object.values(assignmentsMap), allA = (accountsCache || []).filter(a => !a.deleted);
+                facStats = FACULTIES.map(f => {
+                    const ft = allT.filter(a => taskFac(a) === f.id);
+                    return { id: f.id, name: f.name, dv: f.dv, color: f.color, tasks: ft,
+                             staff: allA.filter(a => a.facultyId === f.id && !['curriculum'].includes(normalizeRole(a.role))).length,
+                             finished: ft.filter(a => a.status === 'submitted').length,
+                             started: ft.filter(a => a.status === 'started').length,
+                             amend: ft.filter(a => a.status === 'amend').length,
+                             assigned: ft.filter(a => a.status === 'assigned').length,
+                             overdue: ft.filter(a => a.status !== 'submitted' && dueState(a) === 'overdue').length,
+                             pipe: pipeCounts(ft) };
+                });
+            }
+            return { fac, tasks, allocated, finishedAll, started, notStarted, unallocated, lecturers, facStats,
                      counts: { assigned: count('assigned'), started: count('started'), amend: count('amend'), submitted: count('submitted') }, health,
-                     totalHours: tasks.reduce((x, a) => x + (parseFloat(a.contactHours) || 0), 0) };
+                     pipe: pipeCounts(tasks), totalHours: tasks.reduce((x, a) => x + (parseFloat(a.contactHours) || 0), 0) };
         }
 
+        function facultyCardsHtml(stats, activeId) {
+            return `<div class="fac-grid">${stats.map(f => {
+                const n = f.tasks.length, pct = n ? Math.round(f.finished / n * 100) : 0;
+                return `<div class="fac-card ${activeId === f.id ? 'active' : ''}" style="--fc:${f.color}" onclick="setFacFilter('dash','${f.id}')" title="Open ${esc(f.name)}">
+                    <div class="fac-short">${f.id}</div><div class="fac-name">${esc(f.name)}</div><div class="fac-dv">${esc(f.dv)}</div>
+                    <div class="fac-stats"><div><b>${n}</b><span>Modules</span></div><div><b>${f.finished}</b><span>Finished</span></div><div><b>${f.staff}</b><span>Staff</span></div></div>
+                    <div class="fac-bar"><span style="width:${pct}%"></span></div>
+                    <small>${pct}% finished · ${f.pipe.curriculum} with Curriculum · ${f.pipe.mqa} with MQA · ${f.pipe.approved} approved${f.overdue ? ' · ⛔ ' + f.overdue + ' overdue' : ''}</small>
+                </div>`; }).join('')}</div>`;
+        }
         function renderDashboard() {
             const root = document.getElementById('dash-root');
             if (!root || !can('dashboard')) return;
-            const D = dashData();
+            const dashFac = isUni() ? (selFac.dash || 'ALL') : (myFac() || '__none__');
+            const D = dashData(dashFac);
             const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             const pill = p => `<span class="person-pill">${esc(p.name || p.email)}</span>`;
             const alerts = D.tasks.filter(a => a.status !== 'submitted' && ['overdue', 'due_soon'].includes(dueState(a))).sort((x, y) => String(x.dueAt).localeCompare(String(y.dueAt)));
             let html = `<div class="dash-hero">
                     <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-end;">
-                        <div><h2><i class="fas fa-crown" style="color:var(--r-gold2);"></i> Module Outline Dashboard</h2><div class="gold-rule"></div>
-                        <p>Allocation, progress and deadlines of every module outline - updates live.</p></div>
-                        <div style="text-align:right; opacity:0.9;"><i class="fas fa-calendar-day"></i> ${today}</div>
+                        <div><h2><i class="fas fa-crown" style="color:var(--r-gold2);"></i> ${dashFac === 'ALL' ? 'University Module Outline Dashboard' : esc(facName(dashFac))}</h2><div class="gold-rule"></div>
+                        <p>${dashFac === 'ALL' ? 'Every faculty and centre of the Islamic University of Maldives - allocation, progress, deadlines and the Curriculum / MQA pipeline, live.' : (facById(dashFac) ? '<span class="fac-hero-sub">' + esc(facById(dashFac).dv) + '</span>' : 'Allocation, progress and deadlines - updates live.')}</p></div>
+                        <div style="text-align:right; opacity:0.9;"><i class="fas fa-calendar-day"></i> ${today}${isUni() && dashFac !== 'ALL' ? `<br><button class="btn btn-outline btn-mini" style="margin-top:8px; background:#fff;" onclick="setFacFilter('dash','ALL')"><i class="fas fa-th-large"></i> All faculties</button>` : ''}</div>
                     </div></div>
+                ${isUni() ? `<div class="dash-card"><h3><i class="fas fa-university"></i> Faculties &amp; Centres</h3><div class="dash-sub">Choose a faculty (short name or card) to see its own tasks, progress and statistics.</div>
+                    ${facChipsHtml('dash', dashFac, { all: true })}
+                    ${facultyCardsHtml(D.facStats || dashData('ALL').facStats, dashFac)}</div>` : ''}
+                ${D.facStats ? `<div class="chart-grid" style="margin-bottom:24px;">
+                    <div class="dash-card"><h3>Progress by faculty</h3><div class="dash-sub">Module outlines per faculty and their status</div><div class="chart-box"><canvas id="ch-fac-progress"></canvas></div></div>
+                    <div class="dash-card"><h3>Curriculum &amp; MQA pipeline by faculty</h3><div class="dash-sub">Where each faculty's outlines are now</div><div class="chart-box"><canvas id="ch-fac-pipe"></canvas></div></div>
+                    <div class="dash-card"><h3>Share of modules</h3><div class="dash-sub">Allocated modules by faculty</div><div class="chart-box"><canvas id="ch-fac-share"></canvas></div></div>
+                </div>` : ''}
 
                 <div class="dash-card"><h3><i class="fas fa-stream"></i> Timeline</h3><div class="dash-sub">Every allocated outline from its assigned date to its deadline, with the lecturer's name. The gold line marks today.</div>
                     ${ganttHtml(D.tasks.slice().sort((x, y) => String(x.lecturerName || '').localeCompare(String(y.lecturerName || '')) || String(x.dueAt).localeCompare(String(y.dueAt))), true)}</div>
@@ -3450,6 +3708,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     <div class="dash-card"><h3>Task status</h3><div class="dash-sub">All allocated modules</div><div class="chart-box"><canvas id="ch-status"></canvas></div></div>
                     <div class="dash-card"><h3>Deadline health</h3><div class="dash-sub">On time, late, due soon and overdue</div><div class="chart-box"><canvas id="ch-health"></canvas></div></div>
                     <div class="dash-card"><h3>Lecturer engagement</h3><div class="dash-sub">Finished, started, not started and not allocated</div><div class="chart-box"><canvas id="ch-people"></canvas></div></div>
+                    <div class="dash-card"><h3>Approval pipeline</h3><div class="dash-sub">Lecturer → Dean → Curriculum → MQA → Approved</div><div class="chart-box"><canvas id="ch-pipe"></canvas></div></div>
                     <div class="dash-card"><h3><i class="fas fa-bell" style="color:#b45309;"></i> Deadline alerts</h3><div class="dash-sub">Overdue or due within 3 days</div>
                         <div style="max-height:320px; overflow:auto;">${alerts.length ? alerts.map(a => `<div style="display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #eef2f7;"><div><b>${esc(a.lecturerName || a.lecturerEmail)}</b><br><span style="color:#64748b; font-size:0.85rem;">${esc(a.moduleCode)} - ${esc(a.moduleName)} · due ${fmtDay(a.dueAt)}</span></div><div>${duePill(dueState(a), dueText(a))}</div></div>`).join('') : '<p style="color:#94a3b8;">No outlines are overdue or due soon. 👏</p>'}</div></div>
                 </div>
@@ -3578,6 +3837,340 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     options: { maintainAspectRatio: false, plugins: { legend, tooltip } }
                 });
             } else empty('ch-people', 'No lecturers yet');
+
+            // 6. Approval pipeline
+            const P = D.pipe;
+            if (D.tasks.length && document.getElementById('ch-pipe')) {
+                dashCharts.pipe = new C(document.getElementById('ch-pipe'), {
+                    type: 'doughnut', plugins: [centerText],
+                    data: { labels: ['With lecturer', 'Awaiting Dean', 'Returned to faculty', 'With Curriculum', 'With MQA', 'MQA approved'],
+                            datasets: [{ data: [P.lecturer, P.dean, P.returned, P.curriculum, P.mqa, P.approved], backgroundColor: ['#94a3b8', '#f59e0b', '#dc2626', '#1e3a8a', '#6d28d9', '#059669'], borderColor: '#fff', borderWidth: 3, hoverOffset: 10 }] },
+                    options: { maintainAspectRatio: false, cutout: '62%', plugins: { legend, tooltip, rfCenter: { value: P.approved, label: 'approved' } } }
+                });
+            } else empty('ch-pipe', 'No allocations yet');
+
+            // 7-9. Faculty comparison (University view)
+            if (D.facStats) {
+                const F = D.facStats, labels = F.map(f => f.id);
+                if (document.getElementById('ch-fac-progress')) dashCharts.facProg = new C(document.getElementById('ch-fac-progress'), {
+                    type: 'bar',
+                    data: { labels, datasets: [
+                        { label: 'Finished', data: F.map(f => f.finished), backgroundColor: grad('#10b981', '#065f46', false), borderRadius: 6 },
+                        { label: 'In progress', data: F.map(f => f.started), backgroundColor: grad('#3b6ee8', '#1e3a8a', false), borderRadius: 6 },
+                        { label: 'Amendment', data: F.map(f => f.amend), backgroundColor: grad('#fbbf24', '#b45309', false), borderRadius: 6 },
+                        { label: 'Not started', data: F.map(f => f.assigned), backgroundColor: grad('#cbd5e1', '#64748b', false), borderRadius: 6 }] },
+                    options: { maintainAspectRatio: false, plugins: { legend, tooltip }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef2f7' } } } }
+                });
+                if (document.getElementById('ch-fac-pipe')) dashCharts.facPipe = new C(document.getElementById('ch-fac-pipe'), {
+                    type: 'bar',
+                    data: { labels, datasets: [
+                        { label: 'Lecturer', data: F.map(f => f.pipe.lecturer), backgroundColor: '#94a3b8' },
+                        { label: 'Dean', data: F.map(f => f.pipe.dean + f.pipe.returned), backgroundColor: '#f59e0b' },
+                        { label: 'Curriculum', data: F.map(f => f.pipe.curriculum), backgroundColor: '#1e3a8a' },
+                        { label: 'MQA', data: F.map(f => f.pipe.mqa), backgroundColor: '#6d28d9' },
+                        { label: 'Approved', data: F.map(f => f.pipe.approved), backgroundColor: '#059669' }] },
+                    options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend, tooltip }, scales: { x: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#eef2f7' } }, y: { stacked: true, grid: { display: false } } } }
+                });
+                const withTasks = F.filter(f => f.tasks.length);
+                if (withTasks.length && document.getElementById('ch-fac-share')) dashCharts.facShare = new C(document.getElementById('ch-fac-share'), {
+                    type: 'doughnut', plugins: [centerText],
+                    data: { labels: withTasks.map(f => f.id), datasets: [{ data: withTasks.map(f => f.tasks.length), backgroundColor: withTasks.map(f => f.color), borderColor: '#fff', borderWidth: 3, hoverOffset: 10 }] },
+                    options: { maintainAspectRatio: false, cutout: '58%', plugins: { legend, tooltip, rfCenter: { value: withTasks.reduce((x, f) => x + f.tasks.length, 0), label: 'modules' } } }
+                });
+                else empty('ch-fac-share', 'No allocations yet');
+            }
+        }
+
+
+        // =====================================================================================
+        //  FACULTY APPROVAL  ->  CURRICULUM REVIEW  ->  MQA  ->  APPROVAL  (+ programme binders)
+        // =====================================================================================
+        function taskComments(a) {
+            if (!a) return [];
+            return [].concat((a.curriculumComments || []).map(c => Object.assign({ src: 'curriculum' }, c)), (a.mqaComments || []).map(c => Object.assign({ src: 'mqa' }, c)))
+                .sort((x, y) => String(x.at).localeCompare(String(y.at)));
+        }
+        function updateTask(aid, upd, okMsg) {
+            upd.updatedAt = nowIso();
+            const a = assignmentsMap[aid]; if (a) Object.assign(a, upd);
+            return db.collection('rasfahi_assignments').doc(aid).update(upd)
+                .then(() => { if (okMsg) showToast(okMsg, true); rerenderWorkflowPages(); })
+                .catch(e => alert("❌ Could not update: " + (e.code || e.message) + "\nIf this says permission-denied, publish the updated Firestore rules."));
+        }
+        function rerenderWorkflowPages() {
+            if (isStepActive(19)) renderCurriculum();
+            if (isStepActive(20)) renderFacultyFlow();
+            if (isStepActive(16)) scheduleDashboardRender();
+            updateWorkflowBadges();
+        }
+        function updateWorkflowBadges() {
+            const all = Object.values(assignmentsMap);
+            const cur = document.getElementById('cur-count');
+            if (cur) { const n = can('curriculum') ? all.filter(a => a.stage === 'curriculum').length : 0; cur.textContent = n || ''; cur.style.display = n ? 'inline-block' : 'none'; }
+            const fl = document.getElementById('flow-count');
+            if (fl) {
+                const mine = isUni() ? [] : all.filter(a => taskFac(a) === myFac());
+                const n = mine.filter(a => pipeStep(a) === 'dean' || pipeStep(a) === 'returned').length;
+                fl.textContent = n || ''; fl.style.display = n ? 'inline-block' : 'none';
+            }
+        }
+        function whoStamp() { const w = actor(); return { at: nowIso(), by: w.email, name: w.name, role: w.role }; }
+
+        // ----- comments (Curriculum & MQA) -----
+        function openTaskComments(aid) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            const list = taskComments(a);
+            const label = c => c.src === 'mqa' ? '<span class="pipe-badge pipe-mqa">MQA comment</span>' : (c.type === 'return' ? `<span class="pipe-badge pipe-returned">Returned to faculty${c.source === 'mqa' ? ' (MQA)' : ''}</span>` : '<span class="pipe-badge pipe-curriculum">Curriculum comment</span>');
+            openRfModal(`<h2 style="color:var(--r-navy); margin-bottom:4px;"><i class="fas fa-comments"></i> Review comments</h2>
+                <p style="color:#555; margin-bottom:12px;">${facTag(taskFac(a))} <b>${esc(a.moduleCode)} - ${esc(a.moduleName)}</b><br>${esc(a.lecturerName || a.lecturerEmail || '')}${a.programName ? ' · ' + esc(a.programName) : ''} · ${pipeBadge(a)}</p>
+                ${list.length ? list.map(c => `<div class="note-item"><div style="font-size:0.8rem; color:#92400e; margin-bottom:5px;">${label(c)} ${fmtDate(c.at)} · ${esc(c.name || c.by || '')}</div><div style="white-space:pre-wrap;">${esc(c.text)}</div></div>`).join('') : '<p style="color:#888;">No comments yet.</p>'}
+                ${can('curriculum') ? `<div class="ad-form"><label>Add a comment</label><textarea id="tc-text" rows="4" placeholder="Write the comment for this outline..."></textarea></div>
+                    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                        <button class="btn btn-blue btn-mini" onclick="addTaskComment('${aid}','curriculum')"><i class="fas fa-landmark"></i> Add Curriculum comment</button>
+                        <button class="btn btn-outline btn-mini" style="border-color:#6d28d9; color:#5b21b6;" onclick="addTaskComment('${aid}','mqa')"><i class="fas fa-award"></i> Record MQA comment</button>
+                    </div>` : ''}`);
+        }
+        function addTaskComment(aid, kind) {
+            const a = assignmentsMap[aid]; if (!a || !can('curriculum')) return;
+            const text = (document.getElementById('tc-text').value || '').trim();
+            if (!text) { alert("Please write the comment."); return; }
+            const key = kind === 'mqa' ? 'mqaComments' : 'curriculumComments';
+            const entry = Object.assign({ type: 'comment', text: text }, whoStamp());
+            updateTask(aid, { [key]: (a[key] || []).concat([entry]) }, kind === 'mqa' ? '📝 MQA comment recorded.' : '💬 Comment added.').then(() => openTaskComments(aid));
+        }
+
+        // ----- Dean -----
+        function deanApprove(aid, silent) {
+            const a = assignmentsMap[aid]; if (!a || !can('deanApprove')) return Promise.resolve();
+            if (a.status !== 'submitted') { if (!silent) alert("The lecturer has not pressed All Done for this outline yet."); return Promise.resolve(); }
+            const w = whoStamp();
+            return updateTask(aid, { stage: 'curriculum', deanApprovedAt: w.at, deanApprovedBy: w.by, sentToCurriculumAt: w.at }, silent ? '' : `✅ <b>${esc(a.moduleCode)}</b> approved and sent to Curriculum.`);
+        }
+        function deanApproveAll(fac) {
+            const list = Object.values(assignmentsMap).filter(a => taskFac(a) === fac && pipeStep(a) === 'dean');
+            if (!list.length) return;
+            if (!confirm(`Approve ${list.length} finished outline(s) and send them to the Curriculum Department?`)) return;
+            Promise.all(list.map(a => deanApprove(a.id, true))).then(() => showToast(`✅ ${list.length} outline(s) sent to Curriculum.`, true));
+        }
+        function deanSendToLecturer(aid) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            if (!can('amend')) return denied("Only the Dean, Secretary or Admin can send an outline back to the lecturer.");
+            openAmendModal({ aid: aid, ownerUid: a.lecturerUid, courseId: a.courseId, moduleId: a.moduleId,
+                label: a.moduleCode + ' - ' + a.moduleName + ' (' + (a.lecturerName || a.lecturerEmail) + ')',
+                prefill: a.returnNote ? ((a.returnSource === 'mqa' ? '[MQA] ' : '[Curriculum] ') + a.returnNote) : '' });
+        }
+
+        // ----- Curriculum -----
+        function curReturn(aid) {
+            const a = assignmentsMap[aid]; if (!a || !can('curriculum')) return;
+            openRfModal(`<h2 style="color:#b91c1c; margin-bottom:6px;"><i class="fas fa-undo"></i> Return to faculty for amendment</h2>
+                <p style="color:#555;">${facTag(taskFac(a))} <b>${esc(a.moduleCode)} - ${esc(a.moduleName)}</b><br>The Dean of ${esc(facName(taskFac(a)))} will see this note and send the outline back to the lecturer.</p>
+                <div class="ad-form"><label>What must be changed? *</label><textarea id="cr-note" rows="6">${a.stage === 'mqa' && (a.mqaComments || []).length ? esc(a.mqaComments[a.mqaComments.length - 1].text) : ''}</textarea></div>
+                <button class="btn btn-danger" style="margin-top:12px;" onclick="confirmCurReturn('${aid}')"><i class="fas fa-paper-plane"></i> Return to faculty</button>`);
+        }
+        function confirmCurReturn(aid) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            const note = (document.getElementById('cr-note').value || '').trim();
+            if (!note) { alert("Please write what must be changed."); return; }
+            const src = a.stage === 'mqa' ? 'mqa' : 'curriculum', w = whoStamp();
+            closeRfModal();
+            updateTask(aid, { stage: 'faculty_amend', returnNote: note, returnSource: src, returnedAt: w.at, returnedBy: w.by,
+                curriculumComments: (a.curriculumComments || []).concat([Object.assign({ type: 'return', text: note, source: src }, w)]) }, `↩ <b>${esc(a.moduleCode)}</b> returned to ${esc(taskFac(a))}.`);
+        }
+        function curSendToMqa(aid, silent) {
+            const a = assignmentsMap[aid]; if (!a || !can('curriculum') || a.stage !== 'curriculum') return Promise.resolve();
+            if (!silent && !confirm(`Send ${a.moduleCode} to MQA?`)) return Promise.resolve();
+            const w = whoStamp();
+            return updateTask(aid, { stage: 'mqa', sentToMqaAt: w.at, sentToMqaBy: w.by }, silent ? '' : `➜ <b>${esc(a.moduleCode)}</b> sent to MQA.`);
+        }
+        function curApprove(aid, silent) {
+            const a = assignmentsMap[aid]; if (!a || !can('curriculum') || a.stage !== 'mqa') return Promise.resolve();
+            if (!silent && !confirm(`Record that MQA has APPROVED ${a.moduleCode}? The faculty will be informed.`)) return Promise.resolve();
+            const w = whoStamp();
+            return updateTask(aid, { stage: 'approved', approvedAt: w.at, approvedBy: w.by }, silent ? '' : `🎉 <b>${esc(a.moduleCode)}</b> marked MQA approved - the faculty has been informed.`);
+        }
+        function binderBulk(key, action) {
+            const g = groupByBinder(Object.values(assignmentsMap)).find(x => x.key === key); if (!g) return;
+            const list = g.tasks.filter(a => a.stage === (action === 'mqa' ? 'curriculum' : 'mqa'));
+            if (!list.length) return;
+            if (!confirm(action === 'mqa' ? `Send ${list.length} outline(s) of "${g.prog}" to MQA?` : `Record MQA APPROVAL for ${list.length} outline(s) of "${g.prog}"? The faculty will be informed.`)) return;
+            Promise.all(list.map(a => action === 'mqa' ? curSendToMqa(a.id, true) : curApprove(a.id, true)))
+                .then(() => showToast(action === 'mqa' ? `➜ ${list.length} outline(s) sent to MQA.` : `🎉 ${list.length} outline(s) approved by MQA.`, true));
+        }
+
+        // ----- programme binders (certificate copies) -----
+        let bindersMap = {}, bindersUnsub = null, bindersScope = null, binderMeta = {};
+        function slugProg(p) { return (String(p || 'General').toLowerCase().replace(/[^a-z0-9\u0600-\u06FF\u0780-\u07BF]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60)) || 'general'; }
+        function binderKey(fac, prog) { return (fac || 'NONE') + '__' + slugProg(prog); }
+        function groupByBinder(tasks) {
+            const map = {};
+            tasks.forEach(a => {
+                const fac = taskFac(a) || 'NONE', prog = (a.programName || '').trim() || 'General (no programme set)', key = binderKey(fac, prog);
+                (map[key] || (map[key] = { key, fac, prog, tasks: [] })).tasks.push(a);
+                binderMeta[key] = { fac, prog };
+            });
+            const order = f => { const i = FACULTIES.findIndex(x => x.id === f); return i < 0 ? 99 : i; };
+            return Object.values(map).sort((x, y) => (order(x.fac) - order(y.fac)) || x.prog.localeCompare(y.prog));
+        }
+        function startBindersWatch() {
+            if (!auth.currentUser) return;
+            const scope = isUni() ? 'all' : (myFac() && can('viewAll') ? 'fac:' + myFac() : null);
+            if (!scope) { stopBindersWatch(); return; }
+            if (bindersUnsub && bindersScope === scope) return;
+            stopBindersWatch(); bindersScope = scope;
+            bindersUnsub = scopedQuery('rasfahi_binders').onSnapshot(snap => {
+                bindersMap = {}; snap.forEach(d => { bindersMap[d.id] = Object.assign({ id: d.id }, d.data()); });
+                if (isStepActive(19)) renderCurriculum();
+                if (isStepActive(20)) renderFacultyFlow();
+            }, err => console.warn('[RASFAHI] binders watch failed', err && err.code));
+        }
+        function stopBindersWatch() { if (bindersUnsub) { bindersUnsub(); bindersUnsub = null; } bindersScope = null; bindersMap = {}; }
+        function uploadCertificate(key, input) {
+            const meta = binderMeta[key] || {}, fac = meta.fac || '', prog = meta.prog || '';
+            const file = input.files && input.files[0]; if (!file) return;
+            if (file.size > 700 * 1024) { alert("This file is larger than 700 KB. Please upload a smaller scan (PDF or image), or use \"Add link\" to a copy stored elsewhere."); input.value = ''; return; }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const w = whoStamp();
+                db.collection('rasfahi_binders').doc(key).set({ facultyId: fac, programName: prog, certificate: { name: file.name, type: file.type, size: file.size, data: e.target.result }, uploadedAt: w.at, uploadedBy: w.by }, { merge: true })
+                    .then(() => showToast('📎 Certificate copy saved in the binder of <b>' + esc(prog) + '</b>.', true))
+                    .catch(err => alert("❌ Could not save the certificate: " + (err.code || err.message)));
+            };
+            reader.readAsDataURL(file);
+        }
+        function linkCertificate(key) {
+            const meta = binderMeta[key] || {}, fac = meta.fac || '', prog = meta.prog || '';
+            const url = prompt("Link to the certificate copy (e.g. a shared drive link):");
+            if (!url || !/^https?:\/\//i.test(url.trim())) { if (url) alert("Please enter a full link starting with http:// or https://"); return; }
+            const w = whoStamp();
+            db.collection('rasfahi_binders').doc(key).set({ facultyId: fac, programName: prog, certificate: { name: 'Certificate (link)', url: url.trim() }, uploadedAt: w.at, uploadedBy: w.by }, { merge: true })
+                .then(() => showToast('🔗 Certificate link saved.', true)).catch(err => alert("❌ " + (err.code || err.message)));
+        }
+        function removeCertificate(key) {
+            if (!confirm("Remove the certificate copy from this binder?")) return;
+            db.collection('rasfahi_binders').doc(key).set({ certificate: null, uploadedAt: nowIso(), uploadedBy: auth.currentUser.email }, { merge: true }).catch(err => alert("❌ " + (err.code || err.message)));
+        }
+        function viewCertificate(key) {
+            const b = bindersMap[key]; const c = b && b.certificate; if (!c) return;
+            if (c.url) { window.open(c.url, '_blank'); return; }
+            try {
+                const parts = c.data.split(','), mime = (parts[0].match(/data:(.*?);/) || [])[1] || 'application/octet-stream';
+                const bin = atob(parts[1]); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                const url = URL.createObjectURL(new Blob([arr], { type: mime }));
+                const w = window.open(url, '_blank');
+                if (!w) { const l = document.createElement('a'); l.href = url; l.download = c.name || 'certificate'; l.click(); }
+            } catch (e) { alert("Could not open the file."); }
+        }
+        function binderCertHtml(g, canEdit) {
+            const b = bindersMap[g.key], c = b && b.certificate;
+            const up = canEdit ? `<label class="btn btn-outline btn-mini" style="cursor:pointer;"><i class="fas fa-upload"></i> ${c ? 'Replace' : 'Upload'} certificate copy<input type="file" accept=".pdf,image/*" style="display:none;" onchange="uploadCertificate('${g.key}', this)"></label>
+                <button class="btn btn-outline btn-mini" onclick="linkCertificate('${g.key}')"><i class="fas fa-link"></i> Add link</button>` : '';
+            return `<div class="binder-cert"><i class="fas fa-certificate" style="color:#b45309;"></i> <b>MQA certificate:</b>
+                ${c ? `<span>${esc(c.name || 'certificate')}${c.size ? ' (' + Math.round(c.size / 1024) + ' KB)' : ''} · ${fmtDate(b.uploadedAt, false)}</span>
+                    <button class="btn btn-green btn-mini" onclick="viewCertificate('${g.key}')"><i class="fas fa-eye"></i> View / download</button>
+                    ${canEdit ? `<button class="btn btn-danger btn-mini" onclick="removeCertificate('${g.key}')"><i class="fas fa-times"></i></button>` : ''}` : '<span style="color:#92400e;">not uploaded yet</span>'} ${up}</div>`;
+        }
+        function openBtn(a) { return a.courseId ? `<button class="btn btn-outline btn-mini" title="Open outline" onclick="openOutlineFor('${esc(a.lecturerUid)}','${esc(a.courseId)}','${esc(a.moduleId)}')"><i class="fas fa-eye"></i></button>` : ''; }
+        function commentsBtn(a) { const n = taskComments(a).length; return `<button class="btn btn-outline btn-mini" title="Review comments" onclick="openTaskComments('${a.id}')"><i class="fas fa-comments"></i>${n ? ' ' + n : ''}</button>`; }
+
+        // ----- Curriculum Review page -----
+        function renderCurriculum() {
+            const root = document.getElementById('cur-root'); if (!root) return;
+            if (!can('curriculum')) { root.innerHTML = '<p style="color:var(--danger);">This page is for the Curriculum Department.</p>'; return; }
+            const all = Object.values(assignmentsMap);
+            const inPipe = all.filter(a => ['curriculum', 'faculty_amend', 'mqa', 'approved'].includes(a.stage));
+            const c = { curriculum: 0, faculty_amend: 0, mqa: 0, approved: 0 }; inPipe.forEach(a => c[a.stage]++);
+            const waiting = { ALL: c.curriculum }; inPipe.filter(a => a.stage === 'curriculum').forEach(a => { const f = taskFac(a); waiting[f] = (waiting[f] || 0) + 1; });
+            const fac = selFac.cur || 'ALL';
+            const list = inPipe.filter(a => fac === 'ALL' || taskFac(a) === fac);
+            const groups = groupByBinder(list);
+            let html = `<div class="dash-hero"><h2><i class="fas fa-landmark"></i> Curriculum Review</h2><div class="gold-rule"></div>
+                <p>Outlines approved by the Deans of every faculty and centre. Comment on each outline, return it to the faculty for amendment, send it to MQA, record MQA comments and approval, and keep the certificate copy in each programme's binder.</p></div>
+                <div class="kpi-grid">
+                    <div class="kpi blue"><i class="fas fa-inbox bg"></i><div class="kpi-val">${c.curriculum}</div><div class="kpi-lbl">Waiting for Curriculum</div></div>
+                    <div class="kpi red"><i class="fas fa-undo bg"></i><div class="kpi-val">${c.faculty_amend}</div><div class="kpi-lbl">Returned to faculties</div></div>
+                    <div class="kpi slate"><i class="fas fa-paper-plane bg"></i><div class="kpi-val">${c.mqa}</div><div class="kpi-lbl">With MQA</div></div>
+                    <div class="kpi green"><i class="fas fa-award bg"></i><div class="kpi-val">${c.approved}</div><div class="kpi-lbl">MQA approved</div></div>
+                </div>
+                ${facChipsHtml('cur', fac, { all: true, counts: waiting })}`;
+            if (!groups.length) html += `<div class="dash-card"><p style="color:#64748b; margin:0;">No outlines have been sent to Curriculum${fac !== 'ALL' ? ' from ' + esc(facName(fac)) : ''} yet. They appear here once the Dean approves them.</p></div>`;
+            let lastFac = null;
+            groups.forEach(g => {
+                if (fac === 'ALL' && g.fac !== lastFac) { lastFac = g.fac; html += `<h3 style="font-family:'Playfair Display',serif; color:var(--r-navy); margin:18px 0 10px;">${facTag(g.fac)} ${esc(facName(g.fac))}</h3>`; }
+                const nCur = g.tasks.filter(a => a.stage === 'curriculum').length, nMqa = g.tasks.filter(a => a.stage === 'mqa').length;
+                html += `<div class="binder-card" style="--fc:${facColor(g.fac)}">
+                    <div class="binder-head"><h4><i class="fas fa-folder-open"></i> ${esc(g.prog)} <small style="color:#64748b; font-family:'Segoe UI';">· ${g.tasks.length} outline(s)</small></h4>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            ${nCur ? `<button class="btn btn-blue btn-mini" onclick="binderBulk('${g.key}','mqa')"><i class="fas fa-paper-plane"></i> Send all to MQA (${nCur})</button>` : ''}
+                            ${nMqa ? `<button class="btn btn-green btn-mini" onclick="binderBulk('${g.key}','approve')"><i class="fas fa-award"></i> Mark all MQA approved (${nMqa})</button>` : ''}
+                        </div></div>
+                    ${binderCertHtml(g, true)}
+                    <div class="binder-body"><table class="royal-table"><thead><tr><th>Module outline</th><th>Lecturer</th><th>Stage</th><th>Date</th><th>Actions</th></tr></thead><tbody>
+                    ${g.tasks.map(a => `<tr><td><b>${esc(a.moduleCode)}</b> - ${esc(a.moduleName)}</td><td>${esc(a.lecturerName || a.lecturerEmail || '')}</td><td>${pipeBadge(a)}</td>
+                        <td style="font-size:0.8rem; white-space:nowrap;">${fmtDate(a.approvedAt || a.sentToMqaAt || a.returnedAt || a.sentToCurriculumAt, false)}</td>
+                        <td style="white-space:nowrap;">${openBtn(a)} ${commentsBtn(a)}
+                            ${a.stage === 'curriculum' ? `<button class="btn btn-outline btn-mini" style="border-color:#dc2626; color:#b91c1c;" onclick="curReturn('${a.id}')"><i class="fas fa-undo"></i> Return</button>
+                                <button class="btn btn-blue btn-mini" onclick="curSendToMqa('${a.id}')"><i class="fas fa-paper-plane"></i> Send to MQA</button>` : ''}
+                            ${a.stage === 'mqa' ? `<button class="btn btn-outline btn-mini" style="border-color:#6d28d9; color:#5b21b6;" onclick="openTaskComments('${a.id}')"><i class="fas fa-pen"></i> MQA comment</button>
+                                <button class="btn btn-outline btn-mini" style="border-color:#dc2626; color:#b91c1c;" onclick="curReturn('${a.id}')"><i class="fas fa-undo"></i> Return (MQA)</button>
+                                <button class="btn btn-green btn-mini" onclick="curApprove('${a.id}')"><i class="fas fa-award"></i> MQA approved</button>` : ''}
+                            ${a.stage === 'faculty_amend' ? '<span style="font-size:0.78rem; color:#991b1b;">waiting for faculty</span>' : ''}
+                        </td></tr>`).join('')}
+                    </tbody></table></div></div>`;
+            });
+            root.innerHTML = html;
+            updateWorkflowBadges();
+        }
+
+        // ----- Faculty Approvals page (Dean / Secretary / Admin) -----
+        function renderFacultyFlow() {
+            const root = document.getElementById('flow-root'); if (!root) return;
+            if (!can('viewAll') || (can('curriculum') && !can('manageUsers'))) { root.innerHTML = '<p style="color:var(--danger);">This page is for Deans, Secretaries and the Admin.</p>'; return; }
+            if (isUni() && !selFac.flow) selFac.flow = (FACULTIES.find(f => Object.values(assignmentsMap).some(a => taskFac(a) === f.id)) || FACULTIES[0]).id;
+            const fac = isUni() ? selFac.flow : myFac();
+            if (!fac) { root.innerHTML = '<p style="color:var(--danger);">Your account has no faculty set yet. Ask the Admin to set your faculty in Manage Users.</p>'; return; }
+            const tasks = Object.values(assignmentsMap).filter(a => taskFac(a) === fac);
+            const awaiting = tasks.filter(a => pipeStep(a) === 'dean');
+            const returned = tasks.filter(a => pipeStep(a) === 'returned');
+            const P = pipeCounts(tasks);
+            const f = facById(fac);
+            let html = `<div class="dash-hero" style="background:linear-gradient(135deg, ${facColor(fac)} 0%, #0b1f4d 60%, #065f46 100%);"><h2><i class="fas fa-stamp"></i> Faculty Approvals · ${esc(fac)}</h2><div class="gold-rule"></div>
+                <p><b>${esc(facName(fac))}</b>${f ? '<br><span class="fac-hero-sub">' + esc(f.dv) + '</span>' : ''}</p></div>
+                ${isUni() ? facChipsHtml('flow', fac) : ''}
+                <div class="kpi-grid">
+                    <div class="kpi slate"><i class="fas fa-user-edit bg"></i><div class="kpi-val">${P.lecturer}</div><div class="kpi-lbl">With lecturers</div></div>
+                    <div class="kpi gold"><i class="fas fa-stamp bg"></i><div class="kpi-val">${P.dean}</div><div class="kpi-lbl">Awaiting Dean approval</div></div>
+                    <div class="kpi red"><i class="fas fa-undo bg"></i><div class="kpi-val">${P.returned}</div><div class="kpi-lbl">Returned by Curriculum</div></div>
+                    <div class="kpi blue"><i class="fas fa-landmark bg"></i><div class="kpi-val">${P.curriculum}</div><div class="kpi-lbl">With Curriculum</div></div>
+                    <div class="kpi blue" style="background:linear-gradient(135deg,#7c3aed,#4c1d95);"><i class="fas fa-paper-plane bg"></i><div class="kpi-val">${P.mqa}</div><div class="kpi-lbl">With MQA</div></div>
+                    <div class="kpi green"><i class="fas fa-award bg"></i><div class="kpi-val">${P.approved}</div><div class="kpi-lbl">MQA approved</div></div>
+                </div>
+
+                <div class="dash-card"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;"><div><h3><i class="fas fa-stamp"></i> Awaiting Dean approval</h3><div class="dash-sub">Outlines the lecturers have finished (All Done). Tick to approve and send to the Curriculum Department.</div></div>
+                    ${awaiting.length && can('deanApprove') ? `<button class="btn btn-green btn-mini" onclick="deanApproveAll('${fac}')"><i class="fas fa-check-double"></i> Approve all (${awaiting.length})</button>` : ''}</div>
+                    ${awaiting.length ? `<div style="overflow-x:auto;"><table class="royal-table"><thead><tr><th>Module outline</th><th>Programme</th><th>Lecturer</th><th>Finished</th><th>Actions</th></tr></thead><tbody>
+                    ${awaiting.map(a => `<tr><td><b>${esc(a.moduleCode)}</b> - ${esc(a.moduleName)}</td><td>${esc(a.programName || '—')}</td><td>${esc(a.lecturerName || a.lecturerEmail || '')}</td><td style="font-size:0.8rem;">${fmtDate(a.submittedAt, false)}</td>
+                        <td style="white-space:nowrap;">${openBtn(a)} ${can('deanApprove') ? `<button class="btn btn-green btn-mini" onclick="deanApprove('${a.id}')"><i class="fas fa-check"></i> Approve &amp; send to Curriculum</button>` : '<span style="font-size:0.78rem; color:#64748b;">Dean approves</span>'} ${can('amend') ? `<button class="btn btn-outline btn-mini" title="Send back to lecturer" onclick="deanSendToLecturer('${a.id}')"><i class="fas fa-undo"></i></button>` : ''}</td></tr>`).join('')}
+                    </tbody></table></div>` : '<p style="color:#94a3b8; margin:0;">Nothing is waiting for approval.</p>'}</div>
+
+                <div class="dash-card"><h3><i class="fas fa-undo" style="color:#b91c1c;"></i> Returned by Curriculum / MQA</h3><div class="dash-sub">Send each one back to its lecturer with the note. After the lecturer presses All Done again, approve it again above.</div>
+                    ${returned.length ? returned.map(a => `<div class="note-item" style="border-left-color:#dc2626; background:#fef2f2;">
+                        <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;"><div><b>${esc(a.moduleCode)} - ${esc(a.moduleName)}</b> · ${esc(a.lecturerName || a.lecturerEmail || '')}<br>
+                        <span style="font-size:0.8rem; color:#991b1b;">${a.returnSource === 'mqa' ? 'MQA comments' : 'Curriculum'} · ${fmtDate(a.returnedAt)}</span></div>
+                        <div style="white-space:nowrap;">${openBtn(a)} ${commentsBtn(a)} ${can('amend') ? `<button class="btn btn-blue btn-mini" onclick="deanSendToLecturer('${a.id}')"><i class="fas fa-paper-plane"></i> Send to lecturer</button>` : ''}</div></div>
+                        <div style="white-space:pre-wrap; margin-top:6px;">${esc(a.returnNote || '')}</div></div>`).join('') : '<p style="color:#94a3b8; margin:0;">Nothing has been returned.</p>'}</div>
+
+                <div class="dash-card"><h3><i class="fas fa-route"></i> Curriculum &amp; MQA progress</h3><div class="dash-sub">Where every outline of the faculty is now</div>
+                    ${tasks.length ? `<div style="overflow-x:auto;"><table class="royal-table"><thead><tr><th>Module outline</th><th>Programme</th><th>Lecturer</th><th style="min-width:330px;">Progress</th><th></th></tr></thead><tbody>
+                    ${tasks.slice().sort((x, y) => PIPE_ORDER.indexOf(pipeStep(y)) - PIPE_ORDER.indexOf(pipeStep(x))).map(a => `<tr><td><b>${esc(a.moduleCode)}</b> - ${esc(a.moduleName)}</td><td>${esc(a.programName || '—')}</td><td>${esc(a.lecturerName || a.lecturerEmail || '')}</td>
+                        <td>${pipelineStepperHtml(a)}</td><td style="white-space:nowrap;">${openBtn(a)} ${commentsBtn(a)}</td></tr>`).join('')}
+                    </tbody></table></div>` : '<p style="color:#94a3b8; margin:0;">No outlines have been allocated in this faculty yet.</p>'}</div>`;
+            const groups = groupByBinder(tasks.filter(a => ['mqa', 'approved'].includes(a.stage) || bindersMap[binderKey(fac, (a.programName || '').trim() || 'General (no programme set)')]));
+            html += `<div class="dash-card"><h3><i class="fas fa-folder-open"></i> Programme binders</h3><div class="dash-sub">Certificate copies uploaded by the Curriculum Department after MQA approval</div>
+                ${groups.length ? groups.map(g => `<div class="binder-card" style="--fc:${facColor(g.fac)}; box-shadow:none; border:1px solid #e8edf5;"><div class="binder-head"><h4><i class="fas fa-folder"></i> ${esc(g.prog)}</h4>
+                    <span>${g.tasks.filter(a => a.stage === 'approved').length}/${g.tasks.length} approved</span></div>${binderCertHtml(g, isUni())}</div>`).join('') : '<p style="color:#94a3b8; margin:0;">No programme has reached MQA yet.</p>'}</div>`;
+            root.innerHTML = html;
+            updateWorkflowBadges();
         }
 
         // --- WORKSPACES: reviewers (Dean / Secretary / Admin) can open another user's archive ---
@@ -3638,7 +4231,10 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 if (token !== aoRenderToken) return;
                 const q = (document.getElementById('ao-filter').value || '').toLowerCase().trim();
                 const me = auth.currentUser ? auth.currentUser.uid : '';
-                let users = accs.filter(a => !a.deleted && (!q || String(a.name || '').toLowerCase().includes(q) || String(a.email || '').toLowerCase().includes(q)));
+                const chipsEl = document.getElementById('ao-fac-chips');
+                if (chipsEl) chipsEl.innerHTML = isUni() ? facChipsHtml('ao', selFac.ao, { all: true }) : (myFac() ? `<div style="margin-bottom:10px;">${facTag(myFac())} <b>${esc(facName(myFac()))}</b></div>` : '');
+                const aoF = isUni() ? selFac.ao : 'ALL';
+                let users = accs.filter(a => !a.deleted && (aoF === 'ALL' || a.facultyId === aoF) && (!q || String(a.name || '').toLowerCase().includes(q) || String(a.email || '').toLowerCase().includes(q)));
                 users.sort((a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email)));
                 if (!users.length) { list.innerHTML = '<p style="color:#888;">No users match.</p>'; return; }
                 list.innerHTML = users.map(a => `<div class="archive-course">
@@ -3721,7 +4317,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         });
 
         // Structural edits (adding/removing rows etc.) happen through buttons inside the outline steps.
-        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15', 'step-16', 'step-17', 'step-18']);
+        const NON_OUTLINE_SECTIONS = new Set(['step-9', 'step-10', 'step-12', 'step-14', 'step-15', 'step-16', 'step-17', 'step-18', 'step-19', 'step-20']);
         function isOutlineField(el) {
             if (el.id && (el.id.startsWith('hdr-') || el.id.startsWith('wm-'))) return false; // account branding, saved separately
             const sec = el.closest('.form-section');
@@ -3842,7 +4438,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if(num === 17) { if (!can('allocate')) return denied("Only the Dean or Admin can allocate tasks."); loadAccounts(true).then(() => renderAllocation(true)); renderAllocation(true); }
             if(num === 18) renderMyTasks();
             if(num === 12) renderImportTaskPicker();
-            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18].includes(num));
+            if(num === 19) { if (!can('curriculum')) return denied("This page is for the Curriculum Department."); renderCurriculum(); }
+            if(num === 20) { loadAccounts(false).then(renderFacultyFlow); renderFacultyFlow(); }
+            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18, 19, 20].includes(num));
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
 
