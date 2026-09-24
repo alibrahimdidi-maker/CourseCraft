@@ -2,6 +2,7 @@
 //  1. rasfahiAdmin              - lets the Admin set a user's password, lock/unlock a login, delete a login.
 //  2. rasfahiAssignmentEmails   - e-mails the lecturer when a task is assigned, sent for amendment,
 //                                 and a thank-you when they press "All Done".
+//  4. rasfahi2fa                - two-factor verification (e-mailed 6-digit code) for amending or deleting a course structure.
 //  3. rasfahiDeadlineReminders  - every morning (Maldives time): reminder the day before the deadline,
 //                                 and a reminder once the deadline has passed without the task being finished.
 //
@@ -221,4 +222,62 @@ exports.rasfahiDeadlineReminders = functions.pubsub.schedule('0 8 * * *').timeZo
   });
   await Promise.all(jobs);
   return null;
+});
+
+
+// ------------------------------------------------------------------ 4. two-factor verification
+// Step 1 (in the browser): the user re-enters the password. Step 2: this helper e-mails a 6-digit code;
+// when the code is verified it issues a short-lived token that the Firestore rules require for
+// amending or deleting an existing course structure (rasfahi_binders.structure).
+const crypto = require('crypto');
+function sha(x) { return crypto.createHash('sha256').update(String(x)).digest('hex'); }
+function maskEmail(e) { const [u, d] = String(e).split('@'); return (u || '').slice(0, 2) + '***@' + (d || ''); }
+
+exports.rasfahi2fa = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new HttpsError('unauthenticated', 'Please sign in first.');
+  const uid = context.auth.uid, email = String(context.auth.token.email || '');
+  const snap = await admin.firestore().doc('rasfahi_accounts/' + uid).get();
+  const acc = snap.exists ? snap.data() : {};
+  const role = ADMIN_EMAILS.includes(email.toLowerCase()) ? 'admin' : acc.role;
+  if (!['admin', 'dean'].includes(role) || acc.disabled || acc.deleted) throw new HttpsError('permission-denied', 'Only the Dean or the Admin can change course structures.');
+  // the password must have been entered in the last 10 minutes
+  const authTime = Number(context.auth.token.auth_time || 0) * 1000;
+  if (Date.now() - authTime > 10 * 60 * 1000) throw new HttpsError('failed-precondition', 'Please enter your password again.');
+  const otpRef = admin.firestore().doc('rasfahi_otp/' + uid);
+
+  if (data && data.action === 'send') {
+    const old = await otpRef.get();
+    if (old.exists && Date.now() - (old.data().sentAt || 0) < 45 * 1000) throw new HttpsError('resource-exhausted', 'Please wait a moment before asking for another code.');
+    const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+    await otpRef.set({ hash: sha(uid + ':' + code), sentAt: Date.now(), expiresAt: Date.now() + 10 * 60 * 1000, attempts: 0 });
+    const purpose = String((data && data.purpose) || 'Changing a course structure').slice(0, 160);
+    await admin.firestore().collection(MAIL_COLLECTION).add({
+      to: [email],
+      message: {
+        subject: `RASFAHI verification code: ${code}`,
+        html: `<div style="font-family:Segoe UI,Arial,sans-serif;max-width:520px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+          <div style="background:#0b1f4d;color:#fff;padding:16px 20px;font-size:18px;font-weight:bold;">RASFAHI - two-factor verification</div>
+          <div style="padding:20px;"><p dir="rtl" style="font-family:Faruma,'MV Faseyha',serif;font-size:16px;">ކޯސް ސްޓްރަކްޗަރ ބަދަލުކުރުމަށް ބޭނުންކުރާ ކޯޑު:</p>
+          <p>Your code for: <b>${purpose.replace(/[<>&]/g, '')}</b></p>
+          <p style="font-size:34px;letter-spacing:8px;font-weight:bold;color:#0b1f4d;text-align:center;">${code}</p>
+          <p style="color:#64748b;font-size:13px;">The code is valid for 10 minutes. If you did not ask for it, you can ignore this e-mail.</p></div></div>`
+      },
+      rasfahi: { kind: '2fa', uid, createdAt: new Date().toISOString() }
+    });
+    return { sent: true, to: maskEmail(email) };
+  }
+
+  if (data && data.action === 'verify') {
+    const s = await otpRef.get();
+    if (!s.exists) throw new HttpsError('not-found', 'Please ask for a new code.');
+    const o = s.data();
+    if (Date.now() > o.expiresAt) { await otpRef.delete(); throw new HttpsError('deadline-exceeded', 'The code has expired. Please ask for a new one.'); }
+    if ((o.attempts || 0) >= 5) { await otpRef.delete(); throw new HttpsError('resource-exhausted', 'Too many wrong codes. Please ask for a new one.'); }
+    if (sha(uid + ':' + String(data.code || '')) !== o.hash) { await otpRef.update({ attempts: (o.attempts || 0) + 1 }); throw new HttpsError('permission-denied', 'The code is not correct.'); }
+    await otpRef.delete();
+    const token = crypto.randomBytes(24).toString('hex');
+    await admin.firestore().doc('rasfahi_2fa/' + uid).set({ token, expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 15 * 60 * 1000) });
+    return { token };
+  }
+  throw new HttpsError('invalid-argument', 'Unknown action.');
 });
