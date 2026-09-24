@@ -1577,6 +1577,7 @@ Upon successful completion of this Module, students will have the knowledge and 
                     <div class="importer-box">
                         <p>Upload a previously exported <b>.docx</b> or <b>.doc</b> file (including files exported by this app itself). The system will read the text, automatically create a new Module in your Archive, and fill out the forms with extracted data.</p>
                         <input type="file" id="word-upload" accept=".docx,.doc,.htm,.html,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/html" style="display:none;" onchange="readWordFile(event)">
+                        <div id="import-task-link" style="margin-bottom:15px;"></div>
                         <button class="btn btn-blue" onclick="document.getElementById('word-upload').click()"><i class="fas fa-upload"></i> Select Word File to Import</button>
                         <div id="import-success-msg" class="import-success">✅ File successfully parsed! A new module has been created and loaded from your Archive.</div>
                     </div>
@@ -2414,6 +2415,8 @@ service cloud.firestore {
                     <label>Email address *</label><input type="text" id="ad-email" class="ltr-input" value="${esc(sub.email || (auth.currentUser && auth.currentUser.email) || '')}">
                     <label>Phone number</label><input type="text" id="ad-phone" class="ltr-input" value="${esc(sub.phone || '')}">
                     <label>Remarks for the Admin (optional)</label><textarea id="ad-remarks" rows="3">${esc(sub.remarks || '')}</textarea>
+                    ${!(mod.meta && mod.meta.assignmentId) && openTasksForLinking().length ? `<label>This outline is the work for which allocated task?</label>
+                    <select id="ad-task"><option value="">- Not one of my allocated tasks -</option>${openTasksForLinking().map(t => `<option value="${esc(t.id)}" ${t.id === (matchTaskByCode(mod.code) || {}).id ? 'selected' : ''}>${esc(t.moduleCode)} - ${esc(t.moduleName)} (due ${fmtDay(t.dueAt)})</option>`).join('')}</select>` : ''}
                     <label style="display:flex; gap:8px; align-items:center; font-weight:normal;"><input type="checkbox" id="ad-confirm" style="width:auto;"> I confirm that the whole module outline is finished.</label>
                 </div>
                 <button class="btn btn-green" style="margin-top:15px;" onclick="submitAllDone()"><i class="fas fa-check-double"></i> Submit - All Done</button>`);
@@ -2431,6 +2434,10 @@ service cloud.firestore {
             if (!name) { alert("Please enter your full name."); return; }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert("Please enter a valid email address."); return; }
             if (!document.getElementById('ad-confirm').checked) { alert("Please tick the confirmation box."); return; }
+            const taskSel = document.getElementById('ad-task');
+            if (taskSel && taskSel.value && !(mod.meta && mod.meta.assignmentId)) {
+                if (!linkModuleToAssignment(taskSel.value, activeCourseId, activeModuleId, { quiet: true })) return;
+            }
             const a = actor(), t = nowIso();
             const m = mod.meta || (mod.meta = {});
             m.status = 'submitted'; m.submittedAt = t; m.completedAt = t; m.completedBy = a.email; m.completedRole = a.role;
@@ -2579,7 +2586,7 @@ service cloud.firestore {
         function historyTableHtml(meta) {
             const h = (meta && meta.history) ? meta.history.slice().reverse() : [];
             if (!h.length) return '<p style="color:#888;">No history recorded yet (history starts from the first save after this update).</p>';
-            const label = { created: 'Created', edit: 'Edited', started: '⏳ Work started', submitted: '✅ All Done - lecturer work finished', completed: '✅ Marked complete', reopened: '↩ Edited after submission (back in progress)', returned: '↩ Returned to lecturer', amend: '✏️ Sent for amendment (unlocked)', note: '📝 Correction note' };
+            const label = { created: 'Created', edit: 'Edited', started: '⏳ Work started', submitted: '✅ All Done - lecturer work finished', completed: '✅ Marked complete', reopened: '↩ Edited after submission (back in progress)', returned: '↩ Returned to lecturer', amend: '✏️ Sent for amendment (unlocked)', linked: '🔗 Linked to allocated task', note: '📝 Correction note' };
             let html = '<table><thead><tr><th>Date &amp; time</th><th>Action</th><th>By</th></tr></thead><tbody>';
             h.forEach(e => {
                 const when = e.type === 'edit' ? (fmtDate(e.start) + (e.end && e.end !== e.start ? ' → ' + fmtDate(e.end) : '')) : fmtDate(e.at);
@@ -2647,12 +2654,14 @@ service cloud.firestore {
             bar.innerHTML = `<div class="meta-items">
                     <span><i class="fas fa-file-alt"></i> <b>${esc(mod.code || 'MOD')}</b></span>
                     ${lockedMe ? '<span class="lock-chip"><i class="fas fa-lock"></i> Submitted - locked</span>' : ''}
+                    ${asg ? `<span class="module-chip" title="This outline is the work for this allocated task"><i class="fas fa-link"></i> Task: ${esc(asg.moduleCode)}</span>` : ''}
                     ${dueAt ? `<span><i class="fas fa-calendar-alt"></i> Due: <b>${fmtDay(dueAt)}</b> ${st === 'submitted' ? '' : duePill(dueState({ status: st === 'submitted' ? 'submitted' : 'started', dueAt: dueAt }))}</span>` : ''}
                     <span>Created: <b>${fmtDate(m.createdAt)}</b></span>
                     <span>Last edited: <b>${fmtDate(m.lastEditedAt)}</b>${m.lastEditedBy ? ' by ' + esc(m.lastEditedBy) + ' ' + roleBadge(m.lastEditedRole) : ''}</span>
                     <span>${workStatusBadge(st)}${st === 'submitted' ? ' ' + fmtDate(m.submittedAt || m.completedAt) : ''}</span>
                 </div>
                 <div class="meta-actions">
+                    ${canCompleteHere() && !m.assignmentId && openTasksForLinking().length ? `<button class="btn btn-outline btn-mini" onclick="openLinkTaskModal()"><i class="fas fa-link"></i> Link to my task</button>` : ''}
                     ${canCompleteHere() && st !== 'submitted' ? `<button class="btn btn-green btn-mini" onclick="openAllDoneForm()"><i class="fas fa-flag-checkered"></i> All Done</button>` : ''}
                     ${canCompleteHere() && st === 'submitted' && can('editAll') ? `<button class="btn btn-green btn-mini" onclick="openAllDoneForm()"><i class="fas fa-redo"></i> All Done again</button>` : ''}
                     ${!isOwnWorkspace() ? `<span style="font-size:0.78rem; color:#64748b;" title="All Done is pressed by the person the outline belongs to, in their own archive."><i class="fas fa-info-circle"></i> Viewing another user's outline</span>` : ''}
@@ -2746,6 +2755,7 @@ service cloud.firestore {
             if (isStepActive(16)) scheduleDashboardRender();
             if (isStepActive(17)) renderAllocation();
             if (isStepActive(18)) renderMyTasks();
+            if (isStepActive(12)) renderImportTaskPicker();
         }
         function isStepActive(n) { const el = document.getElementById('step-' + n); return !!el && el.classList.contains('active'); }
 
@@ -2898,6 +2908,96 @@ service cloud.firestore {
             if (!isOwnWorkspace()) switchWorkspace(auth.currentUser.uid).then(() => setTimeout(run, 800)); else run();
         }
 
+        // ---------- linking an outline (made by hand OR imported from Word) to an allocated task ----------
+        function normCode(c) { return String(c || '').toUpperCase().replace(/[\s\-_.]/g, ''); }
+        function openTasksForLinking() { return myAssignmentsList().filter(t => t.status !== 'submitted').sort((x, y) => String(x.dueAt).localeCompare(String(y.dueAt))); }
+        function matchTaskByCode(code) {
+            const c = normCode(code); if (!c) return null;
+            const hits = openTasksForLinking().filter(t => normCode(t.moduleCode) === c);
+            return hits.length === 1 ? hits[0] : null;
+        }
+        let pendingImportTaskId = null;
+
+        // Links module mId (in my own archive) to task aid. Returns true when linked.
+        function linkModuleToAssignment(aid, cId, mId, opts = {}) {
+            const a = assignmentsMap[aid];
+            const course = dbState.courses[cId]; const mod = course && course.modules[mId];
+            if (!a || !mod || !isOwnWorkspace()) return false;
+            if (a.status === 'submitted') { alert("This task is already submitted."); return false; }
+            const oldMod = a.courseId && a.moduleId && a.moduleId !== mId && dbState.courses[a.courseId] && dbState.courses[a.courseId].modules[a.moduleId];
+            if (oldMod && !confirm(`The task ${a.moduleCode} is already linked to another outline in your archive ("${oldMod.code} - ${oldMod.name}").\n\nUse THIS outline for the task instead?`)) return false;
+            if (oldMod && oldMod.meta && oldMod.meta.assignmentId === aid) { delete oldMod.meta.assignmentId; dirtyCourses.add(a.courseId); }
+            const m = mod.meta || (mod.meta = newMeta());
+            const t = nowIso(), who = actor();
+            m.assignmentId = aid;
+            m.assignment = { moduleName: a.moduleName, moduleCode: a.moduleCode, contactHours: a.contactHours || '', assignedAt: a.assignedAt || '', dueAt: a.dueAt || '' };
+            if (getWorkStatus(m) === 'not_started' || getWorkStatus(m) === 'submitted') m.status = 'in_progress';
+            if (!m.startedAt) m.startedAt = t;
+            (m.history || (m.history = [])).push({ type: 'linked', by: who.email, name: who.name, role: who.role, at: t, task: a.moduleCode, source: opts.source || '' });
+            dirtyCourses.add(cId);
+            performSave(false, false);
+            syncStatusIndex(cId, mId, true);
+            const upd = { courseId: cId, moduleId: mId, updatedAt: t };
+            if (a.status === 'assigned') { upd.status = 'started'; upd.startedAt = t; }
+            else if (!a.startedAt) upd.startedAt = t;
+            Object.assign(a, upd);
+            db.collection('rasfahi_assignments').doc(aid).update(upd).catch(err => console.warn('[RASFAHI] task link failed', err && err.code));
+            if (!opts.quiet) showToast(`🔗 This outline is now linked to your task <b>${esc(a.moduleCode)}</b>. Press <b>All Done</b> when it is finished.`, true);
+            renderOutlineMetaBar();
+            return true;
+        }
+
+        function openLinkTaskModal() {
+            const mod = activeModuleObj(); if (!mod) return;
+            const tasks = openTasksForLinking();
+            if (!tasks.length) { alert("You have no open allocated tasks."); return; }
+            const guess = matchTaskByCode(mod.code);
+            openRfModal(`<h2 style="color:var(--r-navy); margin-bottom:6px;"><i class="fas fa-link"></i> Link this outline to a task</h2>
+                <p style="color:#555;">Outline: <b>${esc(mod.code)} - ${esc(mod.name)}</b><br>Use this when you filled the outline by hand or imported it from Word. When you press All Done, the task will show as finished for the Admin.</p>
+                <div class="ad-form"><label>Allocated task</label><select id="lt-task">${tasks.map(t => `<option value="${esc(t.id)}" ${guess && guess.id === t.id ? 'selected' : ''}>${esc(t.moduleCode)} - ${esc(t.moduleName)} (due ${fmtDay(t.dueAt)})</option>`).join('')}</select></div>
+                <button class="btn btn-blue" style="margin-top:15px;" onclick="if (linkModuleToAssignment(document.getElementById('lt-task').value, activeCourseId, activeModuleId, { source: 'manual-link' })) closeRfModal();"><i class="fas fa-link"></i> Link</button>`);
+        }
+
+        function importWordForTask(aid) {
+            if (!isOwnWorkspace()) return denied("Return to your own archive first.");
+            pendingImportTaskId = aid;
+            switchStep(12, document.querySelectorAll('.nav-links li')[10]);
+        }
+
+        function renderImportTaskPicker() {
+            const box = document.getElementById('import-task-link'); if (!box) return;
+            const tasks = openTasksForLinking();
+            if (!auth.currentUser || !tasks.length) { box.innerHTML = ''; return; }
+            const keep = document.getElementById('import-task-select');
+            const current = pendingImportTaskId || (keep ? keep.value : 'auto');
+            box.innerHTML = `<div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; padding:12px 14px; text-align:left;">
+                <label style="font-weight:700; color:var(--r-navy); display:block; margin-bottom:6px;"><i class="fas fa-link"></i> Is this Word file the work for one of your allocated tasks?</label>
+                <select id="import-task-select" onchange="pendingImportTaskId = null;">
+                    <option value="auto">Detect automatically from the module code in the file</option>
+                    ${tasks.map(t => `<option value="${esc(t.id)}">${esc(t.moduleCode)} - ${esc(t.moduleName)} (due ${fmtDay(t.dueAt)})</option>`).join('')}
+                    <option value="none">No - just import it</option>
+                </select>
+                <div style="font-size:0.82rem; color:#475569; margin-top:6px;">After importing, make any small changes, then press <b>All Done</b> - the Admin will see the task as finished and can open this outline.</div></div>`;
+            const sel = document.getElementById('import-task-select');
+            if ([...sel.options].some(o => o.value === current)) sel.value = current;
+        }
+
+        // Called by the Smart Word Importer after it has created the new module.
+        function linkImportedModuleToTask(cId, mId) {
+            const sel = document.getElementById('import-task-select');
+            const choice = pendingImportTaskId || (sel ? sel.value : 'auto');
+            pendingImportTaskId = null;
+            if (choice === 'none' || !openTasksForLinking().length) return null;
+            const mod = dbState.courses[cId] && dbState.courses[cId].modules[mId];
+            if (!mod) return null;
+            let task = choice !== 'auto' ? assignmentsMap[choice] : matchTaskByCode(mod.code);
+            if (!task) {
+                showToast('📄 Imported. It was not matched to a task automatically - open the outline and press <b>Link to my task</b> (or choose the task when you press All Done).', true);
+                return null;
+            }
+            return linkModuleToAssignment(task.id, cId, mId, { source: 'word-import' }) ? task : null;
+        }
+
         function allDoneForAssignment(aid) {
             const a = assignmentsMap[aid]; if (!a) return;
             if (!(a.courseId && dbState.courses[a.courseId] && dbState.courses[a.courseId].modules[a.moduleId])) return openAssignmentOutline(aid);
@@ -2925,6 +3025,7 @@ service cloud.firestore {
                     ${linked || a.courseId ? `<button class="btn btn-blue btn-mini" onclick="openAssignmentOutline('${esc(a.id)}')"><i class="fas fa-folder-open"></i> ${a.status === 'submitted' ? 'View outline' : 'Open outline'}</button>` : ''}
                     ${a.status !== 'assigned' && !linked && !a.courseId ? `<button class="btn btn-green btn-mini" onclick="startAssignmentTask('${esc(a.id)}')"><i class="fas fa-play"></i> Start working</button>` : ''}
                     ${linked && a.status !== 'submitted' ? `<button class="btn btn-green btn-mini" onclick="allDoneForAssignment('${esc(a.id)}')"><i class="fas fa-flag-checkered"></i> All Done</button>` : ''}
+                    ${a.status !== 'submitted' ? `<button class="btn btn-outline btn-mini" title="Use an outline you made before, from a Word file" onclick="importWordForTask('${esc(a.id)}')"><i class="fas fa-file-word"></i> Import from Word</button>` : ''}
                 </div></div>`;
         }
 
@@ -3259,7 +3360,7 @@ service cloud.firestore {
                         const ts = p.tasks.slice().sort((x, y) => String(x.dueAt).localeCompare(String(y.dueAt)));
                         const done = ts.filter(a => a.status === 'submitted').length;
                         return `<tr><td><b>${esc(p.name)}</b><br><span style="color:#64748b; font-size:0.82rem;">${esc(p.email)}</span></td>
-                            <td>${ts.map(a => `<span class="module-chip ${a.status === 'submitted' ? 'done' : ''}" title="${esc(ASSIGN_LABELS[a.status] || '')}">${esc(a.moduleCode)} · ${esc(a.moduleName)}</span>`).join('')}</td>
+                            <td>${ts.map(a => `<span class="module-chip ${a.status === 'submitted' ? 'done' : ''}" title="${esc(ASSIGN_LABELS[a.status] || '')}${a.courseId ? ' - click to open the outline' : ''}" ${a.courseId ? `style="cursor:pointer;" onclick="openOutlineFor('${esc(a.lecturerUid)}','${esc(a.courseId)}','${esc(a.moduleId)}')"` : ''}>${a.courseId ? '<i class="fas fa-external-link-alt" style="font-size:0.65rem;"></i> ' : ''}${esc(a.moduleCode)} · ${esc(a.moduleName)}</span>`).join('')}</td>
                             <td class="nowrap" style="font-size:0.82rem;">${ts.map(a => fmtDay(a.assignedAt)).join('<br>')}</td>
                             <td class="nowrap" style="font-size:0.82rem;">${ts.map(a => fmtDay(a.dueAt) + ' ' + (a.status !== 'submitted' && dueState(a) === 'overdue' ? '⛔' : '')).join('<br>')}</td>
                             <td style="text-align:center; font-weight:700; font-size:1.1rem; color:var(--r-navy);">${ts.length}</td>
@@ -3640,6 +3741,7 @@ service cloud.firestore {
             if(num === 16) { if (!can('dashboard')) return denied("The dashboard is for the Dean and Admin."); loadAccounts(false).then(renderDashboard); renderDashboard(); }
             if(num === 17) { if (!can('allocate')) return denied("Only the Dean or Admin can allocate tasks."); loadAccounts(true).then(() => renderAllocation(true)); renderAllocation(true); }
             if(num === 18) renderMyTasks();
+            if(num === 12) renderImportTaskPicker();
             document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18].includes(num));
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
@@ -4914,10 +5016,12 @@ service cloud.firestore {
             updateTopTitleStatus();
             performSave(false, false);
 
+            const linkedTask = linkImportedModuleToTask(nCid, nMid);
             document.getElementById('import-success-msg').style.display = 'block';
             setTimeout(()=> {
                 document.getElementById('import-success-msg').style.display = 'none';
-                switchStep(10, document.querySelectorAll('.nav-links li')[12]);
+                if (linkedTask) switchStep(5, document.querySelectorAll('.nav-links li')[4]);
+                else switchStep(10, document.querySelectorAll('.nav-links li')[12]);
             }, 1500);
         }
 
