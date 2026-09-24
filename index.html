@@ -1756,7 +1756,7 @@ service cloud.firestore {
 
     match /rasfahi_users/{uid} {
       allow read:  if active() &amp;&amp; (request.auth.uid == uid || reviewer());
-      allow write: if active() &amp;&amp; request.auth.uid == uid;
+      allow write: if active() &amp;&amp; (request.auth.uid == uid || isAdmin());
 
       match /courses/{cid} {
         allow read:   if active() &amp;&amp; (request.auth.uid == uid || reviewer());
@@ -1796,6 +1796,12 @@ service cloud.firestore {
               &amp;&amp; request.resource.data.status in ['started', 'submitted', 'amend']
               &amp;&amp; !(resource.data.status == 'submitted' &amp;&amp; request.resource.data.status != 'submitted'))
       );
+    }
+
+    // System-wide reset marker (written by the Admin's "Hard Reset - entire system").
+    match /rasfahi_system/{doc} {
+      allow read:  if signedIn();
+      allow write: if isAdmin();
     }
 
     // E-mail queue - written only by the server helper (Cloud Functions), never by browsers.
@@ -2041,6 +2047,7 @@ service cloud.firestore {
             if (accountUnsub) { accountUnsub(); accountUnsub = null; }
             stopStatusWatch();
             stopAssignmentsWatch();
+            if (systemResetUnsub) { systemResetUnsub(); systemResetUnsub = null; }
             if (user) {
                 userDocRef = db.collection("rasfahi_users").doc(user.uid);
                 wsUid = user.uid; wsDocRef = userDocRef; wsOwnerInfo = null;
@@ -2058,7 +2065,7 @@ service cloud.firestore {
                     hideSplash();
                     applyRoleUI();
                     loadBrandingSettings(user.uid);
-                    restoreData(user.uid);
+                    loadSystemReset().then(() => { restoreData(user.uid); watchSystemReset(); });
                     watchOwnAccount(user);
                 });
             } else {
@@ -2641,6 +2648,9 @@ service cloud.firestore {
             if (!mod) {
                 if (!course && !canCreateHere() && can('viewAll')) {
                     bar.innerHTML = '<div class="meta-items"><span><i class="fas fa-info-circle"></i> You have no outlines of your own. Open <b>All Outlines (Review)</b> to edit other users\' outlines.</span></div>';
+                    bar.style.display = 'flex';
+                } else if (!course && canCreateHere()) {
+                    bar.innerHTML = '<div class="meta-items"><span><i class="fas fa-info-circle"></i> Your archive is empty. Start an allocated task from <b>My Tasks</b>, import a Word file, or press <b>Create New Course</b> in the Archive.</span></div>';
                     bar.style.display = 'flex';
                 } else { bar.style.display = 'none'; }
                 return;
@@ -4064,41 +4074,152 @@ service cloud.firestore {
             performSave(false, false);
         }
 
-        function hardResetArchive() {
-            if (!canDeleteOutlines() || !isOwnWorkspace()) return denied("Only the admin can reset an archive, and only their own.");
-            if(!confirm("⚠️ 1/3: Are you absolutely sure you want to WIPEOUT the entire archive?")) return;
-            if(!confirm("⚠️ 2/3: SECOND WARNING! All courses, modules, and local data will be permanently destroyed. Proceed?")) return;
-            let verify = prompt("⚠️ 3/3: FINAL STEP. Type 'RESET' in all caps to confirm:");
-            if(verify !== "RESET") { alert("Reset cancelled."); return; }
-
-            dbState = { courses: {} };
-            activeCourseId = null;
-            activeModuleId = null;
-            semCount = 0;
-            annexCount = 0;
-            f3RowCount = 0;
-            document.getElementById('semesters-container').innerHTML = "";
-            document.getElementById('annex-container').innerHTML = "";
-            document.getElementById('tbody-matrix').innerHTML = "";
-            document.getElementById('tbody-sch').innerHTML = "";
-            document.getElementById('tbody-f3-details').innerHTML = "";
-            document.getElementById('tbody-assess').innerHTML = "";
-            
-            const uid = auth.currentUser ? auth.currentUser.uid : 'guest';
-            localStorage.removeItem('rasfahi_archive_' + uid);
+        // ---------- HARD RESET (Admin) ----------
+        let systemResetAt = null, systemResetUnsub = null, resetInProgress = false;
+        function loadSystemReset() {
+            return db.collection('rasfahi_system').doc('reset').get()
+                .then(d => { systemResetAt = d.exists ? (d.data().resetAt || null) : null; })
+                .catch(() => { systemResetAt = null; });
+        }
+        function watchSystemReset() {
+            if (systemResetUnsub) return;
+            systemResetUnsub = db.collection('rasfahi_system').doc('reset').onSnapshot(d => {
+                const at = d.exists ? (d.data().resetAt || null) : null;
+                if (!at || at === systemResetAt) return;
+                systemResetAt = at;
+                if (resetInProgress) return;
+                if (auth.currentUser) handleRemoteReset(d.data());
+            }, () => {});
+        }
+        function clearWorkspaceDom() {
+            semCount = 0; annexCount = 0; f3RowCount = 0;
+            ['semesters-container', 'annex-container', 'tbody-matrix', 'tbody-sch', 'tbody-f3-details', 'tbody-assess'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+            document.querySelectorAll('.content-area .form-section').forEach(sec => {
+                if (NON_OUTLINE_SECTIONS.has(sec.id)) return;
+                sec.querySelectorAll('input:not([type=checkbox]):not([type=file]), textarea').forEach(el => { el.value = ''; });
+            });
+        }
+        function resetLocalWorkspace() {
+            if (auth.currentUser) localStorage.removeItem('rasfahi_archive_' + auth.currentUser.uid);
             resetSyncTracking();
+            dbState = { courses: {} }; activeCourseId = null; activeModuleId = null;
+            isProgrammaticChange = true; clearWorkspaceDom(); isProgrammaticChange = false;
+        }
+        // Another session (the Admin) reset the whole system while I was signed in.
+        function handleRemoteReset(info) {
+            wsUid = auth.currentUser.uid; wsDocRef = userDocRef; wsOwnerInfo = null;
+            resetLocalWorkspace();
+            restoreData(auth.currentUser.uid);
+            applyRoleUI();
+            showToast('♻️ The administrator has reset the system. All previous outlines were removed.', true);
+        }
 
-            if (navigator.onLine && wsDocRef) {
-                wsDocRef.collection('courses').get().then(snap => {
-                    let batch = db.batch();
-                    snap.forEach(d => batch.delete(d.ref));
-                    batch.set(wsDocRef, { activeCourseId: null, activeModuleId: null, timestamp: new Date().toISOString() });
-                    return batch.commit();
-                }).catch(err => console.error('[RASFAHI] cloud archive wipe failed', err));
+        function hardResetArchive() {
+            if (!canDeleteOutlines() || !isOwnWorkspace()) return denied("Only the admin can use Hard Reset.");
+            openRfModal(`<h2 style="color:var(--danger); margin-bottom:8px;"><i class="fas fa-radiation"></i> Hard Reset</h2>
+                <p style="color:#555; margin-bottom:12px;">This permanently deletes outlines. It cannot be undone - export a backup first if you might need them.</p>
+                <div class="ad-form">
+                    <label>What should be deleted?</label>
+                    <label style="font-weight:normal; display:flex; gap:8px; align-items:flex-start;"><input type="radio" name="hr-scope" value="own" checked style="width:auto; margin-top:4px;" onchange="document.getElementById('hr-all-opts').style.display='none'"> Only my own archive</label>
+                    <label style="font-weight:normal; display:flex; gap:8px; align-items:flex-start;"><input type="radio" name="hr-scope" value="all" style="width:auto; margin-top:4px;" onchange="document.getElementById('hr-all-opts').style.display='block'"> <span><b>The entire system</b> - every outline made by every user (Admin, Deans, Lecturers), the progress list and their browser copies</span></label>
+                    <div id="hr-all-opts" style="display:none; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; margin-top:8px;">
+                        <label style="margin-top:0;">Task allocations</label>
+                        <label style="font-weight:normal; display:flex; gap:8px;"><input type="radio" name="hr-tasks" value="keep" checked style="width:auto;"> Keep the allocated tasks, but set them back to "Not started"</label>
+                        <label style="font-weight:normal; display:flex; gap:8px;"><input type="radio" name="hr-tasks" value="delete" style="width:auto;"> Delete all allocated tasks too</label>
+                        <div style="font-size:0.82rem; color:#7f1d1d; margin-top:6px;">User accounts, roles, logos and letterhead settings are not touched.</div>
+                    </div>
+                    <label>Type <b>RESET</b> to confirm</label><input type="text" id="hr-confirm" class="ltr-input" autocomplete="off">
+                </div>
+                <div id="hr-progress" style="margin-top:10px; color:#475569; font-size:0.9rem;"></div>
+                <button id="hr-go" class="btn btn-danger" style="margin-top:12px;" onclick="executeHardReset()"><i class="fas fa-trash-alt"></i> Delete permanently</button>`);
+        }
+
+        function commitInChunks(ops) {   // ops: array of fn(batch)
+            const chunks = [];
+            for (let i = 0; i < ops.length; i += 400) chunks.push(ops.slice(i, i + 400));
+            return chunks.reduce((p, ch) => p.then(() => { const b = db.batch(); ch.forEach(fn => fn(b)); return b.commit(); }), Promise.resolve());
+        }
+
+        function executeHardReset() {
+            if (!canDeleteOutlines() || !isOwnWorkspace()) return;
+            if ((document.getElementById('hr-confirm').value || '').trim() !== 'RESET') { alert("Please type RESET (in capitals) to confirm."); return; }
+            const scope = (document.querySelector('input[name=hr-scope]:checked') || {}).value || 'own';
+            const taskMode = (document.querySelector('input[name=hr-tasks]:checked') || {}).value || 'keep';
+            if (scope === 'all' && !confirm("⚠️ FINAL WARNING\n\nEvery outline of EVERY user will be deleted permanently.\n\nContinue?")) return;
+            const prog = msg => { const el = document.getElementById('hr-progress'); if (el) el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + msg; };
+            const btn = document.getElementById('hr-go'); if (btn) btn.disabled = true;
+            const me = auth.currentUser.uid, t = nowIso();
+            resetInProgress = true;
+
+            let job;
+            if (scope === 'own') {
+                prog('Deleting your archive...');
+                job = userDocRef.collection('courses').get().then(snap => {
+                    const mids = [];
+                    snap.forEach(d => Object.keys((d.data() || {}).modules || {}).forEach(m => mids.push(m)));
+                    const ops = [];
+                    snap.forEach(d => ops.push(b => b.delete(d.ref)));
+                    mids.forEach(m => ops.push(b => b.delete(db.collection('rasfahi_status').doc(statusKey(me, m)))));
+                    ops.push(b => b.set(userDocRef, { activeCourseId: null, activeModuleId: null, dbState: null, timestamp: t }, { merge: true }));
+                    return commitInChunks(ops).then(() => resetLinkedTasks(me, 'keep'));
+                });
+            } else {
+                prog('Finding every user...');
+                job = Promise.all([loadAccounts(true), db.collection('rasfahi_users').get().catch(() => null)]).then(([accs, usersSnap]) => {
+                    const uids = new Set(accs.map(a => a.uid));
+                    if (usersSnap) usersSnap.forEach(d => uids.add(d.id));
+                    uids.add(me);
+                    let done = 0;
+                    return Array.from(uids).reduce((p, uid) => p.then(() => {
+                        prog(`Deleting outlines... (${++done}/${uids.size} users)`);
+                        const ref = db.collection('rasfahi_users').doc(uid);
+                        return ref.collection('courses').get().then(snap => {
+                            const ops = [];
+                            snap.forEach(d => ops.push(b => b.delete(d.ref)));
+                            ops.push(b => b.set(ref, { activeCourseId: null, activeModuleId: null, dbState: null, timestamp: t }, { merge: true }));
+                            return commitInChunks(ops);
+                        }).catch(err => console.warn('[RASFAHI] reset failed for', uid, err && err.code));
+                    }), Promise.resolve());
+                }).then(() => {
+                    prog('Clearing the progress list...');
+                    return db.collection('rasfahi_status').get().then(snap => { const ops = []; snap.forEach(d => ops.push(b => b.delete(d.ref))); return commitInChunks(ops); });
+                }).then(() => {
+                    prog(taskMode === 'delete' ? 'Deleting allocated tasks...' : 'Resetting allocated tasks...');
+                    return resetLinkedTasks(null, taskMode);
+                }).then(() => {
+                    prog('Telling every browser to forget its old copies...');
+                    return db.collection('rasfahi_system').doc('reset').set({ resetAt: t, by: auth.currentUser.email, taskMode: taskMode });
+                }).then(() => { systemResetAt = t; });
             }
 
-            createNewCourse(); 
-            alert("✅ Archive has been completely reset.");
+            job.then(() => {
+                resetLocalWorkspace();
+                closeRfModal();
+                if (scope === 'own' && !systemResetAt) createNewCourse(); else { updateTopTitleStatus(); renderOutlineMetaBar(); }
+                if (isStepActive(10)) renderArchive();
+                resetInProgress = false;
+                alert(scope === 'all' ? "✅ The entire system has been reset. Every user's previous outlines were deleted." : "✅ Your archive has been completely reset.");
+            }).catch(err => {
+                resetInProgress = false;
+                if (btn) btn.disabled = false;
+                alert("❌ Reset did not finish: " + (err.code || err.message) + "\nIf this says permission-denied, publish the updated Firestore rules and try again.");
+            });
+        }
+
+        // Tasks linked to deleted outlines: either delete them, or return them to "Not started".
+        function resetLinkedTasks(onlyUid, mode) {
+            return db.collection('rasfahi_assignments').get().then(snap => {
+                const ops = []; const t = nowIso();
+                snap.forEach(d => {
+                    const a = d.data();
+                    if (onlyUid && a.lecturerUid !== onlyUid) return;
+                    if (mode === 'delete') { ops.push(b => b.delete(d.ref)); return; }
+                    if (onlyUid && !a.courseId) return;
+                    ops.push(b => b.update(d.ref, { status: 'assigned', courseId: null, moduleId: null, startedAt: null, submittedAt: null, resubmittedAt: null,
+                        submission: null, locked: false, amendNote: null, amendCount: 0, amendHistory: [], reminders: { dayBefore: false, overdue: false }, updatedAt: t }));
+                });
+                return commitInChunks(ops);
+            });
         }
 
         function renderArchive() {
@@ -4384,7 +4505,7 @@ service cloud.firestore {
                             loadStateFromMemory(cid, mid, true);
                             statusEl.innerHTML = 'Loaded from Cloud <i class="fas fa-check-circle"></i>';
                             statusEl.parentElement.style.color = "var(--royal-green-light)";
-                        } else if (metaDoc.exists && metaDoc.data().dbState && Object.keys(metaDoc.data().dbState.courses || {}).length > 0) {
+                        } else if (metaDoc.exists && metaDoc.data().dbState && Object.keys(metaDoc.data().dbState.courses || {}).length > 0 && !(systemResetAt && String(metaDoc.data().timestamp || '') < systemResetAt)) {
                             // Archive still in the old single-document format from before this fix -
                             // load it as-is, then migrate it into the new per-course documents so it
                             // keeps syncing correctly (and stays under Firestore's 1MB-per-doc limit).
@@ -4404,7 +4525,10 @@ service cloud.firestore {
 
         function loadLocal(uid) {
             const statusEl = document.getElementById('sync-status-text');
-            const localData = localStorage.getItem('rasfahi_archive_' + uid);
+            let localData = localStorage.getItem('rasfahi_archive_' + uid);
+            if (localData && systemResetAt) {
+                try { const ts = JSON.parse(localData).timestamp; if (!ts || ts < systemResetAt) { localStorage.removeItem('rasfahi_archive_' + uid); localData = null; } } catch (e) { localData = null; }
+            }
             if (localData) {
                 let data = JSON.parse(localData);
                 if(data.dbState && Object.keys(data.dbState.courses).length > 0) {
@@ -4424,7 +4548,7 @@ service cloud.firestore {
 
         // Roles that cannot create outlines (Secretary) start with an empty archive instead of samples.
         function startEmptyOrDefault() {
-            if (!auth.currentUser || canCreateHere()) { initDefaultDB(); return; }
+            if (!auth.currentUser || (canCreateHere() && !systemResetAt)) { initDefaultDB(); return; }
             dbState = { courses: {} }; activeCourseId = null; activeModuleId = null;
             updateTopTitleStatus();
         }
