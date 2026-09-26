@@ -254,8 +254,19 @@
             box-shadow: none; 
         }
 
-        #login-error { 
-            color: var(--danger); 
+        .login-divider { display:flex; align-items:center; gap:10px; margin:16px 0 4px; color:#6b7280; font-size:0.85rem; }
+        .login-divider::before, .login-divider::after { content:''; flex:1; height:1px; background:#d1d5db; }
+        .login-card button.google-btn {
+            background: #fff; color: #1f2937; border: 1px solid #d1d5db;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            text-transform: none; letter-spacing: 0.3px; font-size: 1.05rem;
+        }
+        .login-card button.google-btn:hover { background: #f8fafc; box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+        .login-card button.google-btn svg { width: 20px; height: 20px; flex: none; }
+        #login-info { color: #1d4ed8; font-size: 0.9rem; margin-bottom: 12px; display: none; font-weight: 600; }
+
+        #login-error {
+            color: var(--danger);
             font-size: 0.9rem; 
             margin-bottom: 15px; 
             display: none; 
@@ -1183,9 +1194,15 @@
             </div>
 
             <div id="login-error"></div>
+            <div id="login-info"></div>
+            <button type="button" id="google-btn" class="google-btn" onclick="handleGoogleLogin()">
+                <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+                <span>Sign in with Google / ގޫގުލް އިން ވަނުމަށް</span>
+            </button>
+            <div class="login-divider">or / ނުވަތަ</div>
             <input type="text" id="login-user" placeholder="Email / އީމެއިލް އެޑްރެސް">
-            <input type="password" id="login-pass" placeholder="Password / ޕާސްވޯޑް">
-            
+            <input type="password" id="login-pass" placeholder="Password / ޕާސްވޯޑް" onkeydown="if(event.key==='Enter') handleLogin()">
+
             <button id="login-btn" onclick="handleLogin()"><i class="fas fa-lock-open"></i> Access System</button>
         </div>
     </div>
@@ -2228,11 +2245,16 @@ service cloud.firestore {
                     }
                     return Object.assign({}, acc || {}, { role: 'admin', disabled: false, deleted: false, email: user.email });
                 }
+                // A Google sign-in is allowed only for people the admin has already registered.
+                // (Without this, any Google account in the world would get in as a lecturer.)
+                if (!acc && isGoogleOnly(user)) return { unregistered: true, email: user.email };
                 // Accounts made before roles existed have no record yet - they are lecturers.
                 return acc || { role: 'lecturer', email: user.email, legacy: true };
             }).catch(err => {
                 console.warn('[RASFAHI] could not read account record', err && err.code);
-                return isBoot ? { role: 'admin', email: user.email } : { role: 'lecturer', email: user.email, fallback: true };
+                if (isBoot) return { role: 'admin', email: user.email };
+                if (isGoogleOnly(user)) return { lookupFailed: true, email: user.email };
+                return { role: 'lecturer', email: user.email, fallback: true };
             });
         }
 
@@ -2241,6 +2263,7 @@ service cloud.firestore {
             const btn = document.getElementById('login-btn');
             errorDiv.innerText = msg; errorDiv.style.display = 'block';
             btn.disabled = false; btn.innerHTML = "<i class='fas fa-lock-open'></i> Access System";
+            resetGoogleBtn();
         }
 
         function watchOwnAccount(user) {
@@ -2308,6 +2331,19 @@ service cloud.firestore {
                 userDocRef = db.collection("rasfahi_users").doc(user.uid);
                 wsUid = user.uid; wsDocRef = userDocRef; wsOwnerInfo = null;
                 resolveAccount(user).then(acc => {
+                    if (acc.unregistered) {
+                        hideSplash();
+                        showBlockedLogin("The Google account " + (user.email || '') + " is not registered in RASFAHI. Please ask the administrator to create your account with this e-mail address first.\nމި ގޫގުލް އެކައުންޓް ރަސްފަހީގައި ރަޖިސްޓަރީ ކޮށްފައެއް ނުވޭ. މި އީމެއިލް އިން އެކައުންޓެއް ހަދައިދިނުމަށް އެޑްމިންއާ ގުޅުއްވާ.");
+                        // Remove the empty login Google just created, so the address stays free for the admin.
+                        user.delete().catch(() => auth.signOut());
+                        return;
+                    }
+                    if (acc.lookupFailed) {
+                        hideSplash();
+                        showBlockedLogin("Could not check your account right now (network problem). Please try again.");
+                        auth.signOut();
+                        return;
+                    }
                     if (acc.disabled || acc.deleted) {
                         hideSplash();
                         showBlockedLogin("This account has been disabled. Please contact the administrator.");
@@ -5181,6 +5217,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         let structure2fa = null, twoFaResolve = null, twoFaReject = null;
         function reauthWithPassword(pw) {
             const u = auth.currentUser; if (!u || !u.email) return Promise.reject(new Error('Not signed in'));
+            // Someone who signs in only with Google has no RASFAHI password - confirm with Google instead.
+            if (isGoogleOnly(u)) return u.reauthenticateWithPopup(googleProvider());
             return u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, pw));
         }
         function call2fa(data) { return firebase.app().functions().httpsCallable('rasfahi2fa')(data).then(r => r.data || {}); }
@@ -5197,6 +5235,10 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                         <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;"><button class="btn btn-green" onclick="tfaStep2()"><i class="fas fa-check"></i> Verify</button>
                         <button class="btn btn-outline btn-mini" onclick="tfaSend()">Send the code again</button></div></div>
                     <div id="tfa-msg" style="margin-top:12px; font-weight:600;"></div>`;
+                if (isGoogleOnly(auth.currentUser)) {
+                    document.getElementById('tfa-step1').innerHTML = `<label>Step 1 - confirm it is you with your Google account</label>
+                        <button class="btn btn-blue" style="margin-top:12px;" onclick="tfaStep1()"><i class="fab fa-google"></i> Confirm with Google</button>`;
+                }
                 document.getElementById('rf-modal').style.display = 'flex';
                 setTimeout(() => { const el = document.getElementById('tfa-pw'); if (el) el.focus(); }, 50);
                 window._tfaPurpose = purpose;
@@ -5205,7 +5247,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         function tfaMsg(t, ok) { const el = document.getElementById('tfa-msg'); if (el) { el.style.color = ok ? '#15803d' : '#b91c1c'; el.innerHTML = t; } }
         function tfaStep1() {
             const pw = (document.getElementById('tfa-pw') || {}).value || '';
-            if (!pw) return tfaMsg('Please enter your password.');
+            if (!pw && !isGoogleOnly(auth.currentUser)) return tfaMsg('Please enter your password.');
             tfaMsg('<i class="fas fa-spinner fa-spin"></i> Checking...', true);
             reauthWithPassword(pw).then(() => (auth.currentUser && auth.currentUser.getIdToken ? auth.currentUser.getIdToken(true) : null)).then(() => tfaSend(), err => tfaMsg(/wrong-password|invalid-credential|invalid-login/.test(String(err && err.code)) ? 'The password is not correct.' : 'Could not check the password: ' + esc(err.code || err.message)));
         }
@@ -5388,11 +5430,73 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             }
 
             btn.disabled = true; btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Authenticating..."; errorDiv.style.display = "none";
-            auth.signInWithEmailAndPassword(email, pass).catch((error) => {
+            auth.signInWithEmailAndPassword(email, pass).then(cred => {
+                // Finishing a "link Google to my existing account" request (see handleGoogleLogin).
+                if (!pendingGoogleCred || !cred || !cred.user) return;
+                const gc = pendingGoogleCred; pendingGoogleCred = null;
+                return cred.user.linkWithCredential(gc).then(() => {
+                    showLoginInfo('');
+                    alert("✅ Your Google account is now linked. Next time you can simply press \"Sign in with Google\".");
+                }).catch(e => console.warn('[RASFAHI] Google link failed', e && e.code));
+            }).catch((error) => {
                 errorDiv.innerText = "Login Failed: Incorrect Email or Password.";
                 errorDiv.style.display = "block"; btn.disabled = false; btn.innerHTML = "<i class='fas fa-lock-open'></i> Access System";
             });
         }
+
+        // ----- Google sign-in -----
+        // Only people the admin has registered (rasfahi_accounts) can get in with Google - see resolveAccount().
+        let pendingGoogleCred = null;
+        function googleProvider() {
+            const p = new firebase.auth.GoogleAuthProvider();
+            p.setCustomParameters({ prompt: 'select_account' });
+            return p;
+        }
+        function isGoogleOnly(user) {
+            const ids = ((user && user.providerData) || []).map(p => p && p.providerId);
+            return ids.includes('google.com') && !ids.includes('password');
+        }
+        function showLoginInfo(msg) {
+            const el = document.getElementById('login-info'); if (!el) return;
+            el.innerText = msg || ''; el.style.display = msg ? 'block' : 'none';
+        }
+        function resetGoogleBtn() {
+            const g = document.getElementById('google-btn'); if (!g) return;
+            g.disabled = false;
+            g.querySelector('span').textContent = 'Sign in with Google / ގޫގުލް އިން ވަނުމަށް';
+        }
+        function handleGoogleError(error) {
+            const errorDiv = document.getElementById('login-error');
+            const code = (error && error.code) || '';
+            resetGoogleBtn();
+            if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+            if (code === 'auth/account-exists-with-different-credential') {
+                // This e-mail already has a RASFAHI password login. Sign in once with the password and Google gets linked to it.
+                pendingGoogleCred = error.credential || null;
+                if (error.email) document.getElementById('login-user').value = error.email;
+                showLoginInfo("This e-mail already has a RASFAHI password. Enter your password below once and press Access System - your Google account will then be linked.\nމި އީމެއިލްގެ ޕާސްވޯޑް އެއްފަހަރު ޖައްސަވާ، ދެން ގޫގުލް އެކައުންޓް ގުޅިގެންދާނެ.");
+                setTimeout(() => { const p = document.getElementById('login-pass'); if (p) p.focus(); }, 50);
+                return;
+            }
+            let msg = "Google sign-in failed: " + (error && (error.message || code));
+            if (code === 'auth/unauthorized-domain') msg = "Google sign-in is not allowed on this web address yet. The admin must add " + location.hostname + " under Firebase Console → Authentication → Settings → Authorized domains.";
+            if (code === 'auth/operation-not-allowed') msg = "Google sign-in is not switched on yet. The admin must enable Google under Firebase Console → Authentication → Sign-in method.";
+            if (code === 'auth/network-request-failed') msg = "No internet connection. Please try again.";
+            errorDiv.innerText = msg; errorDiv.style.display = 'block';
+        }
+        function handleGoogleLogin() {
+            const g = document.getElementById('google-btn');
+            document.getElementById('login-error').style.display = 'none'; showLoginInfo('');
+            if (g) { g.disabled = true; g.querySelector('span').textContent = 'Opening Google...'; }
+            auth.signInWithPopup(googleProvider()).then(resetGoogleBtn).catch(err => {
+                // Popups are often blocked on phones / in-app browsers - fall back to a full-page redirect.
+                if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')) {
+                    return auth.signInWithRedirect(googleProvider()).catch(handleGoogleError);
+                }
+                handleGoogleError(err);
+            });
+        }
+        auth.getRedirectResult().catch(handleGoogleError);
 
         function handleLogout() {
             flushSaves().then(() => auth.signOut()).then(() => {
