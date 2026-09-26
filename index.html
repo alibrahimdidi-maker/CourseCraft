@@ -1011,6 +1011,10 @@
         body.rf-outline-locked .content-area .form-section input:disabled,
         body.rf-outline-locked .content-area .form-section textarea:disabled,
         body.rf-outline-locked .content-area .form-section select:disabled { background:#f1f5f9 !important; cursor:not-allowed; }
+        .manual-note { font-size:0.74rem; color:#b45309; margin-top:4px; line-height:1.35; }
+        .manual-note a { color:#1e3a8a; font-weight:600; }
+        tr.alloc-manual td { background:#fff7ed; }
+        .unplaced-card { --fc:#f59e0b; border-style:dashed; }
         .nav-count { background:#f59e0b; color:#fff; border-radius:10px; font-size:0.7rem; padding:1px 7px; margin-left:6px; display:none; }
 
         /* ===== FACULTIES / CURRICULUM WORKFLOW ===== */
@@ -1240,6 +1244,7 @@
                 <li id="nav-faculty-flow" onclick="switchStep(20, this)" style="display:none; background: rgba(6, 95, 70, 0.35); border-color: #c9a227;"><i class="fas fa-stamp"></i> <span>Faculty Approvals</span><span id="flow-count" class="nav-count"></span></li>
                 <li id="nav-curriculum" onclick="switchStep(19, this)" style="display:none; background: rgba(15, 118, 110, 0.45); border-color: #c9a227;"><i class="fas fa-landmark"></i> <span>Curriculum Review</span><span id="cur-count" class="nav-count"></span></li>
                 <li id="nav-structures" onclick="switchStep(24, this)" style="display:none;"><i class="fas fa-sitemap"></i> <span>Course Structures</span></li>
+                <li id="nav-unplaced" onclick="switchStep(25, this)" style="display:none; background: rgba(180, 83, 9, 0.30); border-color: #f59e0b;"><i class="fas fa-inbox"></i> <span>Unplaced Modules</span><span id="unplaced-count" class="nav-count"></span></li>
                 <li id="nav-module-search" onclick="switchStep(23, this)" style="display:none;"><i class="fas fa-search"></i> <span>Module Search</span></li>
                 <li id="nav-course-archive" onclick="switchStep(21, this)" style="display:none; background: rgba(201, 162, 39, 0.28); border-color: #c9a227;"><i class="fas fa-book"></i> <span>Course Archive</span></li>
                 <li id="nav-codes" onclick="switchStep(22, this)" style="display:none; background: rgba(153, 27, 27, 0.35); border-color: #f87171;"><i class="fas fa-barcode"></i> <span>Module Code Check</span><span id="dup-count" class="nav-count" style="background:#dc2626;"></span></li>
@@ -2060,6 +2065,10 @@ service cloud.firestore {
                     <div id="struct-root"></div>
                 </div>
 
+                <div id="step-25" class="form-section">
+                    <div id="unplaced-root"></div>
+                </div>
+
                 <div id="step-23" class="form-section">
                     <div id="msearch-root"></div>
                 </div>
@@ -2216,6 +2225,7 @@ service cloud.firestore {
             selFac[key] = id;
             if (key === 'dash') renderDashboard();
             if (key === 'alloc') renderAllocation(true);
+            if (key === 'unplaced') renderUnplaced();
             if (key === 'ao') { renderAllOutlines(true); renderStatusDashboard(); }
             if (key === 'flow') renderFacultyFlow();
             if (key === 'cur') renderCurriculum();
@@ -2300,6 +2310,7 @@ service cloud.firestore {
             show('nav-course-archive', can('viewAll'));
             show('nav-module-search', !!auth.currentUser);
             show('nav-structures', !!auth.currentUser);
+            show('nav-unplaced', can('viewAll'));
             show('global-search-wrap', !!auth.currentUser, 'block');
             show('nav-codes', can('viewAll'));
             startCodesWatch();
@@ -3231,6 +3242,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (isStepActive(20)) renderFacultyFlow();
             if (isStepActive(21)) renderCourseArchive();
             if (isStepActive(22)) renderCodeCheck();
+            if (isStepActive(24) && !structEdit) renderStructures();
+            if (isStepActive(25)) renderUnplaced();
+            updateUnplacedCount();
             scheduleCodeSync();
             updateWorkflowBadges();
         }
@@ -3628,8 +3642,12 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const d = (allocDrafts[uid] || []).find(x => x.k === k);
             const person = findAccount(uid);
             if (!d) return;
-            if (!d.courseKey) { alert("Please choose the course (tick its structure above first)."); return; }
-            if (!d.structModuleId) { alert("Please choose the module from the course structure. Module name, code, credits and modality are taken from the structure and cannot be typed by hand."); return; }
+            if (d.manual) {
+                if (!String(d.programName || '').trim()) { alert("Please choose the course, or choose \"Programme not listed\" and type the programme name."); return; }
+            } else {
+                if (!d.courseKey) { alert("Please choose the course (tick its structure above first) - or press \"Type it manually\" if the module is not in a structure."); return; }
+                if (!d.structModuleId) { alert("Please choose the module from the course structure - or press \"Type it manually\" if it is not in the structure."); return; }
+            }
             const err = validTask(d); if (err) { alert(err); return; }
             if (!d._dupOk) {
                 const clash = findCodeClash(d.moduleCode, null);
@@ -3644,7 +3662,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 courseLevel: b.level || '', modality: d.modality || '',
                 moduleName: d.moduleName.trim(), moduleCode: d.moduleCode.trim().toUpperCase(), contactHours: String(d.contactHours || '').trim(),
                 assignedAt: d.assignedAt, dueAt: d.dueAt, status: 'assigned', locked: false, codeDuplicateAck: !!d._dupOk,
-                structModuleId: d.structModuleId || '', semester: d.semester || '', credits: d.credits || '',
+                structModuleId: d.manual ? '' : (d.structModuleId || ''), semester: d.manual ? '' : (d.semester || ''), credits: String(d.credits || '').trim(),
+                manualEntry: !!d.manual,
                 createdAt: t, createdBy: who.email, createdByRole: who.role, updatedAt: t,
                 reminders: { dayBefore: false, overdue: false }, amendCount: 0
             };
@@ -3723,7 +3742,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                         <td><input class="w-sm" readonly value="${v('contactHours')}"></td>`
                         : `<td><input class="w-lg" value="${v('moduleName')}" oninput="allocEditInput('${a.id}','moduleName',this.value)">
                             ${courseSelectHtml(fac, ed.courseKey !== undefined ? ed.courseKey : taskCourseKey(a), `allocEditCourse('${a.id}', this.value)`)}
-                            ${modalitySelectHtml(ed.modality !== undefined ? ed.modality : (a.modality || ''), `allocEditInput('${a.id}','modality',this.value)`)}</td>
+                            ${modalitySelectHtml(ed.modality !== undefined ? ed.modality : (a.modality || ''), `allocEditInput('${a.id}','modality',this.value)`)}
+                            <div class="manual-note"><i class="fas fa-inbox"></i> Not in a course structure yet${can('viewAll') ? ` - <a href="javascript:void(0)" onclick="switchStep(25, document.getElementById('nav-unplaced'))">place it</a>` : ''}</div></td>
                         <td><input class="w-sm" value="${v('moduleCode')}" oninput="allocEditInput('${a.id}','moduleCode',this.value)">${codeDupPill(a)}</td>
                         <td><input class="w-sm" type="number" min="0" value="${v('contactHours')}" oninput="allocEditInput('${a.id}','contactHours',this.value)"></td>`}
                         <td><input type="date" value="${v('assignedAt')}" oninput="allocEditInput('${a.id}','assignedAt',this.value)"></td>
@@ -3738,13 +3758,23 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     first = false;
                 });
                 drafts.forEach(d => {
-                    html += `<tr class="alloc-draft ${first ? 'grp-start' : ''}">${nameCell}
-                        <td>${draftCourseSelectHtml(fac, d, p.uid)}
+                    const di = f => `oninput="allocDraftInput('${p.uid}','${d.k}','${f}',this.value)"`;
+                    html += `<tr class="alloc-draft ${first ? 'grp-start' : ''} ${d.manual ? 'alloc-manual' : ''}">${nameCell}
+                        ${d.manual ? `<td>${manualCourseHtml(fac, d, p.uid)}
+                            <input class="w-lg" placeholder="Module name *" style="margin-top:4px;" value="${esc(d.moduleName)}" ${di('moduleName')}>
+                            ${modalitySelectHtml(d.modality || '', `allocDraftInput('${p.uid}','${d.k}','modality',this.value)`)}
+                            <input class="w-sm" type="number" min="0" step="0.5" placeholder="Credits" title="Credits (needed when the module is placed in a structure)" style="margin-top:4px;" value="${esc(d.credits || '')}" ${di('credits')}>
+                            <div class="manual-note"><i class="fas fa-pen-nib"></i> Typed by hand - it goes to <b>Unplaced Modules</b> until it is moved into a course structure.
+                                <a href="javascript:void(0)" onclick="allocDraftManual('${p.uid}','${d.k}', false)">↩ choose from a structure instead</a></div></td>
+                        <td><input class="w-sm" placeholder="Code *" value="${esc(d.moduleCode)}" ${di('moduleCode')}></td>
+                        <td><input class="w-sm" type="number" min="0" placeholder="Hrs" value="${esc(d.contactHours)}" ${di('contactHours')}></td>`
+                        : `<td>${draftCourseSelectHtml(fac, d, p.uid)}
                             ${structModuleSelectHtml(d, p.uid)}
                             <input class="w-lg" readonly placeholder="Module name (from the structure)" style="margin-top:4px;" value="${esc(d.moduleName)}">
-                            ${d.structModuleId ? `<div class="alloc-auto">${esc(d.semester)} · <b>${esc(d.credits || '—')}</b> credits · <b>${esc(d.modality || '—')}</b></div>` : ''}</td>
+                            ${d.structModuleId ? `<div class="alloc-auto">${esc(d.semester)} · <b>${esc(d.credits || '—')}</b> credits · <b>${esc(d.modality || '—')}</b></div>` : ''}
+                            <div style="margin-top:4px; font-size:0.74rem;"><a href="javascript:void(0)" onclick="allocDraftManual('${p.uid}','${d.k}', true)"><i class="fas fa-pen-nib"></i> Not in a structure? Type it manually</a></div></td>
                         <td><input class="w-sm" readonly placeholder="Code" value="${esc(d.moduleCode)}">${d.moduleCode && findCodeClash(d.moduleCode, null).length ? '<div class="alloc-auto" style="color:#b91c1c;"><i class="fas fa-exclamation-triangle"></i> code in use</div>' : ''}</td>
-                        <td><input class="w-sm" readonly placeholder="Hrs" value="${esc(d.contactHours)}"></td>
+                        <td><input class="w-sm" readonly placeholder="Hrs" value="${esc(d.contactHours)}"></td>`}
                         <td><input type="date" value="${esc(d.assignedAt)}" oninput="allocDraftInput('${p.uid}','${d.k}','assignedAt',this.value)"></td>
                         <td><input type="date" value="${esc(d.dueAt)}" oninput="allocDraftInput('${p.uid}','${d.k}','dueAt',this.value)"></td>
                         <td><span class="as-badge as-assigned">Not assigned yet</span></td>
@@ -4277,6 +4307,8 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 if (isStepActive(17)) renderAllocation();
                 if (isStepActive(22)) renderCodeCheck();
                 if (isStepActive(24) && !structEdit) renderStructures();
+                if (isStepActive(25)) renderUnplaced();
+                updateUnplacedCount();
                 if (isStepActive(18)) renderMyTasks();
             }, err => console.warn('[RASFAHI] binders watch failed', err && err.code));
         }
@@ -5020,6 +5052,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 <p>The semester-by-semester structure of each course: modules, codes, modality, credits, learning and contact hours, with semester and cumulative totals and averages. ${canNew ? 'The Dean and the Admin build and edit structures; everyone else can view them.' : 'View only.'}</p></div>
                 ${canNew ? `<button class="btn btn-outline btn-mini" style="background:#fff;" onclick="newCourseStructure()"><i class="fas fa-plus"></i> New course structure</button>` : ''}</div></div>
                 ${isUni() ? facChipsHtml('struct', fac, { all: true }) : ''}`;
+            const nUnplaced = can('viewAll') ? unplacedTasks(fac).length : 0;
+            if (nUnplaced) html += `<div class="struct-warn" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;"><span><i class="fas fa-inbox"></i> <b>${nUnplaced}</b> allocated module(s) were typed by hand and are not in any course structure yet.</span>
+                <button class="btn btn-outline btn-mini" style="background:#fff;" onclick="switchStep(25, document.getElementById('nav-unplaced'))"><i class="fas fa-arrow-right"></i> Unplaced Modules</button></div>`;
             if (!list.length) html += `<div class="dash-card"><p style="color:#64748b; margin:0;">No courses registered yet${canNew ? ' - press <b>New course structure</b> to create one.' : '.'}</p></div>`;
             else html += `<div class="course-grid">${list.map(b => {
                 const st = structOf(b), sm = st ? structSummary(st, b.level) : null;
@@ -5078,6 +5113,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                     </tbody></table></div></div>`;
             });
             html += structGrandHtml(sm, b, false);
+            const waiting = can('viewAll') ? Object.values(assignmentsMap).filter(a => !a.structModuleId && (a.courseKey === key || taskCourseKey(a) === key)) : [];
+            if (waiting.length) html += `<div class="binder-card unplaced-card"><div class="binder-head"><h4><i class="fas fa-inbox"></i> Typed by hand for this course - not in the structure yet</h4><span>${waiting.length} module(s)</span></div>
+                <div class="binder-body" style="overflow-x:auto;">${unplacedTableHtml(waiting, key)}</div></div>`;
             return html;
         }
         function structGrandHtml(sm, b, withIds) {
@@ -5225,6 +5263,162 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 .catch(err => alert("❌ Could not save the structure: " + (err.code || err.message) + "\nIf this says permission-denied, publish the updated Firestore rules."));
         }
 
+
+        // =====================================================================================
+        //  MANUAL MODULES  -  typed by hand in Task Allocation, waiting to be placed in a structure
+        // =====================================================================================
+        function manualCourseHtml(fac, d, uid) {
+            const list = facultyCourses(fac);
+            const typed = d.courseKey === '' && d.progTyped;
+            return `<select class="w-lg" style="font-size:0.78rem;" onchange="allocDraftManualCourse('${uid}','${d.k}', this.value)">
+                <option value="">- choose course / programme -</option>
+                ${list.map(b => `<option value="${esc(b.id)}" ${b.id === d.courseKey ? 'selected' : ''}>${esc(courseLabel(b))}</option>`).join('')}
+                <option value="__typed" ${typed ? 'selected' : ''}>✍️ Programme not listed - type its name</option></select>
+                ${typed ? `<input class="w-lg" placeholder="Programme name *" style="margin-top:4px;" value="${esc(d.programName)}" oninput="allocDraftInput('${uid}','${d.k}','programName',this.value)">` : ''}`;
+        }
+        function allocDraftManual(uid, k, on) {
+            const d = (allocDrafts[uid] || []).find(x => x.k === k); if (!d) return;
+            d.manual = !!on;
+            d.structModuleId = ''; d.semester = '';
+            if (on) { if (d.courseKey && !bindersMap[d.courseKey]) d.courseKey = ''; }
+            else { d.moduleName = ''; d.moduleCode = ''; d.contactHours = ''; d.credits = ''; d.progTyped = false; if (d.courseKey && !structOf(bindersMap[d.courseKey])) { d.courseKey = ''; d.programName = ''; } }
+            renderAllocation(true);
+        }
+        function allocDraftManualCourse(uid, k, key) {
+            const d = (allocDrafts[uid] || []).find(x => x.k === k); if (!d) return;
+            if (key === '__typed') { d.courseKey = ''; d.progTyped = true; d.programName = ''; d.courseFullName = ''; }
+            else if (!key) { d.courseKey = ''; d.progTyped = false; d.programName = ''; d.courseFullName = ''; }
+            else { const b = bindersMap[key] || {}; d.courseKey = key; d.progTyped = false; d.programName = b.programName || ''; d.courseFullName = b.fullName || b.programName || ''; if (!d.modality) d.modality = defaultModality(b); }
+            renderAllocation(true);
+        }
+
+        function unplacedTasks(fac) {
+            return Object.values(assignmentsMap).filter(a => !a.structModuleId && (!fac || fac === 'ALL' || taskFac(a) === fac))
+                .sort((x, y) => String(x.programName || '').localeCompare(String(y.programName || '')) || String(x.moduleCode || '').localeCompare(String(y.moduleCode || '')));
+        }
+        function updateUnplacedCount() {
+            const el = document.getElementById('unplaced-count'); if (!el) return;
+            const n = can('viewAll') ? unplacedTasks(isUni() ? 'ALL' : myFac()).length : 0;
+            el.textContent = n || ''; el.style.display = n ? 'inline-block' : 'none';
+        }
+        const placeSel = {};      // aid -> { key, si }
+        function structCourses(fac) { return Object.values(bindersMap).filter(b => b.programName && structOf(b) && (!fac || b.facultyId === fac)).sort((x, y) => String(x.fullName || x.programName).localeCompare(String(y.fullName || y.programName))); }
+        function placeTarget(a) {
+            const sel = placeSel[a.id] || {};
+            if (sel.key !== undefined) return sel.key;
+            const k = taskCourseKey(a) || a.courseKey || '';
+            return structOf(bindersMap[k]) ? k : '';
+        }
+        function placeSet(aid, field, val, rerender) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            const cur = placeSel[aid] || (placeSel[aid] = {});
+            if (field === 'key') { cur.key = val; cur.si = ''; } else cur[field] = val;
+            if (rerender) { if (isStepActive(25)) renderUnplaced(); if (isStepActive(24) && !structEdit) renderStructures(); }
+        }
+        function unplacedRowHtml(a, fixedKey) {
+            const fac = taskFac(a), edit = canEditStructure(fac);
+            const key = fixedKey || placeTarget(a), b = bindersMap[key], st = structOf(b);
+            const hit = st ? structFindCode(st, a.moduleCode) : null;
+            const regKey = taskCourseKey(a);
+            const prog = `${esc(a.courseFullName || a.programName || '—')}${regKey ? '' : ' <span class="pipe-badge pipe-returned" title="This programme is not a registered course">not registered</span>'}`;
+            let ctl = '<span style="color:#94a3b8; font-size:0.78rem;">View only (Dean of the faculty / Admin)</span>';
+            if (edit) {
+                const courses = structCourses(isUni() ? '' : fac);
+                const courseSel = fixedKey ? '' : `<select style="font-size:0.78rem; max-width:260px;" onchange="placeSet('${a.id}','key',this.value,true)">
+                    <option value="">- move into which course structure? -</option>
+                    ${courses.map(c => `<option value="${esc(c.id)}" ${c.id === key ? 'selected' : ''}>${esc((isUni() ? facShort(c.facultyId) + ' · ' : '') + (c.fullName || c.programName))}</option>`).join('')}</select>`;
+                const si = (placeSel[a.id] || {}).si;
+                const semSel = !st ? '' : hit ? `<div style="font-size:0.76rem; color:#065f46; margin-top:4px;"><i class="fas fa-link"></i> ${esc(a.moduleCode)} is already in this structure (${esc(hit.semName)}) - it will be linked to it.</div>`
+                    : `<select style="font-size:0.78rem; margin-top:4px;" onchange="placeSet('${a.id}','si',this.value,false)">
+                        <option value="">- into which semester? -</option>
+                        ${st.semesters.map((sem, i) => `<option value="${i}" ${String(si) === String(i) ? 'selected' : ''}>${esc(sem.name || 'Semester ' + (i + 1))} (${(sem.modules || []).length} modules)</option>`).join('')}
+                        <option value="__new" ${si === '__new' ? 'selected' : ''}>➕ A new semester at the end</option></select>`;
+                ctl = `${courseSel}${semSel}
+                    <div style="margin-top:6px;"><button class="btn btn-green btn-mini" ${st ? '' : 'disabled'} onclick="placeUnplaced('${a.id}'${fixedKey ? `,'${fixedKey}'` : ''})"><i class="fas ${hit ? 'fa-link' : 'fa-arrow-right'}"></i> ${hit ? 'Link to the structure' : 'Move into the structure'}</button></div>
+                    ${key && !st ? `<div style="font-size:0.74rem; color:#92400e; margin-top:4px;">This course has no structure yet - build it first.</div>` : ''}`;
+            }
+            return `<tr><td><b>${esc(a.moduleCode || '')}</b></td><td>${esc(a.moduleName || '')}${a.manualEntry ? '<div class="manual-note" style="margin-top:2px;"><i class="fas fa-pen-nib"></i> typed by hand</div>' : ''}</td>
+                <td style="font-size:0.82rem;">${esc(a.lecturerName || a.lecturerEmail || '')}<br>${pipeBadge(a)}</td>
+                <td style="font-size:0.82rem;">${fixedKey ? '' : facTag(fac) + ' '}${prog}</td>
+                <td class="calc">${esc(a.credits || '—')}</td><td style="font-size:0.8rem;">${esc(a.modality || '—')}</td><td>${ctl}</td></tr>`;
+        }
+        function unplacedTableHtml(list, fixedKey) {
+            return `<table class="royal-table"><thead><tr><th>Code</th><th>Module</th><th>Lecturer</th><th>${fixedKey ? 'Typed programme' : 'Programme (as typed)'}</th><th>Credits</th><th>Modality</th><th>Place in the structure</th></tr></thead>
+                <tbody>${list.map(a => unplacedRowHtml(a, fixedKey)).join('')}</tbody></table>`;
+        }
+        function renderUnplaced() {
+            const root = document.getElementById('unplaced-root'); if (!root) return;
+            updateUnplacedCount();
+            const fac = isUni() ? (selFac.unplaced || 'ALL') : myFac();
+            const list = unplacedTasks(fac);
+            let html = `<div class="dash-hero"><h2><i class="fas fa-inbox"></i> Unplaced Modules</h2><div class="gold-rule"></div>
+                <p>Modules allocated by typing them by hand (not chosen from a course structure). Move each one into a semester of its course structure - the structure's totals and averages update, and the task is linked to it. If the structure already has the same code, the task is simply linked to that module.${canEditStructure(fac) || can('manageUsers') ? ' Changing a saved structure needs two-factor verification.' : ''}</p></div>
+                ${isUni() ? facChipsHtml('unplaced', fac, { all: true }) : ''}`;
+            if (!list.length) html += `<div class="dash-card"><p style="color:#15803d; margin:0;"><i class="fas fa-check-circle"></i> Every allocated module is placed in a course structure.</p></div>`;
+            else {
+                const groups = {};
+                list.forEach(a => { const g = (taskFac(a) || '—') + '|' + (a.courseFullName || a.programName || 'No programme'); (groups[g] || (groups[g] = [])).push(a); });
+                Object.keys(groups).sort().forEach(g => {
+                    const [gf, gp] = g.split('|');
+                    html += `<div class="binder-card" style="--fc:${facColor(gf)}"><div class="binder-head"><h4>${facTag(gf)} ${esc(gp)}</h4><span>${groups[g].length} module(s) to place</span></div>
+                        <div class="binder-body" style="overflow-x:auto;">${unplacedTableHtml(groups[g])}</div></div>`;
+                });
+            }
+            root.innerHTML = html;
+        }
+        function structFindCode(st, code) {
+            const want = dupKey(code); if (!want) return null;
+            let r = null;
+            (st.semesters || []).forEach((sem, si) => (sem.modules || []).forEach(m => { if (!r && dupKey(m.code) === want) r = { m, si, semName: sem.name || 'Semester ' + (si + 1) }; }));
+            return r;
+        }
+        function placeUnplaced(aid, fixedKey) {
+            const a = assignmentsMap[aid]; if (!a) return;
+            const key = fixedKey || placeTarget(a), b = bindersMap[key], st = structOf(b);
+            if (!b) { alert("Please choose the course structure to move this module into."); return; }
+            if (!st) { alert("This course has no structure yet. Build the structure first, then move the module into it."); return; }
+            if (!canEditStructure(b.facultyId)) return denied("Only the Dean of this faculty or the Admin can change the course structure.");
+            const linkTask = (m, semName) => {
+                const t = nowIso(), w = whoStamp();
+                const upd = Object.assign({}, courseFieldsFor(key), { structModuleId: m.id, semester: semName, credits: String(m.credits || a.credits || ''), modality: m.modality || a.modality || '',
+                    manualEntry: false, placedAt: t, placedBy: w.by, updatedAt: t });
+                return db.collection('rasfahi_assignments').doc(aid).update(upd).then(() => {
+                    delete placeSel[aid];
+                    syncCodeIndexFor(Object.assign({}, a, upd));
+                    showToast(`✅ <b>${esc(a.moduleCode)}</b> is now in <b>${esc(b.fullName || b.programName)}</b> · ${esc(semName)}.`, true);
+                });
+            };
+            const hit = structFindCode(st, a.moduleCode);
+            if (hit) {
+                if (!confirm(`${a.moduleCode} is already in the structure of "${b.fullName || b.programName}" (${hit.semName}).\n\nLink this task to that module? (The structure is not changed.)`)) return;
+                linkTask(hit.m, hit.semName).catch(e => alert("❌ Could not link: " + (e.code || e.message)));
+                return;
+            }
+            const si = (placeSel[aid] || {}).si;
+            if (si === undefined || si === '') { alert("Please choose the semester to put the module in."); return; }
+            let credits = parseFloat(a.credits);
+            if (!(credits > 0)) {
+                const v = prompt(`How many credits is ${a.moduleCode} - ${a.moduleName}?`, '');
+                if (v === null) return;
+                credits = parseFloat(v);
+                if (!(credits > 0)) { alert("Please enter the credits (a number above 0)."); return; }
+            }
+            const modality = a.modality || defaultModality(b);
+            if (!modality) { alert("Please set the delivery modality of this task in Task Allocation first."); return; }
+            const draft = JSON.parse(JSON.stringify(st));
+            let idx = si === '__new' ? draft.semesters.length : parseInt(si, 10);
+            if (si === '__new') draft.semesters.push({ name: 'Semester ' + (draft.semesters.length + 1), modules: [] });
+            const sem = draft.semesters[idx]; if (!sem) { alert("That semester no longer exists - please choose again."); return; }
+            const m = { id: newStructModule().id, name: String(a.moduleName || '').trim(), code: dupKey(a.moduleCode), type: 'Core', modality: modality, credits: String(credits) };
+            (sem.modules || (sem.modules = [])).push(m);
+            const semName = sem.name || 'Semester ' + (idx + 1);
+            if (!confirm(`Move ${m.code} - ${m.name} (${m.credits} credits, ${m.modality})\ninto "${b.fullName || b.programName}" · ${semName}?\n\nThe structure totals will be updated. Changing a saved structure needs two-factor verification.`)) return;
+            require2FA(`Adding ${m.code} to the structure of ${b.fullName || b.programName}`).then(token => {
+                const sm = structSummary(draft, b.level), w = whoStamp();
+                return db.collection('rasfahi_binders').doc(key).set({ facultyId: b.facultyId, programName: b.programName, structure: draft, totalModules: sm.total.mods, credits: String(r1(sm.total.cr)),
+                    structureUpdatedAt: w.at, structureUpdatedBy: w.by, structureAuth: token }, { merge: true }).then(() => linkTask(m, semName));
+            }).catch(err => { if (err && err.message !== 'cancelled') alert("❌ Could not move the module: " + (err.code || err.message) + "\nIf this says permission-denied, publish the updated Firestore rules."); });
+        }
 
         // ----- allocation: choose which course structures to allocate from -----
         const allocStructPick = {};
@@ -5743,8 +5937,9 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if(num === 22) { if (!can('viewAll')) return denied("Module Code Check is for the Curriculum Department, Deans, Secretaries and the Admin."); renderCodeCheck(); }
             if(num === 23) renderModuleSearch();
             if(num === 24) renderStructures();
+            if(num === 25) { if (!can('viewAll')) return denied("Unplaced Modules is for the Deans, Secretaries, Curriculum Department and the Admin."); renderUnplaced(); }
             if(num === 21) { if (!can('viewAll')) return denied("The Course Archive is for the Curriculum Department, Deans, Secretaries and the Admin."); renderCourseArchive(); }
-            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].includes(num));
+            document.body.classList.toggle('rf-admin-page', [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25].includes(num));
             if(window.innerWidth <= 900) { document.getElementById('main-sidebar').classList.remove('mobile-open'); }
         }
 
