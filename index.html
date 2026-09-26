@@ -3160,7 +3160,45 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
         function stopAssignmentsWatch() { if (assignUnsub) { assignUnsub(); assignUnsub = null; } assignScope = null; assignmentsMap = {}; alertToastShown = false; updateTaskNav(); renderTaskAlerts(); }
 
+        // Copy of this browser's archive backups taken at page load, before any autosave can replace them.
+        const localArchiveSnapshot = (() => {
+            const snap = {};
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.indexOf('rasfahi_archive_') === 0) snap[k] = localStorage.getItem(k);
+                }
+            } catch (e) {}
+            return snap;
+        })();
+        // A lecturer's task outline that never reached the cloud (saved only in this browser) is
+        // sent up automatically, so the faculty dashboard can open it.
+        const healChecked = {};
+        function healOwnTaskOutlines() {
+            if (!auth.currentUser || !isOwnWorkspace() || !wsDocRef || !navigator.onLine) return;
+            const me = auth.currentUser.uid;
+            let local = null;
+            try { local = JSON.parse(localArchiveSnapshot['rasfahi_archive_' + me] || localStorage.getItem('rasfahi_archive_' + me) || 'null'); } catch (e) {}
+            const localCourses = (local && local.dbState && local.dbState.courses) || {};
+            myAssignmentsList().forEach(a => {
+                const id = a.courseId;
+                if (!id || healChecked[id]) return;
+                healChecked[id] = true;
+                wsDocRef.collection('courses').doc(id).get({ source: 'server' }).then(doc => {
+                    if (doc.exists) return;
+                    const c = dbState.courses[id] || localCourses[id];
+                    if (!c) return;
+                    if (!dbState.courses[id]) dbState.courses[id] = c;
+                    dirtyCourses.add(id);
+                    pushDirtyCoursesToCloud(false);
+                    showToast(`☁️ Your outline <b>${esc(a.moduleCode)}</b> was saved only on this computer - it has now been sent to the Cloud Archive.`, true);
+                    if (isStepActive(10)) renderArchive();
+                }).catch(() => { healChecked[id] = false; });
+            });
+        }
+
         function onAssignmentsChanged(prev, next, first) {
+            setTimeout(healOwnTaskOutlines, first ? 3500 : 500);
             const me = myUid();
             Object.values(next).forEach(a => {
                 if (a.lecturerUid !== me) return;
@@ -5317,7 +5355,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 return ref.collection('courses').get().then(snap => {
                     const courses = {};
                     snap.forEach(d => { courses[d.id] = d.data(); });
-                    if (!Object.keys(courses).length) { alert("This user has no saved outlines yet."); statusEl.innerHTML = 'Ready'; return false; }
+                    if (!Object.keys(courses).length) { alert("This user has no outlines in the Cloud Archive yet.\n\nIf they have worked on an outline, it is saved only in the browser of their own computer. Ask them to open RASFAHI there (same account) - it will be sent to the cloud automatically - then try again."); statusEl.innerHTML = 'Ready'; return false; }
                     wsUid = uid; wsDocRef = ref; wsOwnerInfo = ownerInfo || findAccount(uid);
                     activeCourseId = null; activeModuleId = null; resetSyncTracking();
                     dbState = { courses: courses };
@@ -5404,17 +5442,78 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (st === 'approved' && courseReleased(a)) return 'view';
             return null;
         }
+        // Find a lecturer's outline in their cloud archive. The task may still point to an old
+        // course id (e.g. the outline was re-imported), so fall back to the module id, then the module code.
+        function locateOutline(uid, cId, mId, code) {
+            const col = db.collection('rasfahi_users').doc(uid).collection('courses');
+            return col.get({ source: 'server' }).catch(() => col.get()).then(snap => {
+                let found = null;
+                snap.forEach(d => { const m = (d.data() || {}).modules || {}; if (!found && d.id === cId && m[mId]) found = { cId: d.id, mId: mId }; });
+                if (!found) snap.forEach(d => { const m = (d.data() || {}).modules || {}; if (!found && mId && m[mId]) found = { cId: d.id, mId: mId }; });
+                if (!found && code) {
+                    const want = dupKey(code);
+                    snap.forEach(d => {
+                        const m = (d.data() || {}).modules || {};
+                        Object.keys(m).forEach(id => { if (!found && dupKey(m[id].code) === want) found = { cId: d.id, mId: id }; });
+                    });
+                }
+                return { found: found, count: snap.size };
+            });
+        }
         function openOutlineFor(uid, cId, mId) {
-            const t = taskByModule(uid, mId), mode = taskOpenMode(t);
+            const t = taskByModule(uid, mId) || Object.values(assignmentsMap).find(a => a.lecturerUid === uid && a.courseId === cId) || null;
+            const mode = taskOpenMode(t);
             if (!mode) {
                 alert(t && t.stage === 'approved'
                     ? "This outline is approved by MQA. It will open (view only) once the Curriculum Department attaches the certificate and releases the course to the faculty."
                     : "This outline is with the Curriculum Department / MQA. The faculty can follow its progress, but it opens only after MQA approval and the certificate is released.");
                 return;
             }
-            forceReadOnly = (mode === 'view');
-            switchWorkspace(uid, findAccount(uid), cId, mId).then(ok => {
-                if (ok) switchStep(5, document.querySelectorAll('.nav-links li')[4]);
+            const me = myUid();
+            const goEditor = () => switchStep(5, document.querySelectorAll('.nav-links li')[4]);
+
+            // My own outline - open it from my own archive.
+            if (uid === me) {
+                const openOwn = () => {
+                    const c = dbState.courses[cId];
+                    if (c && c.modules && c.modules[mId]) { forceReadOnly = false; loadStateFromMemory(cId, mId, true); applyRoleUI(); goEditor(); return true; }
+                    return false;
+                };
+                if (isOwnWorkspace() && openOwn()) return;
+                Promise.resolve(isOwnWorkspace() ? true : switchWorkspace(me)).then(() => {
+                    let tries = 0;
+                    const wait = setInterval(() => {
+                        if (openOwn()) { clearInterval(wait); return; }
+                        if (++tries > 20) { clearInterval(wait); alert("This outline was not found in your archive. Open My Tasks and press \"Start working\" (or \"Import from Word\") again."); }
+                    }, 300);
+                });
+                return;
+            }
+
+            const statusEl = document.getElementById('sync-status-text');
+            if (statusEl) statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finding the outline...';
+            locateOutline(uid, cId, mId, t && t.moduleCode).then(r => {
+                if (statusEl) statusEl.innerHTML = 'Ready';
+                if (!r.found) {
+                    const acc = findAccount(uid);
+                    const who = (t && (t.lecturerName || t.lecturerEmail)) || acc.name || acc.email || 'the lecturer';
+                    const what = t ? (t.moduleCode + ' - ' + t.moduleName) : 'this module';
+                    alert("⚠️ The outline \"" + what + "\" of " + who + " has not reached the Cloud Archive yet" + (r.count ? "" : " (their cloud archive is empty)") + ".\n\n" +
+                          "It is most likely saved only in the browser of the computer they worked on.\n\n" +
+                          "Please ask " + who + " to open RASFAHI on that same computer and browser, with the same account. " +
+                          "It will be sent to the cloud automatically - or they can open the outline and press \"Cloud Save\". " +
+                          "The bottom of their sidebar must say \"Saved to Cloud\". Then open it here again.");
+                    return;
+                }
+                // The task pointed to an old place - repair the link so it opens directly next time.
+                if (t && (t.courseId !== r.found.cId || t.moduleId !== r.found.mId) && can('allocate')) {
+                    db.collection('rasfahi_assignments').doc(t.id).update({ courseId: r.found.cId, moduleId: r.found.mId, updatedAt: nowIso() }).catch(() => {});
+                }
+                forceReadOnly = (mode === 'view');
+                switchWorkspace(uid, findAccount(uid), r.found.cId, r.found.mId).then(ok => { if (ok) goEditor(); });
+            }).catch(err => {
+                if (statusEl) statusEl.innerHTML = 'Ready';
+                alert("❌ Could not open this outline: " + (err.code || err.message) + "\nIf this says permission-denied, publish the Firestore rules from the Manage Users page.");
             });
         }
 
@@ -5817,48 +5916,41 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             isProgrammaticChange = false;
         }
 
+        // Loads one module into the form ONLY to build an export. Clears the previous module first
+        // (so its tables don't leak into the next one) and never crashes on empty/new outlines.
+        function applyInputsSilent(inputs) {
+            for (const [id, valObj] of Object.entries(inputs || {})) {
+                const el = document.getElementById(id);
+                if (!el) continue;
+                if (typeof valObj === 'object' && valObj !== null && valObj.checkbox) el.checked = !!valObj.checked;
+                else if (el.hasAttribute('contenteditable')) {
+                    el.innerText = (typeof valObj === 'object' && valObj !== null) ? valObj.value : valObj;
+                    if (typeof valObj === 'object' && valObj !== null && valObj.manual) el.setAttribute('data-manual', valObj.manual);
+                } else el.value = (typeof valObj === 'object' && valObj !== null) ? (valObj.value == null ? '' : valObj.value) : (valObj == null ? '' : valObj);
+            }
+        }
+        function resetModuleForm() {
+            ['tbody-matrix', 'tbody-sch', 'tbody-assess'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+            document.querySelectorAll('.mod-data').forEach(el => {
+                if (el.hasAttribute('contenteditable')) { el.innerText = '0'; el.removeAttribute('data-manual'); }
+                else if (el.type !== 'checkbox') el.value = '';
+            });
+        }
         function loadStateSilent(cId, mId) {
-            let course = dbState.courses[cId]; if(!course) return;
-            if (course.programData.inputs) { 
-                for (const [id, valObj] of Object.entries(course.programData.inputs)) { 
-                    let el = document.getElementById(id); 
-                    if (el) { 
-                        if(typeof valObj === 'object' && valObj !== null && valObj.checkbox) {
-                            el.checked = !!valObj.checked;
-                        } else if(el.hasAttribute('contenteditable')) {
-                            el.innerText = typeof valObj === 'object' ? valObj.value : valObj;
-                            if(typeof valObj === 'object' && valObj.manual) el.setAttribute('data-manual', valObj.manual);
-                        } else {
-                            el.value = typeof valObj === 'object' ? valObj.value : valObj;
-                        } 
-                    } 
-                } 
-            }
-            if (mId && course.modules[mId]) {
-                let mData = course.modules[mId].moduleData;
-                if(mData.matrixHtml !== undefined) document.getElementById('tbody-matrix').innerHTML = mData.matrixHtml;
-                if(mData.schHtml !== undefined) document.getElementById('tbody-sch').innerHTML = mData.schHtml;
-                if(mData.assessHtml !== undefined) document.getElementById('tbody-assess').innerHTML = mData.assessHtml;
-                
-                if (mData.inputs) { 
-                    for (const [id, valObj] of Object.entries(mData.inputs)) { 
-                        let el = document.getElementById(id); 
-                        if (el) { 
-                            if(typeof valObj === 'object' && valObj !== null && valObj.checkbox) {
-                                el.checked = !!valObj.checked;
-                            } else if(el.hasAttribute('contenteditable')) {
-                                el.innerText = typeof valObj === 'object' ? valObj.value : valObj;
-                                if(typeof valObj === 'object' && valObj.manual) el.setAttribute('data-manual', valObj.manual);
-                            } else {
-                                el.value = typeof valObj === 'object' ? valObj.value : valObj;
-                            } 
-                        } 
-                    } 
-                }
-            }
+            const course = dbState.courses[cId]; if (!course) return;
+            applyInputsSilent((course.programData || {}).inputs);
+            const mod = (course.modules || {})[mId];
+            if (!mod) return;
+            const mData = mod.moduleData || {};
+            resetModuleForm();
+            document.getElementById('tbody-matrix').innerHTML = mData.matrixHtml || '';
+            document.getElementById('tbody-sch').innerHTML = mData.schHtml || '';
+            document.getElementById('tbody-assess').innerHTML = mData.assessHtml || '';
+            applyInputsSilent(mData.inputs);
+            if (!document.getElementById('m-name-rtl').value && !document.getElementById('m-name-ltr').value) document.getElementById('m-name-rtl').value = mod.name || '';
+            if (!document.getElementById('m-code').value) document.getElementById('m-code').value = mod.code || '';
             recalculateAllRows();
         }
-
         function genId(prefix) {
             if (window.crypto && typeof window.crypto.randomUUID === 'function') {
                 return prefix + "_" + window.crypto.randomUUID();
@@ -8005,19 +8097,33 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         }
 
         function buildFullProgramHTML() {
+            if (!activeCourseId || !dbState.courses[activeCourseId]) throw new Error('NO_COURSE');
             saveCurrentToDB();
-            let originalModId = activeModuleId; let originalCourseId = activeCourseId;
-            let html = buildProgramHTMLPartA_B(); 
+            const cId = activeCourseId, origMod = activeModuleId;
+            const course = dbState.courses[cId];
+            let html = buildProgramHTMLPartA_B();
             html += `<div class="export-wrapper">
                         <div class="page-break"></div>
                         <h1>PART C: Module Outlines</h1>
                      </div>`;
-            
-            let course = dbState.courses[activeCourseId];
-            for(const mId of Object.keys(course.modules)) { loadStateSilent(activeCourseId, mId); html += buildModuleHTML(); }
-            loadStateFromMemory(originalCourseId, originalModId, true);
+            const wasProgrammatic = isProgrammaticChange;
+            isProgrammaticChange = true;   // nothing typed into the form while exporting is saved
+            try {
+                for (const mId of Object.keys(course.modules || {})) { loadStateSilent(cId, mId); html += buildModuleHTML(); }
+            } finally {
+                // Restore the screen WITHOUT saving - before, the last module's content was saved over the active module.
+                resetModuleForm();
+                loadStateFromMemory(cId, origMod, false);
+                recalculateAllRows(); calcF3Total(); applyLockState();
+                isProgrammaticChange = wasProgrammatic;
+            }
             html += buildProgramHTMLPartD_Annex();
             return html;
+        }
+        function reportExportError(e) {
+            console.error('[RASFAHI] export failed', e);
+            if (e && e.message === 'NO_COURSE') alert("Please open a course first (Archive Bank, My Tasks or All Outlines), then export the Full Program Document.");
+            else alert("❌ The document could not be built: " + (e && (e.message || e)));
         }
 
         // --- PREVIEW MODAL ---
@@ -8047,6 +8153,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
 
         function showPreview(type) {
             let htmlContent = "", fileName = "", title = "";
+            try {
             if (type === 'module') {
                 htmlContent = buildModuleHTML();
                 fileName = `${document.getElementById('m-code').value}_Module_Outline`;
@@ -8060,6 +8167,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 fileName = `${document.getElementById('p-name').value}_Revision_Form3`;
                 title = 'Revision Form 3 - Preview';
             }
+            } catch (e) { reportExportError(e); return; }
 
             currentPreviewHtmlContent = htmlContent;
             currentPreviewFileName = fileName;
@@ -8290,7 +8398,13 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             wrapper.style.zIndex = '9999';
             wrapper.style.opacity = '0.01'; 
             
-            const htmlContent = type === 'module' ? buildModuleHTML() : (type === 'structure' ? buildProgramHTMLPartA_B() : type === 'form3' ? buildForm3HTML() : buildFullProgramHTML());
+            let htmlContent = '';
+            try {
+                htmlContent = type === 'module' ? buildModuleHTML() : (type === 'structure' ? buildProgramHTMLPartA_B() : type === 'form3' ? buildForm3HTML() : buildFullProgramHTML());
+            } catch (e) {
+                wrapper.style.left = '-10000px'; wrapper.style.zIndex = '-1000';
+                reportExportError(e); return;
+            }
             const fileName = type === 'module' ? `${document.getElementById('m-code').value}_Module_Outline` : (type === 'structure' ? `${document.getElementById('p-name').value}_Program_Structure` : type === 'form3' ? `${document.getElementById('p-name').value}_Revision_Form3` : `MQA_Full_Program_Document`);
 
             if(format === 'word') {
