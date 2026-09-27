@@ -1026,6 +1026,26 @@
         #preview-info details table { width:100%; border-collapse:collapse; font-size:0.8rem; margin-top:6px; }
         #preview-info details td, #preview-info details th { border:1px solid #e2e8f0; padding:4px 6px; text-align:left; }
         .log-table td { font-size:0.82rem; vertical-align:top; }
+        .log-table tr.log-day td { background:#0b1f4d; color:#fff; font-weight:700; font-size:0.85rem; padding:8px 10px; }
+        .log-table tr.log-day td span { opacity:0.75; font-weight:500; }
+        .log-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .log-filters input[type=text] { flex:1; min-width:220px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; }
+        .log-filters select, .log-filters input[type=date] { padding:7px; border:1px solid #cbd5e1; border-radius:6px; }
+        .log-filters label { font-size:0.82rem; color:#475569; display:flex; gap:4px; align-items:center; }
+        .log-act.lc-view { background:#e0f2fe; color:#075985; } .log-act.lc-download { background:#ede9fe; color:#5b21b6; } .log-act.lc-edit { background:#fef3c7; color:#92400e; }
+        .log-act.lc-submit { background:#dcfce7; color:#14532d; } .log-act.lc-amend { background:#ffedd5; color:#9a3412; } .log-act.lc-request { background:#fae8ff; color:#86198f; }
+        .log-act.lc-delete { background:#fee2e2; color:#991b1b; } .log-act.lc-task { background:#e0e7ff; color:#1e3a8a; } .log-act.lc-structure { background:#ccfbf1; color:#115e59; } .log-act.lc-faculty { background:#f1f5f9; color:#334155; }
+        .req-fac-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:14px; }
+        .req-fac-card { background:#fff; border-radius:14px; border-top:6px solid var(--fc); box-shadow:0 4px 14px rgba(15,23,42,0.08); padding:14px 16px; cursor:pointer; transition:transform .15s; }
+        .req-fac-card:hover { transform:translateY(-2px); }
+        .req-fac-card.empty { opacity:0.55; }
+        .rfc-top { display:flex; justify-content:space-between; align-items:center; }
+        .rfc-open { background:#a21caf; color:#fff; border-radius:999px; font-size:0.75rem; font-weight:700; padding:2px 9px; }
+        .rfc-name { font-weight:700; color:#0b1f4d; margin:8px 0 4px; }
+        .rfc-sub { font-size:0.8rem; color:#64748b; }
+        .fac-add-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+        .fac-add-row input { padding:7px; border:1px solid #cbd5e1; border-radius:6px; }
+        .fac-add-row input[type=color] { width:46px; height:36px; padding:2px; }
         .log-act { display:inline-block; padding:2px 8px; border-radius:999px; background:#e0e7ff; color:#1e3a8a; font-weight:700; font-size:0.75rem; }
         .log-act.del { background:#fee2e2; color:#991b1b; } .log-act.done { background:#dcfce7; color:#14532d; } .log-act.edit { background:#fef3c7; color:#92400e; } .log-act.req { background:#fae8ff; color:#86198f; }
         .req-st { display:inline-block; padding:2px 8px; border-radius:999px; font-weight:700; font-size:0.75rem; }
@@ -1861,6 +1881,7 @@ Upon successful completion of this Module, students will have the knowledge and 
                         <button class="btn btn-blue" style="margin-top:15px;" onclick="createUserAccount()"><i class="fas fa-user-plus"></i> Create Account</button>
                     </div>
 
+                    <div id="fac-admin-box"></div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                         <h3 style="color:var(--royal-blue); margin:0;"><i class="fas fa-users"></i> User Directory</h3>
                         <button class="btn btn-outline btn-mini" onclick="renderUserDirectory()"><i class="fas fa-sync"></i> Refresh</button>
@@ -2377,7 +2398,7 @@ service cloud.firestore {
             show('nav-unplaced', can('viewAll'));
             show('nav-logs', !!auth.currentUser);
             show('nav-requests', !!auth.currentUser);
-            startRequestsWatch(); startTombWatch();
+            startRequestsWatch(); startTombWatch(); startFacultiesWatch();
             show('global-search-wrap', !!auth.currentUser, 'block');
             show('nav-codes', can('viewAll'));
             startCodesWatch();
@@ -5756,7 +5777,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             if (uid === me) {
                 const openOwn = () => {
                     const c = dbState.courses[cId];
-                    if (c && c.modules && c.modules[mId]) { forceReadOnly = false; loadStateFromMemory(cId, mId, true); applyRoleUI(); goEditor(); return true; }
+                    if (c && c.modules && c.modules[mId]) { forceReadOnly = false; loadStateFromMemory(cId, mId, true); applyRoleUI(); goEditor(); auditLog('opened outline', logTarget(cId, mId), ''); return true; }
                     return false;
                 };
                 if (isOwnWorkspace() && openOwn()) return;
@@ -6016,7 +6037,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                 document.getElementById('top-title').innerText = txt;
             }
             if(num === 10) renderArchive(); 
-            if(num === 14) renderUserDirectory();
+            if(num === 14) { renderUserDirectory(); renderFacultyAdmin(); }
             if(num === 15) { renderAllOutlines(false, true); renderStatusDashboard(); }
             if(num === 16) { if (!can('dashboard')) return denied("The dashboard is for the Dean and Admin."); loadAccounts(false).then(renderDashboard); renderDashboard(); }
             if(num === 17) { if (!can('allocate')) return denied("Only the Dean or Admin can allocate tasks."); loadAccounts(true).then(() => renderAllocation(true)); renderAllocation(true); }
@@ -6524,7 +6545,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
                         <div><div style="font-weight:600; font-size:1.1rem; color:var(--royal-dark);">${esc(mod.code)} - ${esc(mod.name || 'Unnamed Module')} ${isModActive ? '<span class="active-badge" style="background:var(--royal-blue); color:var(--royal-white);">Loaded</span>' : ''}</div>
                         <div class="module-meta-line">${moduleMetaLineHtml(mod.meta)}</div></div>
                         <div style="display:flex; gap:6px; flex-shrink:0;">
-                            <button class="btn btn-outline" style="padding:5px 10px; font-size:0.85rem;" onclick="loadStateFromMemory('${cId}', '${mId}')">Load</button>
+                            <button class="btn btn-outline" style="padding:5px 10px; font-size:0.85rem;" onclick="loadStateFromMemory('${cId}', '${mId}'); auditLog('opened outline', logTarget('${cId}', '${mId}'), 'Archive Bank')">Load</button>
                             <button class="btn btn-outline" style="padding:5px 10px; font-size:0.85rem;" title="View the outline" onclick="viewOutline(wsUid, '${cId}', '${mId}')"><i class="fas fa-eye"></i></button>
                             <button class="btn btn-outline" style="padding:5px 10px; font-size:0.85rem;" title="Edit history" onclick="showModuleHistory('${cId}', '${mId}')"><i class="fas fa-history"></i></button>
                             ${canDel ? `<button class="btn btn-danger" style="padding:5px 10px; font-size:0.85rem;" onclick="deleteModule('${cId}', '${mId}')"><i class="fas fa-times"></i></button>` : ''}
@@ -8801,10 +8822,28 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushEditLog(); });
         window.addEventListener('pagehide', flushEditLog);
 
-        var logRows = [], logFilter = { q: '', act: '' }, logLoading = false;
+        // ---------- ACTIVITY LOG (clear history: every view, download, edit ...) ----------
+        const LOG_CATS = [
+            ['view', '👁 Views & opens', /^(viewed|opened|previewed|printed)/],
+            ['download', '⬇️ Downloads & exports', /^(exported|downloaded)/],
+            ['edit', '✏️ Edits & drafts', /^(edited|created|draft)/],
+            ['submit', '✅ All Done', /^All Done/],
+            ['amend', '↩️ Amendments', /amendment/],
+            ['request', '📨 Requests', /request/],
+            ['delete', '🗑️ Deletions', /^deleted/],
+            ['task', '📌 Tasks', /^task/],
+            ['structure', '🧩 Structures', /structure|placed/],
+            ['faculty', '🏛️ Faculties', /^faculty/]
+        ];
+        function logCat(a) { for (const c of LOG_CATS) if (c[2].test(a || '')) return c[0]; return 'other'; }
+        const pad2 = n => String(n).padStart(2, '0');
+        function dayKeyOf(iso) { const d = new Date(iso); return isNaN(d) ? '' : d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+        function timeOf(iso) { const d = new Date(iso); return isNaN(d) ? '' : pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+        function dayTitle(k) { const d = new Date(k + 'T00:00:00'); return isNaN(d) ? k : d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
+        var logRows = [], logFilter = { q: '', cat: '', fac: '', who: '', from: '', to: '' }, logLoading = false;
         function loadLogs() {
             const col = db.collection('rasfahi_logs'), me = myUid(), qs = [];
-            if (isUni()) qs.push(col.orderBy('at', 'desc').limit(2000));
+            if (isUni()) qs.push(col.orderBy('at', 'desc').limit(3000));
             else {
                 if (can('viewAll') && myFac()) qs.push(col.where('facultyId', '==', myFac()));
                 qs.push(col.where('uid', '==', me)); qs.push(col.where('ownerUid', '==', me));
@@ -8812,22 +8851,30 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             return Promise.all(qs.map(q => q.get().catch(e => { console.warn('[RASFAHI] log read failed', e && e.code); return null; }))).then(snaps => {
                 const map = {};
                 snaps.forEach(sn => sn && sn.forEach(d => { map[d.id] = Object.assign({ id: d.id }, d.data()); }));
-                logRows = Object.values(map).sort((a, b) => String(b.at || '').localeCompare(String(a.at || ''))).slice(0, 3000);
+                logRows = Object.values(map).sort((a, b) => String(b.at || '').localeCompare(String(a.at || ''))).slice(0, 5000);
             });
         }
         function renderLogs(reload) {
             const root = document.getElementById('logs-root'); if (!root) return;
             if (!document.getElementById('log-body')) {
                 root.innerHTML = `<div class="dash-hero"><h2><i class="fas fa-clipboard-list"></i> Activity Log</h2><div class="gold-rule"></div>
-                    <p>Every time someone opens, views, edits, saves a draft, finishes (All Done), sends for amendment, exports, requests or deletes an outline, it is recorded here with the date and time, the person and what was done. Entries cannot be changed or removed.${isUni() ? '' : can('viewAll') ? ' You see the activity of your faculty, and your own.' : ' You see your own activity and the activity on your outlines.'}</p></div>
-                    <div class="dash-card"><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-                        <input type="text" id="log-q" placeholder="Search person, module, course, details..." oninput="logFilter.q=this.value; clearTimeout(window._lgT); window._lgT=setTimeout(renderLogBody,250);" style="flex:1; min-width:220px; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
-                        <select id="log-act" onchange="logFilter.act=this.value; renderLogBody();" style="padding:8px; border-radius:6px;"></select>
-                        <button class="btn btn-outline btn-mini" onclick="renderLogs(true)"><i class="fas fa-sync"></i> Refresh</button>
-                        <button class="btn btn-outline btn-mini" onclick="exportLogsCsv()"><i class="fas fa-file-csv"></i> Download (CSV)</button>
-                        <span id="log-count" style="color:#64748b; font-size:0.85rem;"></span></div>
-                    <div id="log-body"></div></div>`;
+                    <p>The full history of the system: every time someone <b>opens or views</b> an outline or document, <b>downloads or exports</b> it (PDF, Word, samples, backups, certificates), <b>edits</b> it, saves a <b>draft</b>, presses <b>All Done</b>, sends it for <b>amendment</b>, makes a <b>request</b>, or <b>deletes</b> something - with the date, time, person and what was done. Entries can never be changed or removed.${isUni() ? '' : can('viewAll') ? ' You see the activity of your faculty, and your own.' : ' You see your own activity and the activity on your outlines.'}</p></div>
+                    <div class="dash-card">
+                        <div id="log-cats" class="status-chips" style="margin-bottom:10px;"></div>
+                        <div class="log-filters">
+                            <input type="text" id="log-q" placeholder="Search person, module, course, details..." oninput="logFilter.q=this.value; clearTimeout(window._lgT); window._lgT=setTimeout(renderLogBody,250);">
+                            ${isUni() ? `<select id="log-fac" onchange="logFilter.fac=this.value; renderLogBody();"></select>` : ''}
+                            <select id="log-who" onchange="logFilter.who=this.value; renderLogBody();"></select>
+                            <label>From <input type="date" id="log-from" onchange="logFilter.from=this.value; renderLogBody();"></label>
+                            <label>To <input type="date" id="log-to" onchange="logFilter.to=this.value; renderLogBody();"></label>
+                            <button class="btn btn-outline btn-mini" onclick="logFilter={ q:'', cat:'', fac:'', who:'', from:'', to:'' }; document.getElementById('logs-root').innerHTML=''; renderLogs(false);"><i class="fas fa-eraser"></i> Clear filters</button>
+                            <button class="btn btn-outline btn-mini" onclick="renderLogs(true)"><i class="fas fa-sync"></i> Refresh</button>
+                            <button class="btn btn-outline btn-mini" onclick="exportLogsCsv()"><i class="fas fa-file-csv"></i> Download (CSV)</button>
+                        </div>
+                        <div id="log-count" style="color:#64748b; font-size:0.85rem; margin:8px 0;"></div>
+                        <div id="log-body"></div></div>`;
                 document.getElementById('log-q').value = logFilter.q;
+                document.getElementById('log-from').value = logFilter.from; document.getElementById('log-to').value = logFilter.to;
             }
             if (reload) {
                 flushEditLog();
@@ -8837,27 +8884,58 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             }
             renderLogBody();
         }
+        function logFiltered(skipCat) {
+            const q = logFilter.q.toLowerCase().trim();
+            return logRows.filter(r => {
+                if (!skipCat && logFilter.cat && logCat(r.action) !== logFilter.cat) return false;
+                if (logFilter.fac && (r.facultyId || '') !== (logFilter.fac === 'NONE' ? '' : logFilter.fac)) return false;
+                if (logFilter.who && (r.email || '') !== logFilter.who) return false;
+                const dk = dayKeyOf(r.at);
+                if (logFilter.from && dk < logFilter.from) return false;
+                if (logFilter.to && dk > logFilter.to) return false;
+                return !q || [r.name, r.email, r.action, r.ownerName, r.courseName, r.moduleCode, r.moduleName, r.details].join(' ').toLowerCase().includes(q);
+            });
+        }
+        function logWhatHtml(r) {
+            const what = r.moduleCode ? `<b>${esc(r.moduleCode)}</b> ${esc(r.moduleName || '')}` : (r.courseName ? `<b>${esc(r.courseName)}</b>` : '');
+            const course = r.moduleCode && r.courseName ? `<br><small>Course: ${esc(r.courseName)}</small>` : '';
+            const owner = r.ownerName && r.ownerUid !== r.uid ? `<br><small>Belongs to: ${esc(r.ownerName)}</small>` : '';
+            const view = r.courseId && r.ownerUid && !/^deleted/.test(r.action) ? ` <a href="javascript:void(0)" title="View it" onclick="viewOutline('${esc(r.ownerUid)}','${esc(r.courseId)}','${esc(r.moduleId || '')}')"><i class="fas fa-eye"></i></a>` : '';
+            return (what || '<span style="color:#94a3b8;">—</span>') + view + course + owner;
+        }
         function renderLogBody() {
             const body = document.getElementById('log-body'); if (!body) return;
-            const acts = Array.from(new Set(logRows.map(r => r.action))).sort();
-            const sel = document.getElementById('log-act');
-            if (sel) sel.innerHTML = '<option value="">All actions</option>' + acts.map(a => `<option ${a === logFilter.act ? 'selected' : ''}>${esc(a)}</option>`).join('');
-            const q = logFilter.q.toLowerCase().trim();
-            const rows = logRows.filter(r => (!logFilter.act || r.action === logFilter.act) && (!q || [r.name, r.email, r.action, r.ownerName, r.courseName, r.moduleCode, r.moduleName, r.details].join(' ').toLowerCase().includes(q)));
-            const cls = a => /delet/.test(a) ? 'del' : /All Done|completed/.test(a) ? 'done' : /edit|draft|amend|created/.test(a) ? 'edit' : /request/.test(a) ? 'req' : '';
-            const cnt = document.getElementById('log-count'); if (cnt) cnt.textContent = `${rows.length} of ${logRows.length} entries`;
-            body.innerHTML = rows.length ? `<div style="overflow-x:auto;"><table class="royal-table log-table"><thead><tr><th>Date &amp; time</th><th>Who</th><th>Action</th><th>Outline</th><th>Details</th></tr></thead><tbody>${rows.slice(0, 1000).map(r => `<tr>
-                    <td style="white-space:nowrap;">${fmtDate(r.at)}</td><td>${esc(r.name || r.email)}<br><small>${esc(r.email)}</small> ${roleBadge(r.role)}</td>
-                    <td><span class="log-act ${cls(r.action)}">${esc(r.action)}</span></td>
-                    <td>${r.moduleCode ? '<b>' + esc(r.moduleCode) + '</b> ' + esc(r.moduleName || '') : ''}${r.courseName ? '<br><small>' + esc(r.courseName) + '</small>' : ''}${r.ownerName ? '<br><small>Owner: ' + esc(r.ownerName) + '</small>' : ''}
-                        ${r.courseId && r.ownerUid && !/^deleted/.test(r.action) ? `<br><a href="javascript:void(0)" onclick="viewOutline('${esc(r.ownerUid)}','${esc(r.courseId)}','${esc(r.moduleId || '')}')"><i class="fas fa-eye"></i> view</a>` : ''}</td>
-                    <td style="max-width:420px; white-space:pre-wrap;">${esc(r.details || '')}</td></tr>`).join('')}</tbody></table></div>${rows.length > 1000 ? '<p style="color:#64748b;">Showing the latest 1000 - search to narrow down, or download the CSV.</p>' : ''}`
-                : '<p style="color:#64748b;">No activity recorded yet.</p>';
+            const base = logFiltered(true), rows = logFiltered(false);
+            const counts = {}; base.forEach(r => { const c = logCat(r.action); counts[c] = (counts[c] || 0) + 1; });
+            const cats = document.getElementById('log-cats');
+            if (cats) cats.innerHTML = `<div class="status-chip ${!logFilter.cat ? 'active' : ''}" onclick="logFilter.cat=''; renderLogBody();"><b>${base.length}</b>All activity</div>`
+                + LOG_CATS.concat([['other', '• Other']]).filter(c => counts[c[0]]).map(c => `<div class="status-chip ${logFilter.cat === c[0] ? 'active' : ''}" onclick="logFilter.cat='${c[0]}'; renderLogBody();"><b>${counts[c[0]]}</b>${c[1]}</div>`).join('');
+            const who = document.getElementById('log-who');
+            if (who) { const ppl = {}; logRows.forEach(r => { if (r.email) ppl[r.email] = r.name || r.email; });
+                who.innerHTML = '<option value="">Everyone</option>' + Object.entries(ppl).sort((a, b) => a[1].localeCompare(b[1])).map(([e, n]) => `<option value="${esc(e)}" ${logFilter.who === e ? 'selected' : ''}>${esc(n)}</option>`).join(''); }
+            const fs = document.getElementById('log-fac');
+            if (fs) fs.innerHTML = '<option value="">All faculties</option>' + FACULTIES.map(f => `<option value="${f.id}" ${logFilter.fac === f.id ? 'selected' : ''}>${esc(f.id + ' - ' + f.name)}</option>`).join('') + `<option value="NONE" ${logFilter.fac === 'NONE' ? 'selected' : ''}>University level / none</option>`;
+            const cnt = document.getElementById('log-count'); if (cnt) cnt.textContent = `${rows.length} entr${rows.length === 1 ? 'y' : 'ies'} shown (of ${logRows.length} loaded)`;
+            if (!rows.length) { body.innerHTML = '<p style="color:#64748b;">No activity matches.</p>'; return; }
+            let html = '<div style="overflow-x:auto;"><table class="royal-table log-table"><thead><tr><th>Time</th><th>Who</th><th>What they did</th><th>Outline / document</th><th>Details</th></tr></thead><tbody>', day = '';
+            rows.slice(0, 1500).forEach(r => {
+                const dk = dayKeyOf(r.at);
+                if (dk !== day) { day = dk; const n = rows.filter(x => dayKeyOf(x.at) === dk).length; html += `<tr class="log-day"><td colspan="5"><i class="fas fa-calendar-day"></i> ${esc(dayTitle(dk))} <span>· ${n} entr${n === 1 ? 'y' : 'ies'}</span></td></tr>`; }
+                html += `<tr><td style="white-space:nowrap;"><b>${timeOf(r.at)}</b></td>
+                    <td>${esc(r.name || r.email)} ${roleBadge(r.role)}<br><small>${esc(r.email)}</small>${isUni() && r.facultyId ? ' ' + facTag(r.facultyId) : ''}</td>
+                    <td><span class="log-act lc-${logCat(r.action)}">${esc(r.action)}</span></td>
+                    <td>${logWhatHtml(r)}</td>
+                    <td style="max-width:420px; white-space:pre-wrap;">${esc(r.details || '')}</td></tr>`;
+            });
+            body.innerHTML = html + '</tbody></table></div>' + (rows.length > 1500 ? '<p style="color:#64748b;">Showing the latest 1500 - narrow the filters, or download the CSV for everything.</p>' : '');
         }
         function exportLogsCsv() {
-            const cols = ['at', 'name', 'email', 'role', 'action', 'ownerName', 'courseName', 'moduleCode', 'moduleName', 'details'];
-            const csv = [cols.join(',')].concat(logRows.map(r => cols.map(c => '"' + String(r[c] == null ? '' : r[c]).replace(/"/g, '""') + '"').join(','))).join('\r\n');
+            const rows = logFiltered(false);
+            const cols = [['Date', r => dayKeyOf(r.at)], ['Time', r => timeOf(r.at)], ['Person', r => r.name], ['Email', r => r.email], ['Role', r => r.role], ['Faculty', r => r.facultyId],
+                          ['Category', r => logCat(r.action)], ['Action', r => r.action], ['Module code', r => r.moduleCode], ['Module', r => r.moduleName], ['Course', r => r.courseName], ['Belongs to', r => r.ownerName], ['Details', r => r.details]];
+            const csv = [cols.map(c => c[0]).join(',')].concat(rows.map(r => cols.map(c => '"' + String(c[1](r) == null ? '' : c[1](r)).replace(/"/g, '""') + '"').join(','))).join('\r\n');
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); a.download = `RASFAHI_Activity_Log_${localDay()}.csv`; a.click();
+            auditLog('downloaded activity log', {}, `${rows.length} entries (CSV)`);
         }
 
         // ---------- lecturer: save draft (the work stays open and is marked as a draft) ----------
@@ -8972,6 +9050,7 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const a = actor(), t = nowIso();
             const doc = Object.assign({}, ctx, { scope: scope, type: type, message: msg, byUid: myUid(), byEmail: a.email, byName: a.name || a.email, byRole: a.role,
                 facultyId: (ctx.ownerUid && accFac(ctx.ownerUid)) || myFac() || '', at: t, status: 'open' });
+            doc.courseKey = reqCourseKeyFor(doc); if (doc.courseKey) doc.facultyId = bindersMap[doc.courseKey].facultyId || doc.facultyId;
             db.collection('rasfahi_requests').add(doc).then(ref => {
                 const what = scope === 'course' ? `the whole course document "${doc.courseName}"` : `the module outline ${doc.moduleCode} - ${doc.moduleName} (course "${doc.courseName}")`;
                 const text = `${reqWord(type)} request from ${doc.byName} (${doc.byEmail}, ${ROLE_LABELS[normalizeRole(doc.byRole)] || doc.byRole})\n\nFor: ${what}\nOutline owner: ${doc.ownerName || '-'}\n\n${msg}\n\nOpen RASFAHI > Change Requests to act on it. (Request ${ref.id})`;
@@ -9008,6 +9087,38 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             }, err => console.warn('[RASFAHI] requests watch failed', err && err.code));
         }
         function updateReqCount() { const el = document.getElementById('req-count'); if (!el) return; const n = reqRows.filter(r => r.status === 'open').length; el.textContent = n || ''; el.style.display = n ? 'inline-block' : 'none'; }
+        // ---------- CHANGE REQUESTS: super admin sees them faculty by faculty ----------
+        var reqFac = null;
+        function reqTaskOf(r) {
+            return (r.moduleId ? taskByModule(r.ownerUid, r.moduleId) : null)
+                || Object.values(assignmentsMap).find(a => a.lecturerUid === r.ownerUid && a.courseId && a.courseId === r.courseId) || null;
+        }
+        function reqCourseKeyFor(r) {
+            if (r.courseKey && bindersMap[r.courseKey]) return r.courseKey;
+            const t = reqTaskOf(r); const k = t ? taskCourseKey(t) : '';
+            return k && bindersMap[k] ? k : '';
+        }
+        function reqFacOf(r) { const k = reqCourseKeyFor(r); return (k && bindersMap[k].facultyId) || r.facultyId || (r.ownerUid && accFac(r.ownerUid)) || ''; }
+        function reqStatusHtml(r) {
+            return `<span class="req-st req-${esc(r.status)}">${r.status === 'open' ? 'Waiting' : r.status === 'done' ? 'Approved' : 'Declined'}</span>${r.resolvedAt ? `<br><small>${fmtDate(r.resolvedAt)}</small>` : ''}${r.reply ? `<div style="font-size:0.78rem; margin-top:4px; white-space:pre-wrap;"><b>Answer:</b> ${esc(r.reply)}</div>` : ''}`;
+        }
+        function reqRowHtml(r, su) {
+            const t = reqTaskOf(r);
+            const target = r.scope === 'course' ? `<b>Whole course document</b><br>${esc(r.courseName)}`
+                : `<b>${esc(r.moduleCode)}</b> ${esc(r.moduleName)}<br><small>${esc(r.courseName)}</small>${t && !t.structModuleId ? ' <span class="pipe-badge pipe-returned">not in a structure</span>' : ''}`;
+            const view = r.courseId ? `<button class="btn btn-outline btn-mini" onclick="viewOutline('${esc(r.ownerUid)}','${esc(r.courseId)}','${esc(r.scope === 'course' ? '' : (r.moduleId || ''))}')"><i class="fas fa-eye"></i> View</button>` : '';
+            const act = `<td style="white-space:nowrap;">${view}${su ? `
+                ${r.courseId && r.moduleId ? `<button class="btn btn-outline btn-mini" onclick="openOutlineFor('${esc(r.ownerUid)}','${esc(r.courseId)}','${esc(r.moduleId)}')"><i class="fas fa-edit"></i> Edit</button>` : ''}
+                ${r.status === 'open' ? `<br><button class="btn btn-green btn-mini" style="margin-top:4px;" onclick="resolveRequest('${r.id}','done')"><i class="fas fa-check"></i> Approve</button>
+                <button class="btn btn-outline btn-mini" style="margin-top:4px;" onclick="resolveRequest('${r.id}','declined')"><i class="fas fa-times"></i> Decline</button>
+                ${r.type === 'delete' ? `<br><button class="btn btn-danger btn-mini" style="margin-top:4px;" onclick="superDeleteForRequest('${r.id}')"><i class="fas fa-trash"></i> Approve &amp; delete the ${r.scope === 'course' ? 'course document' : 'outline'}</button>` : ''}` : ''}` : ''}</td>`;
+            return `<tr><td style="font-size:0.8rem;">${fmtDate(r.at)}</td><td>${esc(r.byName)}<br><small>${esc(r.byEmail)}</small> ${roleBadge(r.byRole)}</td>
+                <td><b>${esc(REQ_TYPES[r.type] || r.type)}</b></td><td style="font-size:0.85rem;">${target}${r.ownerName ? `<br><small>Owner: ${esc(r.ownerName)}</small>` : ''}</td>
+                <td style="font-size:0.85rem; white-space:pre-wrap; max-width:340px;">${esc(r.message)}</td><td>${reqStatusHtml(r)}</td>${act}</tr>`;
+        }
+        function reqTableHtml(list, su) {
+            return `<div style="overflow-x:auto;"><table class="royal-table"><thead><tr><th>Date</th><th>From</th><th>Request</th><th>For</th><th>Details</th><th>Status</th><th></th></tr></thead><tbody>${list.map(r => reqRowHtml(r, su)).join('')}</tbody></table></div>`;
+        }
         function renderRequests() {
             const root = document.getElementById('requests-root'); if (!root) return;
             startRequestsWatch();
@@ -9016,31 +9127,139 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
             const list = reqRows.filter(r => reqFilter === 'all' || r.status === reqFilter);
             const chip = (k, l) => `<div class="status-chip ${reqFilter === k ? 'active' : ''}" onclick="reqFilter='${k}'; renderRequests();"><b>${counts[k] || 0}</b>${l}</div>`;
             let html = `<div class="dash-hero"><h2><i class="fas fa-envelope-open-text"></i> Change Requests</h2><div class="gold-rule"></div>
-                <p>${su ? `Requests from Deans, Office Secretaries, the Curriculum Department and Lecturers to edit, correct or delete an outline or a course document. Each one is also e-mailed to <b>${esc(ADMIN_EMAILS[0])}</b>.`
+                <p>${su ? `Requests from Deans, Office Secretaries, the Curriculum Department and Lecturers to edit, correct or delete an outline or a course document - arranged faculty by faculty. Open a faculty to see its requests course by course, and the outlines that are not attached to any course. Each request is also e-mailed to <b>${esc(ADMIN_EMAILS[0])}</b>.`
                         : `Outlines cannot be deleted - and finished outlines cannot be changed - from inside the system. Press <b>Request change</b> (next to an outline, in the outline viewer, or in Review &amp; Export) and the system administrator acts on it. Your requests and the answers are listed here.`}</p></div>
-                <div class="status-chips">${chip('open', 'Open')}${chip('done', 'Completed')}${chip('declined', 'Declined')}${chip('all', 'All')}</div>`;
-            if (!list.length) html += `<div class="dash-card"><p style="color:#64748b; margin:0;">No requests here.</p></div>`;
-            else html += `<div class="dash-card" style="overflow-x:auto;"><table class="royal-table"><thead><tr><th>Date</th><th>From</th><th>Request</th><th>For</th><th>Details</th><th>Status</th><th></th></tr></thead><tbody>${list.map(r => {
-                const target = r.scope === 'course' ? `<b>Whole course document</b><br>${esc(r.courseName)}` : `<b>${esc(r.moduleCode)}</b> ${esc(r.moduleName)}<br><small>${esc(r.courseName)}</small>`;
-                const st = `<span class="req-st req-${esc(r.status)}">${r.status === 'open' ? 'Open' : r.status === 'done' ? 'Completed' : 'Declined'}</span>${r.resolvedAt ? `<br><small>${fmtDate(r.resolvedAt)}</small>` : ''}${r.reply ? `<div style="font-size:0.78rem; margin-top:4px; white-space:pre-wrap;"><b>Answer:</b> ${esc(r.reply)}</div>` : ''}`;
-                const view = r.courseId ? `<button class="btn btn-outline btn-mini" onclick="viewOutline('${esc(r.ownerUid)}','${esc(r.courseId)}','${esc(r.scope === 'course' ? '' : (r.moduleId || ''))}')"><i class="fas fa-eye"></i> View</button>` : '';
-                const act = `<td style="white-space:nowrap;">${view}${su ? `
-                    ${r.courseId && r.moduleId ? `<button class="btn btn-outline btn-mini" onclick="openOutlineFor('${esc(r.ownerUid)}','${esc(r.courseId)}','${esc(r.moduleId)}')"><i class="fas fa-edit"></i> Edit</button>` : ''}
-                    ${r.status === 'open' ? `<br><button class="btn btn-green btn-mini" style="margin-top:4px;" onclick="resolveRequest('${r.id}','done')"><i class="fas fa-check"></i> Done</button>
-                    <button class="btn btn-outline btn-mini" style="margin-top:4px;" onclick="resolveRequest('${r.id}','declined')"><i class="fas fa-times"></i> Decline</button>
-                    ${r.type === 'delete' ? `<br><button class="btn btn-danger btn-mini" style="margin-top:4px;" onclick="superDeleteForRequest('${r.id}')"><i class="fas fa-trash"></i> Delete the ${r.scope === 'course' ? 'course document' : 'outline'}</button>` : ''}` : ''}` : ''}</td>`;
-                return `<tr><td style="font-size:0.8rem;">${fmtDate(r.at)}</td><td>${esc(r.byName)}<br><small>${esc(r.byEmail)}</small> ${roleBadge(r.byRole)}</td>
-                    <td><b>${esc(REQ_TYPES[r.type] || r.type)}</b></td><td style="font-size:0.85rem;">${target}${r.ownerName ? `<br><small>Owner: ${esc(r.ownerName)}</small>` : ''}</td>
-                    <td style="font-size:0.85rem; white-space:pre-wrap; max-width:340px;">${esc(r.message)}</td><td>${st}</td>${act}</tr>`; }).join('')}</tbody></table></div>`;
+                <div class="status-chips">${chip('open', 'Waiting')}${chip('done', 'Approved')}${chip('declined', 'Declined')}${chip('all', 'All')}</div>`;
+            if (!su) {
+                html += list.length ? `<div class="dash-card">${reqTableHtml(list, false)}</div>` : `<div class="dash-card"><p style="color:#64748b; margin:0;">No requests here.</p></div>`;
+                root.innerHTML = html; return;
+            }
+            const byFac = {};
+            list.forEach(r => { const f = reqFacOf(r) || 'NONE'; (byFac[f] || (byFac[f] = [])).push(r); });
+            if (!reqFac) {
+                const facs = FACULTIES.map(f => f.id).concat(byFac.NONE ? ['NONE'] : []);
+                html += `<div class="req-fac-grid">${facs.map(id => {
+                    const rs = byFac[id] || [], all = reqRows.filter(r => (reqFacOf(r) || 'NONE') === id), open = all.filter(r => r.status === 'open').length;
+                    return `<div class="req-fac-card ${rs.length ? '' : 'empty'}" style="--fc:${facColor(id === 'NONE' ? '' : id)}" onclick="reqFac='${id}'; renderRequests();">
+                        <div class="rfc-top">${id === 'NONE' ? '<span class="fac-tag" style="background:#64748b;">—</span>' : facTag(id)} ${open ? `<span class="rfc-open">${open} waiting</span>` : ''}</div>
+                        <div class="rfc-name">${esc(id === 'NONE' ? 'No faculty / university level' : facName(id))}</div>
+                        <div class="rfc-sub">${rs.length} request(s) shown · ${all.length} in total</div></div>`; }).join('')}</div>`;
+                root.innerHTML = html; return;
+            }
+            const rs = byFac[reqFac] || [];
+            html += `<div class="dash-card" style="border-top:5px solid ${facColor(reqFac === 'NONE' ? '' : reqFac)};"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <h3 style="margin:0;">${reqFac === 'NONE' ? 'No faculty / university level' : facTag(reqFac) + ' ' + esc(facName(reqFac))}</h3>
+                <button class="btn btn-outline btn-mini" onclick="reqFac=null; renderRequests();"><i class="fas fa-arrow-left"></i> All faculties</button></div></div>`;
+            if (!rs.length) { root.innerHTML = html + `<div class="dash-card"><p style="color:#64748b; margin:0;">No requests here.</p></div>`; return; }
+            const groups = {};
+            rs.forEach(r => { const k = reqCourseKeyFor(r) || '__none__'; (groups[k] || (groups[k] = [])).push(r); });
+            const keys = Object.keys(groups).filter(k => k !== '__none__').sort((a, b) => String(bindersMap[a].fullName || bindersMap[a].programName).localeCompare(String(bindersMap[b].fullName || bindersMap[b].programName)));
+            if (groups.__none__) keys.push('__none__');
+            keys.forEach(k => {
+                const g = groups[k], b = bindersMap[k], open = g.filter(r => r.status === 'open');
+                html += `<div class="binder-card ${k === '__none__' ? 'unplaced-card' : ''}" style="--fc:${k === '__none__' ? '#f59e0b' : facColor(b.facultyId)}"><div class="binder-head">
+                    <h4>${k === '__none__' ? '<i class="fas fa-inbox"></i> Outlines not attached to a course' : '<i class="fas fa-book"></i> ' + esc(b.fullName || b.programName)}</h4>
+                    <span>${g.length} request(s)${open.length > 1 ? ` · <button class="btn btn-green btn-mini" onclick="approveAllRequests('${k}')"><i class="fas fa-check-double"></i> Approve all ${open.length} waiting</button>` : ''}</span></div>
+                    <div class="binder-body">${reqTableHtml(g, true)}</div></div>`;
+            });
             root.innerHTML = html;
         }
+        function approveAllRequests(key) {
+            if (!isSuperAdmin()) return;
+            const list = reqRows.filter(r => r.status === 'open' && r.type !== 'delete' && (reqFacOf(r) || 'NONE') === reqFac && (reqCourseKeyFor(r) || '__none__') === key);
+            if (!list.length) { alert("Nothing to approve here (delete requests are approved one by one)."); return; }
+            if (!confirm(`Approve ${list.length} waiting request(s)?`)) return;
+            const note = prompt("Note to the people who asked (optional):", ''); if (note === null) return;
+            list.forEach(r => resolveRequest(r.id, 'done', note));
+        }
+
+        // ---------- FACULTIES: the super admin can add a new faculty / centre ----------
+        var customFacs = [], facUnsub = null;
+        function applyCustomFaculties() {
+            for (let i = FACULTIES.length - 1; i >= 0; i--) if (FACULTIES[i].custom) FACULTIES.splice(i, 1);
+            customFacs.forEach(f => { if (f && f.id && !FACULTIES.some(x => x.id === f.id)) FACULTIES.push({ id: f.id, name: f.name || f.id, dv: f.dv || '', color: f.color || '#475569', custom: true }); });
+            const nf = document.getElementById('new-user-faculty');
+            if (nf) { const v = nf.value; while (nf.options.length > 1) nf.remove(1); FACULTIES.forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.id + ' - ' + f.name; nf.appendChild(o); }); nf.value = v; }
+        }
+        function startFacultiesWatch() {
+            if (facUnsub || !auth.currentUser) return;
+            facUnsub = db.collection('rasfahi_system').doc('faculties').onSnapshot(doc => {
+                customFacs = (doc && doc.exists && (doc.data() || {}).list) || [];
+                applyCustomFaculties();
+                if (isStepActive(14)) { renderFacultyAdmin(); renderUserDirectory(); }
+                if (isStepActive(27)) renderRequests();
+            }, err => console.warn('[RASFAHI] faculties watch failed', err && err.code));
+        }
+        function renderFacultyAdmin() {
+            const box = document.getElementById('fac-admin-box'); if (!box) return;
+            if (!isSuperAdmin()) { box.innerHTML = ''; return; }
+            const used = id => (accountsCache || []).filter(a => !a.deleted && a.facultyId === id).length;
+            box.innerHTML = `<div class="dash-card" style="margin-bottom:26px; border-top:5px solid #86198f;">
+                <h3><i class="fas fa-university"></i> Faculties &amp; Centres</h3>
+                <p style="color:#555; font-size:0.9rem;">When a new faculty or centre is created, add it here. It then appears everywhere - faculty chips, account settings, allocation, dashboards, structures and requests. Only the system administrator sees this box.</p>
+                <div style="overflow-x:auto;"><table class="royal-table"><thead><tr><th>Code</th><th>Name</th><th>Dhivehi name</th><th>Colour</th><th>Accounts</th><th></th></tr></thead><tbody>
+                ${FACULTIES.map(f => `<tr><td>${facTag(f.id)}</td><td>${esc(f.name)}</td><td style="direction:rtl;">${esc(f.dv || '')}</td><td><span style="display:inline-block; width:22px; height:22px; border-radius:6px; background:${f.color};"></span></td><td>${used(f.id)}</td>
+                    <td>${f.custom ? `<button class="btn btn-outline btn-mini" onclick="editFaculty('${f.id}')"><i class="fas fa-pen"></i> Edit</button> <button class="btn btn-danger btn-mini" onclick="removeFaculty('${f.id}')"><i class="fas fa-trash"></i></button>` : '<small style="color:#94a3b8;">built in</small>'}</td></tr>`).join('')}
+                </tbody></table></div>
+                <div class="fac-add-row">
+                    <input id="nf-id" placeholder="Code, e.g. KMS" maxlength="10" style="text-transform:uppercase;">
+                    <input id="nf-name" placeholder="Name in English *">
+                    <input id="nf-dv" placeholder="ދިވެހި ނަން" style="direction:rtl;">
+                    <input id="nf-color" type="color" value="#0f766e" title="Colour">
+                    <button class="btn btn-blue btn-mini" onclick="addFaculty()"><i class="fas fa-plus"></i> Add faculty / centre</button>
+                </div></div>`;
+        }
+        function saveFacList(list, what) {
+            const w = whoStamp();
+            return db.collection('rasfahi_system').doc('faculties').set({ list: list, updatedAt: w.at, updatedBy: w.by })
+                .then(() => { showToast('🏛️ ' + esc(what), true); })
+                .catch(e => alert("❌ Could not save: " + (e.code || e.message)));
+        }
+        function addFaculty() {
+            if (!isSuperAdmin()) return denied("Only the system administrator can add faculties.");
+            const id = document.getElementById('nf-id').value.trim().toUpperCase(), name = document.getElementById('nf-name').value.trim();
+            const dv = document.getElementById('nf-dv').value.trim(), color = document.getElementById('nf-color').value || '#0f766e';
+            if (!/^[A-Z][A-Z0-9]{1,9}$/.test(id)) { alert("The code must be 2-10 capital letters / digits, starting with a letter (e.g. KMS)."); return; }
+            if (FACULTIES.some(f => f.id === id)) { alert("A faculty with the code " + id + " already exists."); return; }
+            if (!name) { alert("Please enter the name of the faculty / centre."); return; }
+            const list = customFacs.concat([{ id: id, name: name, dv: dv, color: color }]);
+            saveFacList(list, `${id} - ${name} added.`).then(() => auditLog('faculty added', { facultyId: id }, `${id} - ${name}${dv ? ' (' + dv + ')' : ''}`));
+        }
+        function editFaculty(id) {
+            if (!isSuperAdmin()) return;
+            const f = customFacs.find(x => x.id === id); if (!f) return;
+            const name = prompt("Name in English:", f.name || ''); if (name === null || !name.trim()) return;
+            const dv = prompt("Dhivehi name:", f.dv || ''); if (dv === null) return;
+            const list = customFacs.map(x => x.id === id ? Object.assign({}, x, { name: name.trim(), dv: dv.trim() }) : x);
+            saveFacList(list, `${id} updated.`).then(() => auditLog('faculty renamed', { facultyId: id }, `${id} - ${name.trim()}`));
+        }
+        function removeFaculty(id) {
+            if (!isSuperAdmin()) return;
+            const inUse = (accountsCache || []).some(a => !a.deleted && a.facultyId === id) || Object.values(assignmentsMap).some(a => taskFac(a) === id) || Object.values(bindersMap).some(b => b.facultyId === id);
+            if (inUse) { alert("This faculty is in use (accounts, tasks or courses). Move them to another faculty first."); return; }
+            if (!confirm("Remove the faculty " + id + "?")) return;
+            saveFacList(customFacs.filter(x => x.id !== id), `${id} removed.`).then(() => auditLog('faculty removed', { facultyId: id }, id));
+        }
+
+        // ---------- more views and downloads in the log ----------
+        function wrapWithLog(name, after) {
+            const o = window[name]; if (typeof o !== 'function' || o.__logged) return;
+            const w = function () { const r = o.apply(this, arguments); try { after.apply(this, arguments); } catch (e) {} return r; };
+            w.__logged = true; window[name] = w;
+        }
+        wrapWithLog('exportSampleWord', t => auditLog('downloaded sample (Word)', {}, t === 'program' ? 'Full programme document sample' : t === 'form3' ? 'Form 3 sample' : 'Module outline sample'));
+        wrapWithLog('viewCertificate', k => { const b = bindersMap[k] || {}; auditLog('viewed MQA certificate', { courseName: b.fullName || b.programName || '', facultyId: b.facultyId }, ''); });
+        wrapWithLog('exportDatabase', () => auditLog('downloaded archive backup', { ownerUid: wsUid, ownerName: ownerNameOf(wsUid) }, Object.keys(dbState.courses || {}).length + ' course document(s)'));
+        wrapWithLog('printStructure', k => { const b = bindersMap[k] || {}; auditLog('printed course structure', { courseName: b.fullName || b.programName || '', facultyId: b.facultyId }, ''); });
+        wrapWithLog('showModuleHistory', (c, m) => auditLog('viewed edit history', logTarget(c || activeCourseId, m || activeModuleId), ''));
+
         function resolveRequest(id, status, reply) {
             if (!isSuperAdmin()) return denied("Only the system administrator can answer requests.");
             const r = reqRows.find(x => x.id === id); if (!r) return;
             if (reply === undefined) { reply = prompt(status === 'done' ? "Note to the person who asked (optional):" : "Reason for declining (optional):", ''); if (reply === null) return; }
             const w = whoStamp();
             db.collection('rasfahi_requests').doc(id).update({ status: status, reply: String(reply || '').trim(), resolvedAt: w.at, resolvedBy: w.by })
-                .then(() => auditLog(status === 'done' ? 'request completed' : 'request declined', r, `${reqWord(r.type)} request from ${r.byName}${reply ? ' - ' + reply : ''}`))
+                .then(() => auditLog(status === 'done' ? 'request approved' : 'request declined', r, `${reqWord(r.type)} request from ${r.byName}${reply ? ' - ' + reply : ''}`))
                 .catch(e => alert("❌ " + (e.code || e.message)));
         }
         function superDeleteForRequest(id) {
@@ -9177,9 +9396,11 @@ Role? Type one of: lecturer, secretary, dean, admin`, normalizeRole(acc.role));
         var exportTarget = null, expSel = { uid: '', list: null, loading: false };
         function exportLogTarget() { const T = exportTarget || {}; return { ownerUid: T.uid, ownerName: T.ownerName, courseId: T.cId, courseName: T.courseName, moduleId: T.mId, moduleCode: T.moduleCode, moduleName: T.moduleName }; }
         const __showPreviewActive = showPreview, __exportDocActive = exportDoc;
+        const previewLabel = t => t === 'program' ? 'full document' : t === 'form3' ? 'Form 3' : t === 'structure' ? 'programme structure' : 'module outline';
         showPreview = function (type) {
-            if (!exportTarget) return __showPreviewActive(type);
-            try { withForeignCourse(exportTarget.course, exportTarget.mId, () => __showPreviewActive(type)); } catch (e) { reportExportError(e); }
+            if (!exportTarget) { __showPreviewActive(type); if (activeCourseId && document.getElementById('preview-modal').style.display === 'block') auditLog('previewed ' + previewLabel(type), logTarget(activeCourseId, activeModuleId), 'Review & Export'); return; }
+            try { withForeignCourse(exportTarget.course, exportTarget.mId, () => __showPreviewActive(type)); } catch (e) { reportExportError(e); return; }
+            auditLog('previewed ' + previewLabel(type), exportLogTarget(), 'Review & Export');
         };
         exportDoc = function (type, format) {
             if (!exportTarget) { __exportDocActive(type, format); if (activeCourseId) auditLog('exported Word', logTarget(activeCourseId, activeModuleId), type === 'program' ? 'Full programme document' : type); return; }
